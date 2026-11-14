@@ -178,7 +178,7 @@
           <select id="songSel" class="form-select" aria-label="Song"></select>
         </div>
       </div>
-      <div class="song-meta mt-2" id="songMeta">Songs come from the <code>REFERENCE-AUDIO-FILES</code> folder.</div>
+      <div class="song-meta mt-2" id="songMeta"></div>
     </div>
   </div>
 
@@ -442,7 +442,7 @@
     refreshInstOpts();
     $('step3').hidden = true;
     $('step2').hidden = !cur;
-    if(!cur){ $('songMeta').innerHTML = 'Songs come from the <code>REFERENCE-AUDIO-FILES</code> folder.'; return; }
+    if(!cur){ $('songMeta').innerHTML = ''; return; }
     const bits = [];
     if(cur.key) bits.push('Key: <strong>' + esc(cur.key) + '</strong>');
     bits.push(cur.notes.length ? cur.notes.length + ' notes' : 'no notes yet');
