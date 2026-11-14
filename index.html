@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Song Practice</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-red:#dc3545;
+    --biz-green:#198754;
+    --biz-purple:#6f42c1;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav: same as the blog */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+  }
+
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.9rem; height:1.9rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.95rem; margin-right:.55rem; flex:none;
+  }
+  .step-title{ display:flex; align-items:center; font-weight:700; font-size:1.1rem; margin-bottom:.75rem; }
+  .accent-blue{ border-left:5px solid var(--biz-blue); }
+  .accent-yellow{ border-left:5px solid var(--biz-yellow); }
+  .accent-green{ border-left:5px solid var(--biz-green); }
+  .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
+
+  /* Instrument choice */
+  .inst-choice{ display:flex; flex-wrap:wrap; gap:.75rem; }
+  .inst-opt{
+    display:flex; align-items:center; gap:.6rem; cursor:pointer; user-select:none;
+    border:2px solid #c9d3e3; border-radius:.6rem; padding:.7rem 1.1rem; background:#fff; min-width:190px;
+  }
+  .inst-opt:hover{ border-color:var(--biz-blue); }
+  .inst-opt .form-check-input{ width:1.3rem; height:1.3rem; margin:0; border-radius:.3rem; cursor:pointer; }
+  .inst-opt .big{ font-size:1.6rem; line-height:1; }
+  .inst-opt .nm{ font-weight:800; }
+  .inst-opt .sub{ font-size:.75rem; color:#6c757d; }
+  .inst-opt.checked{ border-color:var(--biz-blue); background:#eef3fb; box-shadow:0 0 0 3px #0d6efd22; }
+
+  .song-meta{ font-size:.85rem; color:#6c757d; }
+  .stat-pill{ background:#eef3fb; border-radius:2rem; padding:.2rem .7rem; font-size:.8rem; font-weight:600; }
+
+  /* Prompt + now-playing */
+  .prompt{
+    background:linear-gradient(120deg,var(--biz-blue-dark),var(--biz-blue)); color:#fff;
+    border-radius:.6rem; padding:.9rem 1.1rem; font-size:1.05rem; min-height:3.2rem;
+  }
+  .now-box{ display:flex; gap:.75rem; flex-wrap:wrap; }
+  .now-card{ flex:1 1 200px; background:#fff; border:2px solid #dde3ec; border-radius:.6rem; padding:.6rem .9rem; }
+  .now-card.now{ border-color:#c79100; background:#fff8e1; }
+  .now-card .lbl{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; }
+  .now-card .val{ font-size:1.5rem; font-weight:800; line-height:1.2; min-height:1.8rem; }
+  .now-card .det{ font-size:.85rem; color:#5a6475; min-height:1.2rem; }
+  .big-play{ font-size:1.15rem; font-weight:700; padding:.6rem 1.8rem; }
+  .progress{ height:.5rem; }
+
+  /* Piano */
+  .kb-wrap{ overflow-x:auto; padding-bottom:.25rem; -webkit-overflow-scrolling:touch; }
+  .keyboard{ position:relative; display:flex; height:160px; user-select:none; }
+  .key.white{
+    flex:1 0 26px; position:relative; background:linear-gradient(#fff,#f1f1f1); border:1px solid #b9bec7;
+    border-radius:0 0 .4rem .4rem; margin-right:-1px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+    padding-bottom:.35rem; font-size:.66rem; font-weight:700; color:#333; cursor:pointer;
+  }
+  .key.black{
+    position:absolute; top:0; right:-31%; width:62%; height:60%; z-index:2;
+    background:linear-gradient(#333,#111); border-radius:0 0 .3rem .3rem; color:#fff;
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding-bottom:.3rem;
+    font-size:.55rem; font-weight:700; box-shadow:0 2px 3px rgba(0,0,0,.4); cursor:pointer;
+  }
+  .key.white.used{ background:linear-gradient(#fff,#d7f0e1); }
+  .key.black.used{ background:linear-gradient(#2c6e49,#174a2f); }
+  .key.white.playing{ background:linear-gradient(#fff3c4,var(--biz-yellow)) !important; }
+  .key.black.playing{ background:linear-gradient(#ffd75e,#c79100) !important; color:#000; }
+  .key.white.pressed{ background:linear-gradient(#cfe2ff,#9ec5fe) !important; }
+  .key.black.pressed{ background:linear-gradient(#3d8bfd,#0a58ca) !important; }
+
+  /* Guitar fretboard */
+  .fb-wrap, .tab-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .fretboard{
+    position:relative; min-width:760px; border-radius:.4rem; overflow:hidden; user-select:none;
+    background:linear-gradient(180deg,#5a3a22,#6e4628 50%,#5a3a22); box-shadow:inset 0 0 12px rgba(0,0,0,.5);
+  }
+  .fb-head, .fb-row{ display:grid; grid-template-columns:44px 38px repeat(15, 1fr); }
+  .fb-head{ background:#f1f4f9; }
+  .fb-head div{ text-align:center; font-size:.68rem; font-weight:700; color:#6c757d; padding:.15rem 0; }
+  .fb-row{ height:30px; }
+  .fb-name{ background:#f1f4f9; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; color:#333; }
+  .fb-cell{ position:relative; cursor:pointer; border-right:3px solid #c9c9c9; display:flex; align-items:center; justify-content:center; }
+  .fb-cell.open{ background:#efe6d8; border-right:7px solid #f5f0e6; }
+  .fb-cell::before{ content:''; position:absolute; left:0; right:-3px; top:50%; height:var(--sw,2px); transform:translateY(-50%); background:linear-gradient(#f4f4f4,#a9a9a9); box-shadow:0 1px 1px rgba(0,0,0,.5); }
+  .fb-cell.open::before{ right:-7px; }
+  .fb-cell:hover .fb-dot{ opacity:1; background:#ffffffcc; color:#333; }
+  .fb-dot{
+    position:relative; z-index:1; min-width:22px; height:22px; padding:0 3px; border-radius:11px; font-size:.62rem; font-weight:800;
+    display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .1s;
+  }
+  .fb-cell.used .fb-dot{ opacity:.9; background:#2c6e49; color:#fff; }
+  .fb-cell.pressed .fb-dot{ opacity:1; background:#0d6efd; color:#fff; }
+  .fb-cell.playing .fb-dot{ opacity:1; background:var(--biz-yellow); color:#000; box-shadow:0 0 0 3px #fff8, 0 0 10px #ffc107; transform:scale(1.15); }
+  .fb-inlay{ position:absolute; width:12px; height:12px; border-radius:50%; background:#e9dcc3; opacity:.55; transform:translate(-50%,-50%); pointer-events:none; }
+
+  /* Guitar tab */
+  .tab-wrap{ position:relative; background:#fff; border:1px solid #dde3ec; border-radius:.5rem; padding:.4rem .5rem; }
+  .tab-strip{ display:flex; align-items:stretch; min-height:150px; font-family:Consolas,Monaco,monospace; }
+  .tab-names{ display:flex; flex-direction:column; padding-top:18px; margin-right:.25rem; position:sticky; left:0; background:#fff; z-index:1; }
+  .tab-names div, .tab-col .tc{ height:20px; line-height:20px; font-size:.8rem; font-weight:700; }
+  .tab-col{ position:relative; display:flex; flex-direction:column; min-width:30px; cursor:pointer; border-radius:.3rem; }
+  .tab-col .tt{ height:18px; font-size:.68rem; font-weight:800; color:var(--biz-purple); text-align:center; white-space:nowrap; }
+  .tab-col .tc{ position:relative; text-align:center; }
+  .tab-col .tc::before{ content:''; position:absolute; left:0; right:0; top:50%; border-top:1px solid #9aa6b8; }
+  .tab-col .tc span{ position:relative; background:#fff; padding:0 2px; color:#084298; }
+  .tab-col.playing{ background:var(--biz-yellow); }
+  .tab-col.playing .tc span{ background:var(--biz-yellow); color:#000; }
+
+  /* Note boxes */
+  .song-area{
+    background:#f1f4f9; border:2px dashed #c9d3e3; border-radius:.6rem; padding:.6rem;
+    display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; max-height:320px; overflow-y:auto;
+  }
+  .chip{
+    position:relative; background:#fff; border:2px solid var(--biz-blue); border-radius:.5rem;
+    padding:.4rem .5rem .3rem; text-align:center; cursor:pointer; min-width:48px;
+  }
+  .chip .cname{ font-weight:800; font-size:.92rem; line-height:1.2; }
+  .chip .charm{ font-size:.7rem; font-weight:700; color:#5a6475; line-height:1.1; margin-top:.2rem; }
+  .chip .cbeats{ font-size:.62rem; color:#6c757d; margin-top:.2rem; }
+  .chip .ctech{
+    position:absolute; top:-.6rem; left:-.45rem; min-width:1.2rem; height:1.2rem; padding:0 .2rem; border-radius:.6rem;
+    background:var(--biz-purple); color:#fff; font-size:.7rem; font-weight:800; line-height:1.2rem; text-align:center;
+  }
+  .chip.done{ opacity:.55; }
+  .chip.playing{ background:var(--biz-yellow); border-color:#c79100; opacity:1; transform:translateY(-3px); transition:transform .08s; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+
+  <h1 class="h3 fw-bold mb-1">🎶 Song Practice</h1>
+  <p class="text-muted mb-4">Pick a song, pick your instrument, press Play and follow the yellow notes.</p>
+
+  <!-- STEP 1: song -->
+  <div class="card shadow-sm accent-blue mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">1</span>Choose a song</div>
+      <div class="row g-2 align-items-center">
+        <div class="col-md-8">
+          <select id="songSel" class="form-select" aria-label="Song"></select>
+        </div>
+      </div>
+      <div class="song-meta mt-2" id="songMeta">Songs come from the <code>REFERENCE-AUDIO-FILES</code> folder.</div>
+    </div>
+  </div>
+
+  <!-- STEP 2: instrument -->
+  <div class="card shadow-sm accent-yellow mb-3" id="step2" hidden>
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">2</span>Which instrument are you practising on?</div>
+      <div class="inst-choice" id="instChoice">
+        <label class="inst-opt" data-inst="piano">
+          <input class="form-check-input" type="checkbox" value="piano" id="instPiano">
+          <span class="big">🎹</span><span><span class="nm d-block">Piano</span><span class="sub">keyboard + note boxes</span></span>
+        </label>
+        <label class="inst-opt" data-inst="guitar">
+          <input class="form-check-input" type="checkbox" value="guitar" id="instGuitar">
+          <span class="big">🎸</span><span><span class="nm d-block">Guitar</span><span class="sub">fretboard + tab + note boxes</span></span>
+        </label>
+      </div>
+      <div class="small text-muted mt-2" id="instHint"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: practice -->
+  <div class="card shadow-sm accent-green mb-3" id="step3" hidden>
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">3</span><span id="practiceTitle">Practice</span></div>
+
+      <div class="prompt mb-3" id="prompt" aria-live="polite"></div>
+
+      <!-- Controls -->
+      <div class="row g-3 align-items-end mb-3">
+        <div class="col-lg-4 d-flex gap-2">
+          <button type="button" class="btn btn-success big-play" id="playBtn">▶ Play</button>
+          <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled>■ Stop</button>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+          <label class="ctrl-label" for="soundSel">Sound</label>
+          <select id="soundSel" class="form-select form-select-sm"></select>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+          <label class="ctrl-label" for="speed">Speed: <span id="speedVal">100</span>%</label>
+          <input type="range" class="form-range" id="speed" min="50" max="125" step="5" value="100">
+        </div>
+        <div class="col-lg-2 d-flex align-items-center">
+          <div class="form-check mb-1"><input class="form-check-input" type="checkbox" id="loop"><label class="form-check-label small" for="loop">🔁 Loop</label></div>
+        </div>
+      </div>
+      <div class="progress mb-3" role="progressbar" aria-label="Song progress"><div class="progress-bar bg-warning" id="progBar" style="width:0%"></div></div>
+
+      <!-- Now / next -->
+      <div class="now-box mb-3">
+        <div class="now-card now"><div class="lbl">Now playing</div><div class="val" id="nowVal">–</div><div class="det" id="nowDet"></div></div>
+        <div class="now-card"><div class="lbl">Next</div><div class="val" id="nextVal">–</div><div class="det" id="nextDet"></div></div>
+      </div>
+
+      <!-- Instrument view -->
+      <div id="pianoView" hidden>
+        <span class="ctrl-label">🎹 Keyboard <span class="fw-normal" style="text-transform:none">(green keys are used in this song; tap a key to hear it)</span></span>
+        <div class="kb-wrap mb-3"><div class="keyboard" id="keyboard" aria-label="Piano keyboard"></div></div>
+      </div>
+      <div id="guitarView" hidden>
+        <span class="ctrl-label">🎸 Fretboard <span class="fw-normal" style="text-transform:none">(strings top to bottom: e B G D A E; green dots are used in this song)</span></span>
+        <div class="fb-wrap mb-3"><div class="fretboard" id="fretboard" aria-label="Guitar fretboard"></div></div>
+        <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+          <span class="ctrl-label mb-0">🎼 Guitar tab</span>
+          <span class="small text-muted">/ = slide up · \ = slide down · h = hammer-on · p = pull-off</span>
+        </div>
+        <div class="tab-wrap mb-3" id="tabView"></div>
+      </div>
+
+      <!-- Note boxes -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+        <span class="ctrl-label mb-0">🎵 Notes</span>
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="stat-pill" id="statNotes"></span>
+          <span class="stat-pill" id="statTime"></span>
+        </div>
+      </div>
+      <div class="song-area" id="noteArea"></div>
+      <p class="small text-muted mt-2 mb-0">Tip: click any note box to hear that note on its own. Press <kbd>Space</kbd> to play or stop.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">Music Practice App · for personal practice</div>
+</footer>
+
+<!-- The song list (edit this file to add songs) -->
+<script src="REFERENCE-AUDIO-FILES/song-library.js"></script>
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const AUDIO_DIR = 'REFERENCE-AUDIO-FILES/';
+
+  /* ================= AUDIO ENGINE (synth: piano + Karplus-Strong guitar) ================= */
+  let ctx = null, master = null, playBus = null, liveSrc = [];
+  function ensureCtx(){
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC){ alert('Sorry, your browser does not support Web Audio.'); return false; }
+      ctx = new AC();
+      const comp = ctx.createDynamicsCompressor();
+      master = ctx.createGain(); master.gain.value = 0.7;
+      master.connect(comp); comp.connect(ctx.destination);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return true;
+  }
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+  const track = s => { liveSrc.push(s); s.onended = () => { const i = liveSrc.indexOf(s); if(i >= 0) liveSrc.splice(i, 1); }; return s; };
+
+  function osc(type, freq, t, stopAt, slide){
+    const o = ctx.createOscillator(); o.type = type;
+    if(slide){ o.frequency.setValueAtTime(freq * slide.ratio, t); o.frequency.exponentialRampToValueAtTime(freq, t + slide.dur); }
+    else o.frequency.setValueAtTime(freq, t);
+    o.start(t); o.stop(stopAt); return track(o);
+  }
+
+  // Plucked string: noise circulating in a one-period delay line, softened on every pass (Karplus-Strong)
+  const KS_SECONDS = 2.6, ksCache = {};
+  function ksBuffer(m, soft){
+    const key = m + (soft ? 's' : 'p');
+    if(ksCache[key]) return ksCache[key];
+    const sr = ctx.sampleRate, len = Math.floor(sr * KS_SECONDS);
+    const buf = ctx.createBuffer(1, len, sr), out = buf.getChannelData(0);
+    const P = sr / mtof(m), N = Math.max(2, Math.floor(P - 0.6));
+    const dfrac = P - 0.5 - N, C = (1 - dfrac) / (1 + dfrac);
+    const line = new Float32Array(N), bright = soft ? 0.22 : 0.65;
+    let lp = 0, mean = 0, peak = 0;
+    for(let i = 0; i < N; i++){ lp += bright * ((Math.random() * 2 - 1) - lp); line[i] = lp; mean += lp; }
+    mean /= N;
+    for(let i = 0; i < N; i++){ line[i] -= mean; peak = Math.max(peak, Math.abs(line[i])); }
+    for(let i = 0; i < N; i++) line[i] *= peak > 0 ? 0.6 / peak : 1;
+    const loss = 0.996 - Math.min(0.004, mtof(m) / 400000);
+    let idx = 0, apX = 0, apY = 0;
+    for(let n = 0; n < len; n++){
+      const x = line[idx], nxt = idx + 1 === N ? 0 : idx + 1;
+      const avg = loss * 0.5 * (x + line[nxt]);
+      const y = C * avg + apX - C * apY; apX = avg; apY = y;
+      line[idx] = y; out[n] = x; idx = nxt;
+    }
+    return (ksCache[key] = buf);
+  }
+
+  // One note. opts: {from: midi to slide in from, soft: legato attack, tie: next note is legato}
+  function tone(m, t, d, inst, dest, opts){
+    opts = opts || {};
+    const f = mtof(m), end = t + d;
+    const slide = (opts.from != null && opts.from !== m) ? {ratio: mtof(opts.from) / f, dur: Math.min(0.11, d * 0.5)} : null;
+    const g = ctx.createGain(); g.connect(dest); g.gain.setValueAtTime(0, t);
+    if(inst === 'guitar'){
+      const src = ctx.createBufferSource(); src.buffer = ksBuffer(m, !!opts.soft);
+      if(slide){ src.playbackRate.setValueAtTime(slide.ratio, t); src.playbackRate.exponentialRampToValueAtTime(1, t + slide.dur); }
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 70;
+      const body = ctx.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 180; body.Q.value = 1.2; body.gain.value = 4;
+      const air = ctx.createBiquadFilter(); air.type = 'peaking'; air.frequency.value = 2800; air.Q.value = 0.9; air.gain.value = 3;
+      src.connect(hp); hp.connect(body); body.connect(air); air.connect(g);
+      g.gain.linearRampToValueAtTime(opts.soft ? 0.5 : 0.85, t + 0.002);
+      if(opts.tie) g.gain.setTargetAtTime(0, end, 0.012); else g.gain.setTargetAtTime(0, end + 0.08, 0.09);
+      src.start(t); src.stop(Math.min(t + KS_SECONDS, end + 0.8)); track(src);
+    } else {
+      const stopAt = end + 0.6;
+      const o1 = osc('triangle', f, t, stopAt, slide), o2 = osc('sine', f * 2, t, stopAt, slide);
+      const g2 = ctx.createGain(); g2.gain.value = 0.25;
+      o1.connect(g); o2.connect(g2); g2.connect(g);
+      g.gain.linearRampToValueAtTime(0.5, t + 0.01);
+      g.gain.setTargetAtTime(0.12, t + 0.01, 0.35);
+      g.gain.setTargetAtTime(0, end, 0.08);
+    }
+  }
+  function newBus(){ killBus(); playBus = ctx.createGain(); playBus.connect(master); return playBus; }
+  function killBus(){
+    if(!playBus) return;
+    const b = playBus, now = ctx.currentTime; playBus = null;
+    b.gain.cancelScheduledValues(now); b.gain.setValueAtTime(b.gain.value, now); b.gain.linearRampToValueAtTime(0, now + 0.05);
+    setTimeout(() => { try{ b.disconnect(); }catch(e){} }, 120);
+    liveSrc.slice().forEach(s => { try{ s.stop(now + 0.06); }catch(e){} });
+  }
+
+  /* ================= NOTES ================= */
+  const NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const CODE = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const noteName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+  const isBlack = m => [1,3,6,8,10].includes(m % 12);
+  const STRINGS = [{n:'e', open:64}, {n:'B', open:59}, {n:'G', open:55}, {n:'D', open:50}, {n:'A', open:45}, {n:'E', open:40}];
+  const FRETS = 15;
+
+  function parseName(txt){
+    const mt = txt.match(/^([A-Ga-g])([#b♯♭]?)(-?\d)$/);
+    if(!mt) throw new Error('unknown note "' + txt + '"');
+    let pc = CODE.indexOf(mt[1].toUpperCase());
+    if(mt[2] === '#' || mt[2] === '♯') pc++;
+    if(mt[2] === 'b' || mt[2] === '♭') pc--;
+    return (parseInt(mt[3], 10) + 1) * 12 + pc;
+  }
+  // Where each note sits on the neck: the string given with @, otherwise the lowest fret on a free string
+  function placeOnGuitar(ms, wanted){
+    const used = new Set(), out = [];
+    ms.forEach((m, k) => {
+      let best = null;
+      STRINGS.forEach((s, si) => {
+        const f = m - s.open;
+        if(f < 0 || f > 22 || used.has(si)) return;
+        if(wanted[k] != null){ if(si === wanted[k]) best = [si, f]; return; }
+        if(!best || f < best[1]) best = [si, f];
+      });
+      if(best){ used.add(best[0]); out.push(best); }
+    });
+    return out;
+  }
+  // One library line: 'time  notes  beats  label'
+  function parseLine(line){
+    const parts = String(line).trim().split(/\s+/);
+    const [tTxt, nTxt, bTxt] = parts;
+    const n = {t: tTxt === '-' ? null : parseFloat(tTxt), b: parseFloat(bTxt) || 1, lbl: parts.slice(3).join(' ') || ''};
+    let body = nTxt;
+    if(body[0] === '~'){ n.sl = true; body = body.slice(1); }
+    else if(body[0] === '^'){ n.lg = true; body = body.slice(1); }
+    const wanted = [];
+    n.ms = body.split('+').map(tok => {
+      const [nm, str] = tok.split('@');
+      wanted.push(str ? 'eBGDAE'.indexOf(str) : null);
+      return parseName(nm);
+    });
+    n.pos = placeOnGuitar(n.ms, wanted);
+    return n;
+  }
+
+  /* ================= SONG LIST ================= */
+  let library = [];
+  try{
+    library = (window.SONG_LIBRARY || []).map(s => ({
+      title: s.title, key: s.key || '', inst: s.inst || '', tempo: s.tempo || 100,
+      audio: s.audio ? AUDIO_DIR + s.audio : null, file: s.audio || '', notes: (s.notes || []).map(parseLine)
+    }));
+  }catch(e){ $('songMeta').innerHTML = '⚠️ Could not read <code>song-library.js</code>: ' + e.message; }
+
+  function fillSongSelect(keep){
+    const sel = $('songSel');
+    sel.innerHTML = '<option value="">— Choose a song —</option>' +
+      library.map((s, i) => `<option value="${i}">${s.notes.length ? '🎵' : '🔈'} ${esc(s.title)}${s.notes.length ? '' : ' (audio only)'}</option>`).join('');
+    if(keep != null) sel.value = keep;
+    if(!library.length) $('songMeta').innerHTML = '⚠️ No songs found. Check that <code>REFERENCE-AUDIO-FILES/song-library.js</code> is next to this page.';
+  }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  /* ================= STATE ================= */
+  let cur = null, inst = null, playing = false;
+  let audioEl = null, raf = 0, synthStart = 0, idx = -1, timeline = [], songLen = 0, endTimer = 0;
+  const keyEls = {}, fbCells = [];
+  let chips = [], tabCols = [];
+
+  $('songSel').addEventListener('change', () => {
+    stop(true);
+    const v = $('songSel').value;
+    cur = v === '' ? null : library[+v];
+    inst = null;
+    ['instPiano','instGuitar'].forEach(id => $(id).checked = false);
+    refreshInstOpts();
+    $('step3').hidden = true;
+    $('step2').hidden = !cur;
+    if(!cur){ $('songMeta').innerHTML = 'Songs come from the <code>REFERENCE-AUDIO-FILES</code> folder.'; return; }
+    const bits = [];
+    if(cur.key) bits.push('Key: <strong>' + esc(cur.key) + '</strong>');
+    bits.push(cur.notes.length ? cur.notes.length + ' notes' : 'no notes yet');
+    if(cur.file) bits.push('🎧 ' + esc(cur.file));
+    $('songMeta').innerHTML = bits.join(' · ');
+    $('instHint').innerHTML = cur.inst ? `This song is played on <strong>${cur.inst}</strong> in the recording, but you can practise it on either.` : '';
+    $('step2').scrollIntoView({block:'nearest', behavior:'smooth'});
+  });
+
+  // Piano / Guitar: two checkboxes that work as a pair (ticking one unticks the other)
+  ['instPiano','instGuitar'].forEach(id => $(id).addEventListener('change', e => {
+    if(e.target.checked){
+      ['instPiano','instGuitar'].forEach(o => { if(o !== id) $(o).checked = false; });
+      inst = e.target.value;
+    } else inst = null;
+    refreshInstOpts();
+    stop(true);
+    if(inst) buildPractice(); else $('step3').hidden = true;
+  }));
+  function refreshInstOpts(){
+    document.querySelectorAll('.inst-opt').forEach(el => el.classList.toggle('checked', el.querySelector('input').checked));
+  }
+
+  /* ================= BUILD THE PRACTICE UI ================= */
+  function buildPractice(){
+    $('step3').hidden = false;
+    $('practiceTitle').textContent = `Practice "${cur.title}" on ${inst === 'guitar' ? '🎸 guitar' : '🎹 piano'}`;
+    // Sound choices
+    const synthLabel = inst === 'guitar' ? '🎸 Synth guitar' : '🎹 Synth piano';
+    $('soundSel').innerHTML = (cur.audio ? '<option value="rec">🎧 Original recording</option>' : '') +
+      (cur.notes.length ? `<option value="synth">${synthLabel}</option>` : '');
+    $('pianoView').hidden = inst !== 'piano';
+    $('guitarView').hidden = inst !== 'guitar';
+    if(inst === 'piano') buildKeyboard(); else { buildFretboard(); buildTab(); }
+    buildChips();
+    buildTimeline();
+    showNowNext(-1);
+    $('statNotes').textContent = cur.notes.length + ' notes';
+    $('statTime').textContent = songLen ? songLen.toFixed(1) + ' s' : '';
+    $('progBar').style.width = '0%';
+    $('playBtn').disabled = !$('soundSel').options.length;
+    $('prompt').innerHTML = cur.notes.length
+      ? `🎼 Ready! Press <strong>▶ Play</strong> and follow the yellow highlight on the ${inst === 'guitar' ? 'fretboard and tab' : 'keyboard'}.`
+      : '🔈 This song has no notes in the song list yet, so Play just plays the audio.';
+    $('step3').scrollIntoView({block:'start', behavior:'smooth'});
+  }
+
+  function buildKeyboard(){
+    const kb = $('keyboard'); kb.innerHTML = '';
+    Object.keys(keyEls).forEach(k => delete keyEls[k]);
+    const all = cur.notes.flatMap(n => n.ms);
+    let lo = all.length ? Math.min(...all) : 60, hi = all.length ? Math.max(...all) : 72;
+    lo = Math.min(lo - (lo % 12), 48);                 // start on a C, at least from C3
+    hi = Math.max(hi + (11 - hi % 12) + 1, 84);        // end on a C, at least up to C6
+    const used = new Set(all);
+    let lastWhite = null;
+    for(let m = lo; m <= hi; m++){
+      const el = document.createElement('div');
+      el.className = 'key ' + (isBlack(m) ? 'black' : 'white') + (used.has(m) ? ' used' : '');
+      el.innerHTML = `<span>${noteName(m)}</span>`;
+      el.title = noteName(m);
+      el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hear([m]); flash(el); });
+      if(isBlack(m)){ if(lastWhite) lastWhite.appendChild(el); } else { kb.appendChild(el); lastWhite = el; }
+      keyEls[m] = el;
+    }
+    kb.style.minWidth = (kb.children.length * 26) + 'px';
+  }
+
+  function buildFretboard(){
+    const fb = $('fretboard'); fb.innerHTML = ''; fbCells.length = 0;
+    const used = new Set(cur.notes.flatMap(n => n.pos.map(p => p.join(':'))));
+    const head = document.createElement('div'); head.className = 'fb-head';
+    head.innerHTML = '<div>string</div><div>open</div>' + Array.from({length:FRETS}, (_, i) => `<div>${i + 1}</div>`).join('');
+    fb.appendChild(head);
+    STRINGS.forEach((s, si) => {
+      const row = document.createElement('div'); row.className = 'fb-row';
+      row.style.setProperty('--sw', (1.2 + si * 0.5).toFixed(1) + 'px');
+      row.innerHTML = `<div class="fb-name">${s.n}</div>`;
+      fbCells[si] = [];
+      for(let f = 0; f <= FRETS; f++){
+        const c = document.createElement('div');
+        c.className = 'fb-cell' + (f === 0 ? ' open' : '') + (used.has(si + ':' + f) ? ' used' : '');
+        c.title = `${s.n} string, ${f === 0 ? 'open' : 'fret ' + f}: ${noteName(s.open + f)}`;
+        c.innerHTML = `<span class="fb-dot">${noteName(s.open + f)}</span>`;
+        if([3, 5, 7, 9, 15].includes(f) && si === 2) c.insertAdjacentHTML('beforeend', '<span class="fb-inlay" style="left:50%;top:100%"></span>');
+        if(f === 12 && (si === 1 || si === 3)) c.insertAdjacentHTML('beforeend', '<span class="fb-inlay" style="left:50%;top:100%"></span>');
+        c.addEventListener('pointerdown', e => { e.preventDefault(); hear([s.open + f]); flash(c); });
+        row.appendChild(c); fbCells[si][f] = c;
+      }
+      fb.appendChild(row);
+    });
+  }
+
+  function techMark(n, i){
+    const prev = cur.notes[i - 1];
+    if(!prev || !(n.sl || n.lg)) return '';
+    const up = n.ms[0] > prev.ms[0];
+    return n.sl ? (up ? '/' : '\\') : (up ? 'h' : 'p');
+  }
+  function buildTab(){
+    const wrap = $('tabView'); wrap.innerHTML = '';
+    if(!cur.notes.length){ wrap.innerHTML = '<div class="text-muted fst-italic p-3">No notes for this song yet.</div>'; tabCols = []; return; }
+    const strip = document.createElement('div'); strip.className = 'tab-strip';
+    strip.innerHTML = '<div class="tab-names">' + STRINGS.map(s => `<div>${s.n}</div>`).join('') + '</div>';
+    cur.notes.forEach((n, i) => {
+      const col = document.createElement('div'); col.className = 'tab-col';
+      col.style.minWidth = (24 + Math.min(n.b, 4) * 14) + 'px';
+      const frets = {}; n.pos.forEach(([s, f]) => frets[s] = f);
+      const top = n.lbl || techMark(n, i);
+      col.innerHTML = `<div class="tt">${esc(top)}</div>` + STRINGS.map((s, si) => `<div class="tc">${frets[si] !== undefined ? `<span>${frets[si]}</span>` : ''}</div>`).join('');
+      col.addEventListener('click', () => hearNote(i));
+      strip.appendChild(col);
+    });
+    wrap.appendChild(strip);
+    tabCols = [...strip.querySelectorAll('.tab-col')];
+  }
+
+  function describe(n){
+    if(!n) return {val:'–', det:''};
+    const names = n.ms.map(noteName);
+    const val = n.lbl ? n.lbl : names.join(' + ');
+    let det;
+    if(inst === 'guitar'){
+      det = n.pos.length >= 3 ? 'strum all strings' :
+        n.pos.map(([s, f]) => `${STRINGS[s].n} string ${f === 0 ? 'open' : 'fret ' + f}`).join(' + ');
+    } else det = n.lbl ? names.join(' ') : (n.ms.length > 1 ? 'play together' : '');
+    const tech = n.sl ? ' · slide in' : n.lg ? ' · hammer-on / pull-off' : '';
+    return {val, det: det + tech};
+  }
+
+  function buildChips(){
+    const area = $('noteArea'); area.innerHTML = '';
+    if(!cur.notes.length){ area.innerHTML = '<div class="text-muted fst-italic w-100 text-center">No notes for this song yet.</div>'; chips = []; return; }
+    cur.notes.forEach((n, i) => {
+      const chip = document.createElement('div'); chip.className = 'chip';
+      const mark = techMark(n, i);
+      const techHTML = mark ? `<span class="ctech">${mark === '/' ? '↗' : mark === '\\' ? '↘' : mark.toUpperCase()}</span>` : '';
+      let main, sub = '';
+      if(inst === 'guitar' && n.pos.length && n.pos.length < 3){
+        const frets = [...new Set(n.pos.map(p => p[1]))];
+        main = frets.length === 1 ? (frets[0] === 0 ? 'open' : 'fret ' + frets[0]) : n.pos.map(p => p[1]).join('/');
+        sub = n.ms.map(noteName).join(' ');
+      } else if(n.lbl){ main = esc(n.lbl); sub = n.ms.length + ' notes'; }
+      else { main = noteName(n.ms[0]); sub = n.ms.slice(1).map(noteName).join(' '); }
+      chip.innerHTML = `${techHTML}<div class="cname">${main}</div>${sub ? `<div class="charm">${sub}</div>` : ''}<div class="cbeats">${fmtBeats(n.b)}</div>`;
+      chip.addEventListener('click', () => hearNote(i));
+      area.appendChild(chip);
+    });
+    chips = [...area.querySelectorAll('.chip')];
+  }
+  const fmtBeats = b => (b === 0.5 ? '½' : b === 1.5 ? '1½' : String(b)) + (b === 1 ? ' beat' : ' beats');
+
+  // When each note starts, in seconds of song time (measured times if the song has them, otherwise from the beats)
+  function buildTimeline(){
+    const spb = 60 / cur.tempo;
+    const timed = cur.notes.length && cur.notes.every(n => n.t != null);
+    let acc = 0;
+    timeline = cur.notes.map(n => { const t = timed ? n.t : acc; acc += n.b * spb; return t; });
+    const last = cur.notes[cur.notes.length - 1];
+    songLen = last ? timeline[timeline.length - 1] + last.b * spb : 0;
+  }
+
+  /* ================= HEAR SINGLE NOTES ================= */
+  function hear(ms){
+    if(!ensureCtx()) return;
+    const t = ctx.currentTime + 0.01, sorted = ms.slice().sort((a, b) => a - b);
+    sorted.forEach((m, k) => tone(m, t + (ms.length >= 3 ? k * 0.03 : 0), 0.5, inst, master));
+  }
+  function flash(el){ el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), 220); }
+  function hearNote(i){
+    const n = cur.notes[i]; hear(n.ms);
+    targets(i).forEach(el => { if(el.classList.contains('key') || el.classList.contains('fb-cell')) flash(el); });
+  }
+
+  /* ================= HIGHLIGHT ================= */
+  function targets(i){
+    const n = cur.notes[i]; if(!n) return [];
+    const out = [chips[i]];
+    if(inst === 'piano') n.ms.forEach(m => keyEls[m] && out.push(keyEls[m]));
+    else { out.push(tabCols[i]); n.pos.forEach(([s, f]) => fbCells[s] && fbCells[s][f] && out.push(fbCells[s][f])); }
+    return out.filter(Boolean);
+  }
+  function highlight(i){
+    if(i === idx) return;
+    if(idx >= 0) targets(idx).forEach(el => el.classList.remove('playing'));
+    chips.forEach((c, k) => c.classList.toggle('done', i >= 0 && k < i));
+    idx = i;
+    showNowNext(i);
+    if(i < 0) return;
+    targets(i).forEach(el => el.classList.add('playing'));
+    // keep the highlighted note box and tab column in view
+    const chip = chips[i], area = $('noteArea');
+    if(chip){
+      const top = chip.offsetTop - area.offsetTop;
+      if(top < area.scrollTop || top + chip.offsetHeight > area.scrollTop + area.clientHeight) area.scrollTop = top - area.clientHeight / 3;
+    }
+    const col = tabCols[i];
+    if(col && inst === 'guitar'){
+      const w = $('tabView'), left = col.offsetLeft, right = left + col.offsetWidth;
+      if(left < w.scrollLeft + 60 || right > w.scrollLeft + w.clientWidth - 40) w.scrollLeft = left - w.clientWidth / 3;
+    }
+    if(inst === 'piano'){
+      const key = cur.notes[i].ms.map(m => keyEls[m]).find(Boolean), w = key && key.closest('.kb-wrap');
+      if(key && w){ const kl = key.getBoundingClientRect().left - w.getBoundingClientRect().left;
+        if(kl < 20 || kl > w.clientWidth - 40) w.scrollLeft += kl - w.clientWidth / 2; }
+    }
+  }
+  function showNowNext(i){
+    const a = describe(cur.notes[i]), b = describe(cur.notes[i + 1]);
+    $('nowVal').textContent = i >= 0 ? a.val : '–'; $('nowDet').textContent = i >= 0 ? a.det : '';
+    const nextI = i + 1 < cur.notes.length ? i + 1 : -1;
+    $('nextVal').textContent = nextI >= 0 ? b.val : (i >= 0 ? '🏁 end' : '–'); $('nextDet').textContent = nextI >= 0 ? b.det : '';
+  }
+
+  /* ================= PLAY / STOP ================= */
+  const speed = () => parseInt($('speed').value, 10) / 100;
+  $('speed').addEventListener('input', () => {
+    $('speedVal').textContent = $('speed').value;
+    if(audioEl) audioEl.playbackRate = speed();
+    else if(playing) play();          // synth: restart at the new speed
+  });
+
+  function tick(){
+    if(!playing) return;
+    const now = audioEl ? audioEl.currentTime : (ctx.currentTime - synthStart) * speed() + timeline[0];
+    let i = -1;
+    while(i + 1 < timeline.length && timeline[i + 1] <= now) i++;
+    highlight(i);
+    const len = audioEl && audioEl.duration ? audioEl.duration : songLen;
+    $('progBar').style.width = Math.min(100, len ? now / len * 100 : 0) + '%';
+    raf = requestAnimationFrame(tick);
+  }
+
+  function play(){
+    if(!cur || !inst) return;
+    stop(true);
+    playing = true; $('playBtn').disabled = true; $('stopBtn').disabled = false;
+    if($('soundSel').value === 'rec') playRecording(); else playSynth();
+  }
+
+  function playRecording(){
+    const a = new Audio(cur.audio); audioEl = a;
+    a.playbackRate = speed(); a.preservesPitch = true;
+    a.addEventListener('ended', () => { if(audioEl === a) finished(); });
+    a.play().then(() => {
+      $('prompt').innerHTML = '🎧 Playing the original recording… follow the yellow notes!';
+      raf = requestAnimationFrame(tick);
+    }).catch(() => {
+      if(audioEl !== a) return;
+      stop(true);
+      $('prompt').innerHTML = `⚠️ Couldn't play <code style="color:#fff">${esc(cur.file)}</code>. Make sure it's in the <strong>REFERENCE-AUDIO-FILES</strong> folder next to this page` +
+        (cur.notes.length ? ', or switch Sound to the synth.' : '.');
+    });
+  }
+
+  function playSynth(){
+    if(!ensureCtx() || !cur.notes.length){ stop(true); return; }
+    const bus = newBus(), sp = speed(), spb = 60 / cur.tempo;
+    const t0 = timeline[0];
+    synthStart = ctx.currentTime + 0.12;
+    cur.notes.forEach((n, i) => {
+      const start = synthStart + (timeline[i] - t0) / sp;
+      const natural = n.b * spb;
+      const gap = i + 1 < timeline.length ? timeline[i + 1] - timeline[i] : natural;
+      const d = Math.max(0.05, Math.min(gap, natural * 1.5) / sp) * 0.97;
+      const prev = cur.notes[i - 1], next = cur.notes[i + 1];
+      const opts = {soft: !!(n.sl || n.lg) && !!prev, tie: !!(next && (next.sl || next.lg))};
+      if(n.ms.length >= 3){
+        n.ms.slice().sort((a, b) => a - b).forEach((m, k) => tone(m, start + k * 0.03, d, inst, bus));
+      } else {
+        const shift = (n.sl && prev) ? prev.ms[0] - n.ms[0] : null;      // double stops slide by the same number of frets
+        n.ms.forEach(m => tone(m, start, d, inst, bus, Object.assign({}, opts, shift != null ? {from: m + shift} : {})));
+      }
+    });
+    $('prompt').innerHTML = `${inst === 'guitar' ? '🎸' : '🎹'} Playing the synth ${inst}${sp !== 1 ? ' at ' + Math.round(sp * 100) + '% speed' : ''}… follow the yellow notes!`;
+    raf = requestAnimationFrame(tick);
+    endTimer = setTimeout(finished, ((songLen - t0) / sp + 0.4) * 1000);
+  }
+
+  function finished(){
+    if($('loop').checked && playing){ play(); return; }
+    stop(true);
+    $('progBar').style.width = '100%';
+    $('prompt').innerHTML = '👏 Well played! Press <strong>▶ Play</strong> to go again, slow it down with Speed, or tick 🔁 Loop.';
+  }
+
+  function stop(silent){
+    const was = playing;
+    playing = false;
+    cancelAnimationFrame(raf); clearTimeout(endTimer);
+    if(audioEl){ const a = audioEl; audioEl = null; a.pause(); }
+    if(ctx) killBus();
+    if(cur && chips.length) { highlight(-1); chips.forEach(c => c.classList.remove('done')); }
+    $('playBtn').disabled = !$('soundSel').options.length; $('stopBtn').disabled = true;
+    if(was && !silent) $('prompt').innerHTML = '■ Stopped. Press <strong>▶ Play</strong> to start again from the beginning.';
+  }
+
+  $('playBtn').addEventListener('click', play);
+  $('stopBtn').addEventListener('click', () => stop());
+  $('soundSel').addEventListener('change', () => { if(playing) play(); });
+  document.addEventListener('keydown', e => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if(e.key !== ' ' || ['input','select','textarea','button'].includes(tag) || $('step3').hidden) return;
+    e.preventDefault(); playing ? stop() : play();
+  });
+
+  fillSongSelect();
+})();
+</script>
+</body>
+</html>
