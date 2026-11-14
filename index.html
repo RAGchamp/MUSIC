@@ -97,19 +97,32 @@
 
   /* Guitar fretboard */
   .fb-wrap, .tab-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  /* The fretboard is one grid. Laptop: strings run across (open on the left, fret 15 on the right).
+     Phone: the same board turned 90° anticlockwise (strings run up, open at the bottom, fret 15 at the top). */
   .fretboard{
-    position:relative; min-width:760px; border-radius:.4rem; overflow:hidden; user-select:none;
+    position:relative; display:grid; min-width:760px; border-radius:.4rem; overflow:hidden; user-select:none;
+    grid-template-columns:44px 38px repeat(15, 1fr); grid-template-rows:auto repeat(6, 30px);
     background:linear-gradient(180deg,#5a3a22,#6e4628 50%,#5a3a22); box-shadow:inset 0 0 12px rgba(0,0,0,.5);
   }
-  .fb-head, .fb-row{ display:grid; grid-template-columns:44px 38px repeat(15, 1fr); }
-  .fb-head{ background:#f1f4f9; }
-  .fb-head div{ text-align:center; font-size:.68rem; font-weight:700; color:#6c757d; padding:.15rem 0; }
-  .fb-row{ height:30px; }
+  .fb-lbl{ background:#f1f4f9; display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:#6c757d; padding:.15rem 0; }
   .fb-name{ background:#f1f4f9; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; color:#333; }
   .fb-cell{ position:relative; cursor:pointer; border-right:3px solid #c9c9c9; display:flex; align-items:center; justify-content:center; }
   .fb-cell.open{ background:#efe6d8; border-right:7px solid #f5f0e6; }
   .fb-cell::before{ content:''; position:absolute; left:0; right:-3px; top:50%; height:var(--sw,2px); transform:translateY(-50%); background:linear-gradient(#f4f4f4,#a9a9a9); box-shadow:0 1px 1px rgba(0,0,0,.5); }
   .fb-cell.open::before{ right:-7px; }
+  .fb-inlay{ left:50%; top:100%; }
+
+  .fretboard.vertical{
+    min-width:0; max-width:400px; margin:0 auto;
+    grid-template-columns:34px repeat(6, 1fr); grid-template-rows:repeat(15, 36px) 34px auto;
+    background:linear-gradient(90deg,#5a3a22,#6e4628 50%,#5a3a22);
+  }
+  .fretboard.vertical .fb-name{ padding:.2rem 0; }
+  .fretboard.vertical .fb-cell{ border-right:none; border-top:3px solid #c9c9c9; }
+  .fretboard.vertical .fb-cell.open{ border-right:none; border-top:7px solid #f5f0e6; }
+  .fretboard.vertical .fb-cell::before{ left:50%; right:auto; top:-3px; bottom:0; height:auto; width:var(--sw,2px); transform:translateX(-50%); background:linear-gradient(90deg,#f4f4f4,#a9a9a9); }
+  .fretboard.vertical .fb-cell.open::before{ top:-7px; }
+  .fretboard.vertical .fb-inlay{ left:100%; top:50%; }
   .fb-cell:hover .fb-dot{ opacity:1; background:#ffffffcc; color:#333; }
   .fb-dot{
     position:relative; z-index:1; min-width:22px; height:22px; padding:0 3px; border-radius:11px; font-size:.62rem; font-weight:800;
@@ -213,11 +226,7 @@
           <button type="button" class="btn btn-success big-play" id="playBtn">▶ Play</button>
           <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled>■ Stop</button>
         </div>
-        <div class="col-lg-3 col-sm-6">
-          <label class="ctrl-label" for="soundSel">Sound</label>
-          <select id="soundSel" class="form-select form-select-sm"></select>
-        </div>
-        <div class="col-lg-3 col-sm-6">
+        <div class="col-lg-5 col-sm-8">
           <label class="ctrl-label" for="speed">Speed: <span id="speedVal">100</span>%</label>
           <input type="range" class="form-range" id="speed" min="50" max="125" step="5" value="100">
         </div>
@@ -239,7 +248,7 @@
         <div class="kb-wrap mb-3"><div class="keyboard" id="keyboard" aria-label="Piano keyboard"></div></div>
       </div>
       <div id="guitarView" hidden>
-        <span class="ctrl-label">🎸 Fretboard <span class="fw-normal" style="text-transform:none">(strings top to bottom: e B G D A E; green dots are used in this song)</span></span>
+        <span class="ctrl-label">🎸 Fretboard <span class="fw-normal" style="text-transform:none">(strings e B G D A E, high to low; green dots are used in this song)</span></span>
         <div class="fb-wrap mb-3"><div class="fretboard" id="fretboard" aria-label="Guitar fretboard"></div></div>
         <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
           <span class="ctrl-label mb-0">🎼 Guitar tab</span>
@@ -275,7 +284,7 @@
   const $ = id => document.getElementById(id);
   const AUDIO_DIR = 'REFERENCE-AUDIO-FILES/';
 
-  /* ================= AUDIO ENGINE (synth: piano + Karplus-Strong guitar) ================= */
+  /* ================= NOTE SOUNDS (tap a key, fret or note box to hear one note) ================= */
   let ctx = null, master = null, playBus = null, liveSrc = [];
   function ensureCtx(){
     if(!ctx){
@@ -429,7 +438,7 @@
 
   /* ================= STATE ================= */
   let cur = null, inst = null, playing = false;
-  let audioEl = null, raf = 0, synthStart = 0, idx = -1, timeline = [], songLen = 0, endTimer = 0;
+  let audioEl = null, raf = 0, idx = -1, timeline = [], songLen = 0;
   const keyEls = {}, fbCells = [];
   let chips = [], tabCols = [];
 
@@ -470,10 +479,6 @@
   function buildPractice(){
     $('step3').hidden = false;
     $('practiceTitle').textContent = `Practice "${cur.title}" on ${inst === 'guitar' ? '🎸 guitar' : '🎹 piano'}`;
-    // Sound choices
-    const synthLabel = inst === 'guitar' ? '🎸 Synth guitar' : '🎹 Synth piano';
-    $('soundSel').innerHTML = (cur.audio ? '<option value="rec">🎧 Original recording</option>' : '') +
-      (cur.notes.length ? `<option value="synth">${synthLabel}</option>` : '');
     $('pianoView').hidden = inst !== 'piano';
     $('guitarView').hidden = inst !== 'guitar';
     if(inst === 'piano') buildKeyboard(); else { buildFretboard(); buildTab(); }
@@ -483,8 +488,8 @@
     $('statNotes').textContent = cur.notes.length + ' notes';
     $('statTime').textContent = songLen ? songLen.toFixed(1) + ' s' : '';
     $('progBar').style.width = '0%';
-    $('playBtn').disabled = !$('soundSel').options.length;
-    $('prompt').innerHTML = cur.notes.length
+    $('playBtn').disabled = !cur.audio;
+    $('prompt').innerHTML = !cur.audio ? '⚠️ This song has no recording in the song list, so it cannot be played.' : cur.notes.length
       ? `🎼 Ready! Press <strong>▶ Play</strong> and follow the yellow highlight on the ${inst === 'guitar' ? 'fretboard and tab' : 'keyboard'}.`
       : '🔈 This song has no notes in the song list yet, so Play just plays the audio.';
     $('step3').scrollIntoView({block:'start', behavior:'smooth'});
@@ -511,30 +516,42 @@
     kb.style.minWidth = (kb.children.length * 26) + 'px';
   }
 
+  // Every piece of the board remembers its place in the laptop layout (row r, column c);
+  // layoutFretboard() puts it there, or turns the board 90° anticlockwise on small screens.
+  const fbParts = [], phone = window.matchMedia('(max-width: 767.98px)');
   function buildFretboard(){
-    const fb = $('fretboard'); fb.innerHTML = ''; fbCells.length = 0;
+    const fb = $('fretboard'); fb.innerHTML = ''; fbCells.length = 0; fbParts.length = 0;
     const used = new Set(cur.notes.flatMap(n => n.pos.map(p => p.join(':'))));
-    const head = document.createElement('div'); head.className = 'fb-head';
-    head.innerHTML = '<div>string</div><div>open</div>' + Array.from({length:FRETS}, (_, i) => `<div>${i + 1}</div>`).join('');
-    fb.appendChild(head);
+    const add = (el, r, c) => { el.dataset.r = r; el.dataset.c = c; fb.appendChild(el); fbParts.push(el); return el; };
+    const div = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; return d; };
+    add(div('fb-lbl', 'string'), 1, 1);
+    add(div('fb-lbl', 'open'), 1, 2);
+    for(let f = 1; f <= FRETS; f++) add(div('fb-lbl', f), 1, f + 2);
     STRINGS.forEach((s, si) => {
-      const row = document.createElement('div'); row.className = 'fb-row';
-      row.style.setProperty('--sw', (1.2 + si * 0.5).toFixed(1) + 'px');
-      row.innerHTML = `<div class="fb-name">${s.n}</div>`;
+      add(div('fb-name', s.n), si + 2, 1);
       fbCells[si] = [];
       for(let f = 0; f <= FRETS; f++){
-        const c = document.createElement('div');
-        c.className = 'fb-cell' + (f === 0 ? ' open' : '') + (used.has(si + ':' + f) ? ' used' : '');
+        const c = div('fb-cell' + (f === 0 ? ' open' : '') + (used.has(si + ':' + f) ? ' used' : ''), `<span class="fb-dot">${noteName(s.open + f)}</span>`);
+        c.style.setProperty('--sw', (1.2 + si * 0.5).toFixed(1) + 'px');   // low strings are thicker
         c.title = `${s.n} string, ${f === 0 ? 'open' : 'fret ' + f}: ${noteName(s.open + f)}`;
-        c.innerHTML = `<span class="fb-dot">${noteName(s.open + f)}</span>`;
-        if([3, 5, 7, 9, 15].includes(f) && si === 2) c.insertAdjacentHTML('beforeend', '<span class="fb-inlay" style="left:50%;top:100%"></span>');
-        if(f === 12 && (si === 1 || si === 3)) c.insertAdjacentHTML('beforeend', '<span class="fb-inlay" style="left:50%;top:100%"></span>');
+        // Position-marker dots, as on a real neck (between the G and D strings; two at the 12th fret)
+        if(([3, 5, 7, 9, 15].includes(f) && si === 2) || (f === 12 && (si === 1 || si === 3))) c.insertAdjacentHTML('beforeend', '<span class="fb-inlay"></span>');
         c.addEventListener('pointerdown', e => { e.preventDefault(); hear([s.open + f]); flash(c); });
-        row.appendChild(c); fbCells[si][f] = c;
+        add(c, si + 2, f + 2); fbCells[si][f] = c;
       }
-      fb.appendChild(row);
+    });
+    layoutFretboard();
+  }
+  function layoutFretboard(){
+    const vertical = phone.matches, last = FRETS + 3;      // laptop columns 1 … FRETS + 2
+    $('fretboard').classList.toggle('vertical', vertical);
+    fbParts.forEach(el => {
+      const r = +el.dataset.r, c = +el.dataset.c;
+      el.style.gridRow = vertical ? last - c : r;            // turned 90° anticlockwise: column c becomes row (last − c)
+      el.style.gridColumn = vertical ? r : c;                 //                          row r becomes column r
     });
   }
+  phone.addEventListener('change', layoutFretboard);
 
   function techMark(n, i){
     const prev = cur.notes[i - 1];
@@ -662,25 +679,25 @@
   $('speed').addEventListener('input', () => {
     $('speedVal').textContent = $('speed').value;
     if(audioEl) audioEl.playbackRate = speed();
-    else if(playing) play();          // synth: restart at the new speed
   });
 
   function tick(){
     if(!playing) return;
-    const now = audioEl ? audioEl.currentTime : (ctx.currentTime - synthStart) * speed() + timeline[0];
+    if(!audioEl) return;
+    const now = audioEl.currentTime;
     let i = -1;
     while(i + 1 < timeline.length && timeline[i + 1] <= now) i++;
     highlight(i);
-    const len = audioEl && audioEl.duration ? audioEl.duration : songLen;
+    const len = audioEl.duration || songLen;
     $('progBar').style.width = Math.min(100, len ? now / len * 100 : 0) + '%';
     raf = requestAnimationFrame(tick);
   }
 
   function play(){
-    if(!cur || !inst) return;
+    if(!cur || !inst || !cur.audio) return;
     stop(true);
     playing = true; $('playBtn').disabled = true; $('stopBtn').disabled = false;
-    if($('soundSel').value === 'rec') playRecording(); else playSynth();
+    playRecording();
   }
 
   function playRecording(){
@@ -693,34 +710,10 @@
     }).catch(() => {
       if(audioEl !== a) return;
       stop(true);
-      $('prompt').innerHTML = `⚠️ Couldn't play <code style="color:#fff">${esc(cur.file)}</code>. Make sure it's in the <strong>REFERENCE-AUDIO-FILES</strong> folder next to this page` +
-        (cur.notes.length ? ', or switch Sound to the synth.' : '.');
+      $('prompt').innerHTML = `⚠️ Couldn't play <code style="color:#fff">${esc(cur.file)}</code>. Make sure it's in the <strong>REFERENCE-AUDIO-FILES</strong> folder next to this page.`;
     });
   }
 
-  function playSynth(){
-    if(!ensureCtx() || !cur.notes.length){ stop(true); return; }
-    const bus = newBus(), sp = speed(), spb = 60 / cur.tempo;
-    const t0 = timeline[0];
-    synthStart = ctx.currentTime + 0.12;
-    cur.notes.forEach((n, i) => {
-      const start = synthStart + (timeline[i] - t0) / sp;
-      const natural = n.b * spb;
-      const gap = i + 1 < timeline.length ? timeline[i + 1] - timeline[i] : natural;
-      const d = Math.max(0.05, Math.min(gap, natural * 1.5) / sp) * 0.97;
-      const prev = cur.notes[i - 1], next = cur.notes[i + 1];
-      const opts = {soft: !!(n.sl || n.lg) && !!prev, tie: !!(next && (next.sl || next.lg))};
-      if(n.ms.length >= 3){
-        n.ms.slice().sort((a, b) => a - b).forEach((m, k) => tone(m, start + k * 0.03, d, inst, bus));
-      } else {
-        const shift = (n.sl && prev) ? prev.ms[0] - n.ms[0] : null;      // double stops slide by the same number of frets
-        n.ms.forEach(m => tone(m, start, d, inst, bus, Object.assign({}, opts, shift != null ? {from: m + shift} : {})));
-      }
-    });
-    $('prompt').innerHTML = `${inst === 'guitar' ? '🎸' : '🎹'} Playing the synth ${inst}${sp !== 1 ? ' at ' + Math.round(sp * 100) + '% speed' : ''}… follow the yellow notes!`;
-    raf = requestAnimationFrame(tick);
-    endTimer = setTimeout(finished, ((songLen - t0) / sp + 0.4) * 1000);
-  }
 
   function finished(){
     if($('loop').checked && playing){ play(); return; }
@@ -732,17 +725,16 @@
   function stop(silent){
     const was = playing;
     playing = false;
-    cancelAnimationFrame(raf); clearTimeout(endTimer);
+    cancelAnimationFrame(raf); 
     if(audioEl){ const a = audioEl; audioEl = null; a.pause(); }
     if(ctx) killBus();
     if(cur && chips.length) { highlight(-1); chips.forEach(c => c.classList.remove('done')); }
-    $('playBtn').disabled = !$('soundSel').options.length; $('stopBtn').disabled = true;
+    $('playBtn').disabled = !(cur && cur.audio); $('stopBtn').disabled = true;
     if(was && !silent) $('prompt').innerHTML = '■ Stopped. Press <strong>▶ Play</strong> to start again from the beginning.';
   }
 
   $('playBtn').addEventListener('click', play);
   $('stopBtn').addEventListener('click', () => stop());
-  $('soundSel').addEventListener('change', () => { if(playing) play(); });
   document.addEventListener('keydown', e => {
     const tag = (e.target.tagName || '').toLowerCase();
     if(e.key !== ' ' || ['input','select','textarea','button'].includes(tag) || $('step3').hidden) return;
