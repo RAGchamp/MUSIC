@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Context, Nov 14 2026</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-light:#6ea8fe;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-red:#dc3545;
+    --biz-green:#198754;
+    --biz-orange:#e8710a;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    /* the colours of the /context squares */
+    --c-system:#8a8f98;
+    --c-mcp:#2e9b4f;
+    --c-skills:#d39b12;
+    --c-msg:#8b7fd6;
+    --c-free:#6c757d;
+    --c-buffer:#adb5bd;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+    .topnav .tagline{ font-size:.85rem; letter-spacing:.08em; word-spacing:.3em; }
+  }
+
+  section[id]{ scroll-margin-top:84px; }
+  html{ scroll-behavior:smooth; }
+
+  .hero{ background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%); color:#fff; }
+  .accent-blue{ border-left:5px solid var(--biz-blue); }
+  .accent-green{ border-left:5px solid var(--biz-green); }
+  .accent-red{ border-left:5px solid var(--biz-red); }
+  .accent-yellow{ border-left:5px solid var(--biz-yellow); }
+  .accent-orange{ border-left:5px solid var(--biz-orange); }
+
+  .section-title{
+    display:inline-flex; align-items:center; gap:.6rem;
+    padding-bottom:.4rem; border-bottom:3px solid var(--biz-blue); margin-bottom:1.25rem;
+  }
+  .toc-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.8rem; height:1.8rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.85rem; margin-right:.5rem; flex:none;
+  }
+  .toc-list a{ text-decoration:none; color:#212529; }
+  .toc-list a:hover{ color:var(--biz-blue); text-decoration:underline; }
+  .toc-item{ display:flex; align-items:center; padding:.4rem 0; }
+  .back-to-top{ font-size:.85rem; }
+  .color-key-dot{ width:.9rem; height:.9rem; border-radius:50%; display:inline-block; margin-right:.4rem; }
+  table thead th{ background:#eef3fb; }
+  .glossary-table thead th{ background:#04264d; color:#fff; }
+  .num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* VS Code style code windows */
+  .code-window{ background:#084298; border-radius:.5rem; overflow:hidden; margin:1rem 0 1.5rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.3); }
+  .code-window .code-titlebar{ background:#323233; color:#cccccc; padding:.45rem .9rem; font-size:.8rem; display:flex; align-items:center; gap:.4rem; font-family:'Segoe UI',Roboto,sans-serif; }
+  .code-window .dot{ width:.7rem; height:.7rem; border-radius:50%; display:inline-block; }
+  .dot-red{ background:#ff5f56; } .dot-yellow{ background:#ffbd2e; } .dot-green{ background:#27c93f; }
+  .code-window .code-filename{ margin-left:.5rem; opacity:.85; }
+  .code-window pre{ margin:0; padding:1rem 1.25rem; background:#084298; overflow-x:auto; }
+  .code-window code{ font-family:'Fira Code',Consolas,Monaco,monospace; font-size:.85rem; color:#fff; font-weight:700; }
+
+  /* Step boxes */
+  .step-box{ background:#e9ecef; border-radius:.5rem; overflow:hidden; margin:0 0 1.25rem; box-shadow:0 .15rem .5rem rgba(0,0,0,.12); }
+  .step-box .step-bar{ background:var(--nav-blue); color:#5BF527; font-weight:700; padding:.5rem 1.1rem; font-size:.95rem; letter-spacing:.02em; }
+  .step-box .step-body{ padding:1rem 1.25rem; }
+  .step-box .step-body p:last-child{ margin-bottom:0; }
+
+  /* A copy of the /context screen */
+  .term{ background:#0c0c0c; color:#e6e6e6; border-radius:.5rem; padding:1rem 1.2rem; font-family:Consolas,'Cascadia Mono',Monaco,monospace; font-size:.85rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.3); }
+  .term .ttl{ font-weight:700; margin-bottom:.4rem; }
+  .term-grid{ display:grid; grid-template-columns:repeat(20, 1fr); gap:3px; max-width:400px; }
+  .sq{ aspect-ratio:1; border-radius:3px; cursor:help; }
+  .sq.system{ background:var(--c-system); }
+  .sq.mcp{ background:var(--c-mcp); }
+  .sq.skills{ background:var(--c-skills); }
+  .sq.msg{ background:var(--c-msg); }
+  .sq.free{ border:1px dashed #6c757d; }
+  .sq.buffer{ border:1px solid #c9c9c9; background:repeating-linear-gradient(45deg,transparent 0 3px,#c9c9c9 3px 4px); }
+  .sq.hot{ outline:2px solid var(--nav-yellow); outline-offset:1px; }
+  .term-side div{ line-height:1.55; }
+  .term-side .muted{ color:#a0a0a0; }
+  .term-side .key{ display:inline-block; width:.85rem; height:.85rem; border-radius:2px; vertical-align:-1px; margin-right:.35rem; }
+  .term-side .row-cat{ cursor:pointer; border-radius:.25rem; padding:0 .25rem; margin-left:-.25rem; }
+  .term-side .row-cat:hover, .term-side .row-cat.hot{ background:#2a2a2a; }
+  .key.system{ background:var(--c-system); } .key.mcp{ background:var(--c-mcp); } .key.skills{ background:var(--c-skills); }
+  .key.msg{ background:var(--c-msg); } .key.free{ border:1px dashed #9aa0a6; } .key.buffer{ border:1px solid #c9c9c9; background:repeating-linear-gradient(45deg,transparent 0 3px,#c9c9c9 3px 4px); }
+
+  /* Stacked bar of the whole window */
+  .stack{ display:flex; height:2.2rem; border-radius:.4rem; overflow:hidden; border:1px solid #ced4da; background:#fff; }
+  .stack div{ height:100%; }
+  .stack .free{ background:repeating-linear-gradient(90deg,#fff 0 6px,#eef1f5 6px 8px); }
+  .stack .buffer{ background:repeating-linear-gradient(45deg,#e9ecef 0 4px,#adb5bd 4px 5px); }
+  .scale{ display:flex; justify-content:space-between; font-size:.72rem; color:#6c757d; margin-top:.2rem; }
+
+  .cat-chip{ display:inline-block; width:1rem; height:1rem; border-radius:3px; vertical-align:-2px; margin-right:.4rem; }
+  .big-num{ font-size:1.6rem; font-weight:800; line-height:1.1; }
+  .stat-card .lbl{ font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">MUSIC APP CLAUDE CONTEXT</div>
+</div>
+
+<!-- HERO -->
+<header class="hero py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-9">
+        <span class="badge rounded-pill bg-warning text-dark mb-3">Claude Code · /context · Opus 5.5 (claude-opus-5-5)</span>
+        <h1 class="display-6 fw-bold">What Was in Claude's Context While Building the Music App</h1>
+        <p class="lead mb-0">This page explains the <code class="text-white">/context</code> screen from the Claude Code session that built the Music Practice App. It shows how much of Claude's working memory, the <strong>context window</strong>, each kind of content used. There's one section for every coloured box: <strong>System prompt</strong>, <strong>System tools</strong>, <strong>MCP server instructions</strong>, <strong>Skills</strong>, <strong>Messages</strong>, <strong>Free space</strong> and the <strong>Autocompact buffer</strong>. It also explains the <strong>1m-token auto-compact window</strong> and what happens when it fills up. <span class="d-block mt-2 small">Snapshot taken 2026-11-14: 181.4k of 1m tokens used (18%).</span></p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-5">
+
+  <!-- COLOR KEY -->
+  <div class="mb-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body py-3">
+        <div class="row g-2 small text-center text-md-start">
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-blue);"></span>Blue: how it works</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-yellow);"></span>Yellow: definitions &amp; background</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-green);"></span>Green: what you can do</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-orange);"></span>Orange: this session's numbers</div>
+          <div class="col-12 col-md"><span class="color-key-dot" style="background:var(--biz-red);"></span>Red: watch out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="mb-4"><a href="index.html" class="text-decoration-none">&larr; Back to the Music Practice App</a></p>
+
+  <!-- TOC -->
+  <section id="toc" class="mb-5">
+    <h2 class="section-title">Table of Contents</h2>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row toc-list">
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">1</span><a href="#screen">The /context Screen, Explained</a></div>
+            <div class="toc-item"><span class="toc-num">2</span><a href="#tokens">Tokens and the Context Window</a></div>
+            <div class="toc-item"><span class="toc-num">3</span><a href="#glance">The Numbers at a Glance</a></div>
+            <div class="toc-item"><span class="toc-num">4</span><a href="#system-prompt">Box: System Prompt (3.1k)</a></div>
+            <div class="toc-item"><span class="toc-num">5</span><a href="#system-tools">Box: System Tools (23.6k)</a></div>
+            <div class="toc-item"><span class="toc-num">6</span><a href="#mcp">Box: MCP Server Instructions (717)</a></div>
+            <div class="toc-item"><span class="toc-num">7</span><a href="#skills">Box: Skills (6k)</a></div>
+          </div>
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">8</span><a href="#messages">Box: Messages (148.1k)</a></div>
+            <div class="toc-item"><span class="toc-num">9</span><a href="#free">Box: Free Space (785.6k)</a></div>
+            <div class="toc-item"><span class="toc-num">10</span><a href="#buffer">Box: Autocompact Buffer (33k)</a></div>
+            <div class="toc-item"><span class="toc-num">11</span><a href="#window">The Auto-compact Window (1m) and Compaction</a></div>
+            <div class="toc-item"><span class="toc-num">12</span><a href="#missing">What Is Not on the Screen (and Why)</a></div>
+            <div class="toc-item"><span class="toc-num">13</span><a href="#tips">Tips: Keeping the Context Healthy</a></div>
+            <div class="toc-item"><span class="toc-num">14</span><a href="#glossary">Glossary</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1. SCREEN -->
+  <section id="screen" class="mb-5">
+    <h2 class="section-title">1. The /context Screen, Explained</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <p>Typing <code>/context</code> in Claude Code draws a map of the context window. Below is a copy of the screen from this session. <strong>Hover over or tap a square, or a line on the right,</strong> to see which category it belongs to.</p>
+        <div class="term mb-3">
+          <div class="ttl">Context Usage</div>
+          <div class="row g-4">
+            <div class="col-md-5"><div class="term-grid" id="grid" aria-label="Grid of 200 squares, one per 5,000 tokens"></div></div>
+            <div class="col-md-7 term-side">
+              <div>Opus 5.5</div>
+              <div class="muted">claude-opus-5-5</div>
+              <div>181.4k/1m tokens (18%)</div>
+              <div class="mt-2 muted fst-italic">Estimated usage by category</div>
+              <div class="row-cat" data-cat="system"><span class="key system"></span>System prompt: 3.1k tokens (0.3%)</div>
+              <div class="row-cat" data-cat="system"><span class="key system"></span>System tools: 23.6k tokens (2.4%)</div>
+              <div class="row-cat" data-cat="mcp"><span class="key mcp"></span>MCP server instructions: 717 tokens (0.1%)</div>
+              <div class="row-cat" data-cat="skills"><span class="key skills"></span>Skills: 6k tokens (0.6%)</div>
+              <div class="row-cat" data-cat="msg"><span class="key msg"></span>Messages: 148.1k tokens (14.8%)</div>
+              <div class="row-cat" data-cat="free"><span class="key free"></span>Free space: 785.6k (78.6%)</div>
+              <div class="row-cat" data-cat="buffer"><span class="key buffer"></span>Autocompact buffer: 33k tokens (3.3%)</div>
+            </div>
+          </div>
+          <div class="mt-3">Auto-compact window: <span class="muted">1m tokens</span></div>
+          <div class="small mt-2" id="sqInfo" style="color:var(--nav-yellow);min-height:1.3rem"></div>
+        </div>
+        <ul class="mb-0">
+          <li><strong>The grid is the whole window.</strong> It has 20 columns × 10 rows = <strong>200 squares</strong>, and the window holds 1,000,000 tokens, so <strong>one square ≈ 5,000 tokens</strong>.</li>
+          <li><strong>It fills in reading order</strong>, left to right and top to bottom: first what Claude Code loads before you type anything (system prompt, tools, MCP instructions, skills), then the conversation (messages). Dashed empty squares are free space, and the crossed-out squares at the very end are the reserved autocompact buffer.</li>
+          <li><strong>The squares are rounded.</strong> MCP server instructions are only 717 tokens, about a seventh of a square, but they still get a whole square so you can see them. Use the numbers on the right for exact sizes.</li>
+          <li><strong>The top lines</strong> show the model (<strong>Opus 5.5</strong>, id <code>claude-opus-5-5</code>) and the total in use: <strong>181.4k of 1m tokens, 18%</strong>.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 2. TOKENS -->
+  <section id="tokens" class="mb-5">
+    <h2 class="section-title">2. Tokens and the Context Window</h2>
+    <div class="card shadow-sm accent-yellow mb-4">
+      <div class="card-body">
+        <h5>What is a token?</h5>
+        <p>Claude doesn't read letters or whole words. It reads <strong>tokens</strong>, chunks of text that are usually part of a word. As a rough rule for English, <strong>1 token ≈ 4 characters ≈ ¾ of a word</strong>. Code, numbers, symbols and non-English text usually take more tokens per character. Some examples:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small">
+            <thead><tr><th>Text</th><th class="num">Roughly</th></tr></thead>
+            <tbody>
+              <tr><td>"Play the original recording"</td><td class="num">≈ 5 tokens</td></tr>
+              <tr><td>One page of plain English (~500 words)</td><td class="num">≈ 650 tokens</td></tr>
+              <tr><td>The Music Practice App's <code>index.html</code> (39 KB)</td><td class="num">≈ 10–12k tokens</td></tr>
+              <tr><td>One screenshot attached to a message</td><td class="num">≈ 1–2k tokens</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h5 class="mt-3">What is the context window?</h5>
+        <p class="mb-0">It is <strong>everything Claude can see at once</strong> while it writes its next reply: its instructions, the tool descriptions, and the whole conversation so far, including every file it read and every command output. Claude has no other memory of the session. If something isn't in the window, Claude doesn't know it. This session's window is <strong>1 million tokens</strong> (written <strong>1m</strong>), enough for roughly 750,000 words.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 3. GLANCE -->
+  <section id="glance" class="mb-5">
+    <h2 class="section-title">3. The Numbers at a Glance</h2>
+    <div class="card shadow-sm accent-orange mb-4">
+      <div class="card-body">
+        <div class="row g-3 mb-3 text-center">
+          <div class="col-6 col-md-3"><div class="border rounded p-2 bg-white stat-card"><div class="lbl">In use</div><div class="big-num">181.4k</div><div class="small text-muted">18% of the window</div></div></div>
+          <div class="col-6 col-md-3"><div class="border rounded p-2 bg-white stat-card"><div class="lbl">Free</div><div class="big-num">785.6k</div><div class="small text-muted">78.6%</div></div></div>
+          <div class="col-6 col-md-3"><div class="border rounded p-2 bg-white stat-card"><div class="lbl">Reserved</div><div class="big-num">33k</div><div class="small text-muted">autocompact buffer</div></div></div>
+          <div class="col-6 col-md-3"><div class="border rounded p-2 bg-white stat-card"><div class="lbl">Window</div><div class="big-num">1m</div><div class="small text-muted">tokens</div></div></div>
+        </div>
+        <div class="stack mb-1" id="stack" aria-label="The whole window as one bar"></div>
+        <div class="scale"><span>0</span><span>250k</span><span>500k</span><span>750k</span><span>1m</span></div>
+        <div class="table-responsive mt-3">
+          <table class="table table-bordered align-middle small mb-0">
+            <thead><tr><th>Box</th><th class="num">Tokens</th><th class="num">%</th><th class="num">Squares</th><th>When it is loaded</th><th>Grows during the session?</th></tr></thead>
+            <tbody>
+              <tr><td><span class="cat-chip" style="background:var(--c-system)"></span><a href="#system-prompt">System prompt</a></td><td class="num">3.1k</td><td class="num">0.3%</td><td class="num">≈1</td><td>At the start of every request</td><td>No</td></tr>
+              <tr><td><span class="cat-chip" style="background:var(--c-system)"></span><a href="#system-tools">System tools</a></td><td class="num">23.6k</td><td class="num">2.4%</td><td class="num">≈5</td><td>At the start of every request</td><td>A little, when a deferred tool is loaded</td></tr>
+              <tr><td><span class="cat-chip" style="background:var(--c-mcp)"></span><a href="#mcp">MCP server instructions</a></td><td class="num">717</td><td class="num">0.1%</td><td class="num">1</td><td>When a connector is connected</td><td>No</td></tr>
+              <tr><td><span class="cat-chip" style="background:var(--c-skills)"></span><a href="#skills">Skills</a></td><td class="num">6k</td><td class="num">0.6%</td><td class="num">≈1</td><td>At the start (names + descriptions only)</td><td>Only if a skill is invoked (its body then joins Messages)</td></tr>
+              <tr><td><span class="cat-chip" style="background:var(--c-msg)"></span><a href="#messages">Messages</a></td><td class="num">148.1k</td><td class="num">14.8%</td><td class="num">≈30</td><td>Builds up with every turn</td><td><strong>Yes, all the time</strong></td></tr>
+              <tr><td><span class="cat-chip" style="border:1px dashed #6c757d"></span><a href="#free">Free space</a></td><td class="num">785.6k</td><td class="num">78.6%</td><td class="num">≈155</td><td>Whatever is left over</td><td>Shrinks as Messages grow</td></tr>
+              <tr><td><span class="cat-chip" style="background:repeating-linear-gradient(45deg,#fff 0 3px,#adb5bd 3px 4px);border:1px solid #adb5bd"></span><a href="#buffer">Autocompact buffer</a></td><td class="num">33k</td><td class="num">3.3%</td><td class="num">≈7</td><td>Always reserved</td><td>No (fixed)</td></tr>
+              <tr class="fw-bold"><td>Total</td><td class="num">1,000k</td><td class="num">100%</td><td class="num">200</td><td colspan="2">Used 181.4k + free 785.6k + buffer 33k = 1,000k</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 4. SYSTEM PROMPT -->
+  <section id="system-prompt" class="mb-5">
+    <h2 class="section-title"><span class="cat-chip" style="background:var(--c-system)"></span>4. Box: System Prompt (3.1k tokens)</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <p>The <strong>system prompt</strong> is the standing instructions Claude Code gives the model before the conversation starts. You never see it in the chat, but it is sent with every single request. At 3.1k tokens (about 2,300 words) it is small. It contains:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small mb-0">
+            <thead><tr><th>Part</th><th>What it tells Claude</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Who it is</strong></td><td>That it is Claude Code, Anthropic's command-line coding agent, working with you on your goals.</td></tr>
+              <tr><td><strong>How the harness works</strong></td><td>Replies are shown as Markdown in the terminal; tools run under the permission mode you chose; a denied tool call means you said no.</td></tr>
+              <tr><td><strong>Ground rules</strong></td><td>Confirm before actions that are hard to undo or that publish something (that's why every <code>git push</code> in this project waited for your "yes push it"); report results honestly; keep your personal details private.</td></tr>
+              <tr><td><strong>Memory</strong></td><td>Where the long-term memory folder is and how to write memory files.</td></tr>
+              <tr><td><strong>Environment</strong></td><td>Working folder <code>C:\Daya\RAGchamp\BLOG</code>, Windows 11, the PowerShell and Git Bash shells, today's date (2026-11-14), the model name, and the scratchpad folder for temporary files.</td></tr>
+              <tr><td><strong>Context management</strong></td><td>That old parts of a long conversation are summarized automatically, so Claude doesn't need to rush or hand off work early (see <a href="#window">section 11</a>).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 5. SYSTEM TOOLS -->
+  <section id="system-tools" class="mb-5">
+    <h2 class="section-title"><span class="cat-chip" style="background:var(--c-system)"></span>5. Box: System Tools (23.6k tokens)</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <p>Claude can't touch your computer directly. It asks Claude Code to run a <strong>tool</strong>. Each tool comes with a written description and a JSON "schema" listing its inputs, and all of that sits in the context so Claude knows what it can do. These are the tools that were <strong>fully loaded</strong> this session, and how they were used to build the Music app:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small">
+            <thead><tr><th>Tool</th><th>What it does</th><th>Used for the Music app?</th></tr></thead>
+            <tbody>
+              <tr><td><code>Read</code>, <code>Write</code>, <code>Edit</code></td><td>Read a file (also images and PDFs); create a file; replace exact text in a file.</td><td>Yes: read <code>MUSIC-BASICS.html</code>, wrote <code>index.html</code>, <code>CLAUDE.md</code> and this page; viewed the test screenshots.</td></tr>
+              <tr><td><code>Bash</code>, <code>PowerShell</code></td><td>Run shell commands in Git Bash or Windows PowerShell.</td><td>Yes: <code>git</code> init / commit / push, <code>sed</code> and Python edits, the Node + headless Chrome tests, <code>curl</code> checks of the live site.</td></tr>
+              <tr><td><code>Glob</code>, <code>Grep</code></td><td>Find files by name pattern; search inside files.</td><td>Searches were done with <code>grep</code> through Bash.</td></tr>
+              <tr><td><code>AskUserQuestion</code></td><td>Show a multiple-choice question.</td><td>Yes: once, to ask whether the WAV recording should go into the public repo.</td></tr>
+              <tr><td><code>Agent</code>, <code>ListAgents</code></td><td>Start helper agents (subagents) and list them.</td><td>No.</td></tr>
+              <tr><td><code>Artifact</code></td><td>Publish an HTML page as a private claude.ai artifact. Its long instructions make it one of the biggest tools here.</td><td>No: the app is hosted on GitHub Pages instead.</td></tr>
+              <tr><td><code>Skill</code>, <code>ToolSearch</code></td><td>Load a skill; fetch the full schema of a deferred tool.</td><td>No.</td></tr>
+              <tr><td><code>ReportFindings</code>, <code>ScheduleWakeup</code>, <code>SendFeedback</code></td><td>Code-review results, <code>/loop</code> timing, feedback drafts.</td><td>No.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h5 class="mt-3">"Deferred" tools: listed, but not counted</h5>
+        <p class="mb-0">The full <code>/context</code> table also listed <strong>System tools (deferred): 26.3k</strong>. Those tools aren't in the grid. Only their <em>names</em> are in the context, e.g. <code>WebFetch</code>, <code>WebSearch</code>, <code>Monitor</code>, <code>NotebookEdit</code>, <code>CronCreate</code>, <code>EnterPlanMode</code>, <code>EnterWorktree</code>, <code>SendMessage</code>, <code>ArtifactComments</code>, <code>ArtifactData</code> and others. If Claude needs one, it calls <code>ToolSearch</code> to load its full description, and only then does it cost tokens. The 26.3k is what it <em>would</em> cost to load them all. Keeping them deferred saves about 26k tokens on every request. (Check: 3.1k + 23.6k + 0.7k + 6k + 148.1k = 181.5k, which matches the 181.4k total after rounding, so the deferred tools are clearly not included.)</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 6. MCP -->
+  <section id="mcp" class="mb-5">
+    <h2 class="section-title"><span class="cat-chip" style="background:var(--c-mcp)"></span>6. Box: MCP Server Instructions (717 tokens)</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <p><strong>MCP</strong> (Model Context Protocol) is the standard way to plug extra tools into Claude: connectors to services such as Google Drive or Slack. An MCP server can send a short set of <strong>instructions</strong> on how to use its tools, and those count here.</p>
+        <p>This session had one connector: <strong>claude.ai Claude Docs</strong>, which creates and edits living documents on claude.ai. Its 717 tokens of instructions explain when to make a doc, how to start one with a skeleton of sections, and how to answer comments left on a doc. It gets one green square only because the grid rounds up; the real size is about a seventh of a square.</p>
+        <p class="mb-0">Its <strong>tools</strong> are separate: the table lists <strong>MCP tools (deferred): 2.2k</strong> for its 8 tools (<code>batch</code>, <code>guide</code>, <code>update</code>, <code>create</code>, <code>read</code>, <code>query</code>, <code>export</code>, <code>delete</code>). Like the deferred system tools, they are only fully loaded when needed. None were used for the Music app.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 7. SKILLS -->
+  <section id="skills" class="mb-5">
+    <h2 class="section-title"><span class="cat-chip" style="background:var(--c-skills)"></span>7. Box: Skills (6k tokens)</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <p>A <strong>skill</strong> is a packaged set of instructions for one kind of task (making a Word file, reviewing code, drawing charts…). To keep the context small, Claude Code puts <strong>only each skill's name and one-paragraph description</strong> in the context. That's enough for Claude to know a skill exists and when to use it. The skill's full instructions are loaded only when it is invoked, and they then count as Messages. About 30 skills were listed, for 6k tokens in total:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small">
+            <thead><tr><th>Skill</th><th>Source</th><th class="num">Tokens</th><th>What it is for</th></tr></thead>
+            <tbody>
+              <tr><td>dataviz</td><td>Built-in</td><td class="num">~480</td><td>Charts, graphs and dashboards</td></tr>
+              <tr><td>code-review</td><td>Built-in</td><td class="num">~400</td><td>Reviewing a diff or pull request for bugs</td></tr>
+              <tr><td>claude-api</td><td>Built-in</td><td class="num">~390</td><td>Reference for building apps with the Claude API</td></tr>
+              <tr><td>docs</td><td>claude.ai sync</td><td class="num">~340</td><td>Editable documents on claude.ai</td></tr>
+              <tr><td>pptx</td><td>claude.ai sync</td><td class="num">~330</td><td>PowerPoint files</td></tr>
+              <tr><td>google-workspace</td><td>claude.ai sync</td><td class="num">~330</td><td>Google Docs / Sheets / Slides</td></tr>
+              <tr><td>xlsx</td><td>claude.ai sync</td><td class="num">~320</td><td>Excel spreadsheets</td></tr>
+              <tr><td>computer-use</td><td>claude.ai sync</td><td class="num">~320</td><td>Controlling desktop apps</td></tr>
+              <tr><td>docx</td><td>claude.ai sync</td><td class="num">~320</td><td>Word documents</td></tr>
+              <tr><td>built-in-browser</td><td>claude.ai sync</td><td class="num">~290</td><td>The desktop app's browser pane</td></tr>
+              <tr><td><em>20 more</em> (artifact-design, simplify, loop, schedule, pdf, init, security-review, …)</td><td>mixed</td><td class="num">~2.4k</td><td>Other tasks</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-0"><strong>"Built-in"</strong> skills ship with Claude Code. <strong>"claude.ai sync"</strong> skills come from your claude.ai account and are synced into Claude Code. <strong>No skill was invoked</strong> while building the Music app, so only the 6k of descriptions was ever loaded.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 8. MESSAGES -->
+  <section id="messages" class="mb-5">
+    <h2 class="section-title"><span class="cat-chip" style="background:var(--c-msg)"></span>8. Box: Messages (148.1k tokens)</h2>
+    <div class="card shadow-sm accent-orange mb-4">
+      <div class="card-body">
+        <p><strong>Messages</strong> is the conversation itself, and it is the only box that keeps growing. It includes much more than the text you typed:</p>
+        <ul>
+          <li><strong>Your messages</strong>, including the screenshots you pasted (Images #9 to #13: the Scan-folder button, the side lines, the Sound dropdown, the fretboard and the /context screen).</li>
+          <li><strong>Claude's replies</strong>, including its reasoning before each reply.</li>
+          <li><strong>Every tool call and its result</strong>: every file read, every file written (the full text of a <code>Write</code> is part of the conversation), every command and its output, every screenshot Claude looked at.</li>
+          <li><strong>The summary of the earlier conversation.</strong> This session had already been <a href="#window">compacted</a> once (see below), so it starts with a summary of all the earlier BLOG work.</li>
+          <li><strong>Small system notes</strong>, such as "this file changed on disk" or "the user hasn't heard from you in a while".</li>
+        </ul>
+        <h5>Where the 148.1k came from (rough estimates, in order of the session)</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small">
+            <thead><tr><th>#</th><th>Part of the session</th><th>Why it is big or small</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><strong>Summary of the earlier work</strong>: the AI-for-middle-school article, <code>MUSIC-BASICS.html</code>, <code>AUDIO-RECORDER.py</code>, the audio analysis of the Inteha recording, the WAV clips</td><td>A few thousand tokens that stand in for a much longer conversation that was compacted.</td></tr>
+              <tr><td>2</td><td><strong>Reading <code>MUSIC-BASICS.html</code></strong> (about 1,280 of its 1,776 lines) to reuse its audio engine, fretboard and tab code</td><td>One of the biggest single items: tens of thousands of tokens of HTML, CSS and JavaScript.</td></tr>
+              <tr><td>3</td><td><strong>Writing the app</strong>: <code>song-library.js</code>, then the whole <code>index.html</code> (≈39 KB)</td><td>The full file text sits in the conversation: about 10–12k tokens.</td></tr>
+              <tr><td>4</td><td><strong>Testing</strong>: Node + headless Chrome scripts and their output; screenshots of the guitar and piano views at laptop and phone widths</td><td>Each script is ~1k tokens; each screenshot ~1–2k.</td></tr>
+              <tr><td>5</td><td><strong>Small changes</strong>: rename to <code>index.html</code>, removing the Scan-folder button, the side lines, the folder hint and the Sound dropdown, plus a <code>git push</code> after each</td><td>Mostly short; reading parts of <code>index.html</code> again adds a few thousand.</td></tr>
+              <tr><td>6</td><td><strong>Vertical fretboard for phones</strong>, with phone and laptop screenshots</td><td>Code plus two screenshots.</td></tr>
+              <tr><td>7</td><td><strong>Writing <code>.claude/CLAUDE.md</code></strong>, then <code>/context</code> and its output, plus reading <code>HOW-ACCT-AGENT-WORKS.html</code> for this page's style</td><td>The CLAUDE.md text, the /context table, and ~360 lines of the style reference.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card bg-light border-0"><div class="card-body small">
+          <strong>Why reading big files matters so much:</strong> a file Claude reads <em>stays</em> in Messages for the rest of the conversation, and the whole context is sent again with every request. Reading only the needed lines (the <code>offset</code>/<code>limit</code> of <code>Read</code>, or <code>grep</code> first to find them), as was done for <code>MUSIC-BASICS.html</code> and the style reference, keeps this box smaller.
+        </div></div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 9. FREE -->
+  <section id="free" class="mb-5">
+    <h2 class="section-title"><span class="cat-chip" style="border:1px dashed #6c757d"></span>9. Box: Free Space (785.6k tokens)</h2>
+    <div class="card shadow-sm accent-green mb-4">
+      <div class="card-body">
+        <p><strong>Free space</strong> is room the conversation can still grow into: <strong>1,000k − 181.4k used − 33k reserved = 785.6k</strong> (78.6%).</p>
+        <p class="mb-0">That's plenty: the session could keep going for a long time (more than four times what it has used so far) before anything is compacted. Free space is not "wasted". Claude doesn't get slower or less careful because the window is mostly empty, but an emptier window is cheaper and faster per request.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 10. BUFFER -->
+  <section id="buffer" class="mb-5">
+    <h2 class="section-title"><span class="cat-chip" style="background:repeating-linear-gradient(45deg,#fff 0 3px,#adb5bd 3px 4px);border:1px solid #adb5bd"></span>10. Box: Autocompact Buffer (33k tokens)</h2>
+    <div class="card shadow-sm accent-yellow mb-4">
+      <div class="card-body">
+        <p>The crossed-out squares at the end of the grid are a <strong>reserve</strong> that the conversation is not allowed to fill. It is 33k tokens, 3.3% of the window. It exists for two reasons:</p>
+        <ol>
+          <li><strong>It is the trigger line.</strong> When Messages grow until they would run into the buffer, at about <strong>1,000k − 33k = 967k tokens</strong> in use, Claude Code starts <strong>auto-compaction</strong> (<a href="#window">next section</a>).</li>
+          <li><strong>It leaves room to do the compaction.</strong> Summarizing the conversation is itself a model request that needs space for its output, the summary. The buffer makes sure that space exists, so the session never hits a hard "context is full" error in the middle of a task.</li>
+        </ol>
+        <p class="mb-0">You can't use those 33k tokens for conversation, but they keep long sessions running smoothly.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 11. WINDOW -->
+  <section id="window" class="mb-5">
+    <h2 class="section-title">11. The Auto-compact Window (1m) and Compaction</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <p>The last line of the screen, <strong>"Auto-compact window: 1m tokens"</strong>, is the window size that auto-compaction is measured against. Here it equals the full 1-million-token window of Opus 5.5 in this session. All the percentages and the 33k buffer are worked out from it.</p>
+        <h5>What happens when it fills up</h5>
+        <div class="step-box">
+          <div class="step-bar">Step 1 · The conversation grows</div>
+          <div class="step-body"><p>Every message, file read and command output is added to Messages, and free space shrinks.</p></div>
+        </div>
+        <div class="step-box">
+          <div class="step-bar">Step 2 · It reaches the buffer (≈967k in use)</div>
+          <div class="step-body"><p>Claude Code sees that the next turns might not fit, and starts compaction automatically. You don't have to do anything.</p></div>
+        </div>
+        <div class="step-box">
+          <div class="step-bar">Step 3 · The old part is summarized</div>
+          <div class="step-body"><p>The older conversation is replaced by a <strong>written summary</strong>: what you asked for, the decisions made, which files were changed and how, errors and fixes, what's still pending, and the exact next step. The most recent messages may be kept word for word. The full original conversation is still saved on disk as a transcript (<code>.jsonl</code>), so details can be looked up again if needed.</p></div>
+        </div>
+        <div class="step-box">
+          <div class="step-bar">Step 4 · Work continues</div>
+          <div class="step-body"><p>The session goes on with the summary in place of the old messages. Messages drop to a small size and free space opens up again.</p></div>
+        </div>
+        <div class="card bg-light border-0 mb-3"><div class="card-body small">
+          <strong>This session has already been compacted once.</strong> It began as the BLOG session (the AI article, <code>MUSIC-BASICS.html</code>, the audio analysis…). When that ran out of room, it continued "from a previous conversation that ran out of context", with a summary at the top. The Music app was built after that, so the 148.1k of Messages includes that summary plus all the Music-app work.
+        </div></div>
+        <h5>You can also do it yourself</h5>
+        <div class="code-window">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">Claude Code commands</span></div>
+<pre><code>/context            show this map of the context window
+/compact            summarize the conversation now
+/compact keep the song-library format and the git rules
+                    summarize, telling it what to keep in detail
+/clear              start a completely fresh conversation (nothing kept)</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm accent-red mb-4">
+      <div class="card-body">
+        <h5>Watch out</h5>
+        <ul class="mb-0">
+          <li><strong>A summary is shorter than the original.</strong> Exact wording, long code listings and small details can be lost. That's why important, lasting facts belong in a <code>CLAUDE.md</code> file (see <a href="#missing">section 12</a>), not only in the chat.</li>
+          <li><strong>Compacting takes a moment</strong>, and during it Claude isn't working on your task.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 12. MISSING -->
+  <section id="missing" class="mb-5">
+    <h2 class="section-title">12. What Is Not on the Screen (and Why)</h2>
+    <div class="card shadow-sm accent-yellow mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small mb-0">
+            <thead><tr><th>Category you might expect</th><th>Why it isn't shown</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Memory files</strong> (<code>CLAUDE.md</code>, memory index)</td><td>No memory files were loaded in this session. The session was started in <code>C:\Daya\RAGchamp\BLOG</code>, and the new <code>C:\Daya\RAGchamp\MUSIC\.claude\CLAUDE.md</code> was only created near the end. <strong>If you start Claude Code in the <code>MUSIC</code> folder next time</strong>, that file is loaded automatically and a <em>Memory files</em> box appears (a few thousand tokens). Every new session then knows the app, the song-library format and your rules (e.g. "ask before pushing") without being told.</td></tr>
+              <tr><td><strong>Deferred tools</strong> (26.3k system + 2.2k MCP)</td><td>Only their names are loaded until they're needed (see <a href="#system-tools">section 5</a>).</td></tr>
+              <tr><td><strong>Custom agents</strong></td><td>No custom subagents are defined in this project, and none were started.</td></tr>
+              <tr><td><strong>The audio file itself</strong></td><td>Claude never "listens" to the WAV in the context. The note timings came from Python analysis scripts in the earlier part of the session, and only their text output entered the conversation.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 13. TIPS -->
+  <section id="tips" class="mb-5">
+    <h2 class="section-title">13. Tips: Keeping the Context Healthy</h2>
+    <div class="card shadow-sm accent-green mb-4">
+      <div class="card-body">
+        <ol class="mb-0">
+          <li><strong>Start Music-app sessions in <code>C:\Daya\RAGchamp\MUSIC</code>.</strong> <code>CLAUDE.md</code> is then loaded automatically, and the BLOG history doesn't take up room.</li>
+          <li><strong>Use <code>/clear</code> between unrelated jobs</strong>, e.g. after finishing the Music app and before starting on something unrelated. A fresh session starts at ~33k (prompt + tools + skills) instead of carrying 148k of old messages.</li>
+          <li><strong>Point Claude at exact files and lines.</strong> "Change the Play button in index.html" costs less than "look through everything".</li>
+          <li><strong>Keep screenshots focused.</strong> A crop of the part that matters (like the Scan-folder button or the Sound dropdown you shared) is cheaper and clearer than a full-screen capture.</li>
+          <li><strong>Put lasting rules in <code>CLAUDE.md</code></strong>, not just in chat, so they survive compaction and new sessions.</li>
+          <li><strong>Run <code>/context</code> now and then</strong> on long jobs to see how full the window is.</li>
+        </ol>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 14. GLOSSARY -->
+  <section id="glossary" class="mb-5">
+    <h2 class="section-title">14. Glossary</h2>
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped align-middle small mb-0 glossary-table">
+            <thead><tr><th style="width:24%">Term</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Token</strong></td><td>The unit Claude reads and writes in: about 4 characters or ¾ of an English word.</td></tr>
+              <tr><td><strong>Context window</strong></td><td>Everything Claude can see at once when it writes a reply. Here: 1,000,000 tokens.</td></tr>
+              <tr><td><strong>k / m</strong></td><td>Thousand / million tokens (181.4k = 181,400; 1m = 1,000,000).</td></tr>
+              <tr><td><strong>System prompt</strong></td><td>Claude Code's standing instructions to the model, sent with every request.</td></tr>
+              <tr><td><strong>Tool / schema</strong></td><td>An action Claude can ask Claude Code to perform (read a file, run a command), and the JSON description of its inputs.</td></tr>
+              <tr><td><strong>Deferred tool</strong></td><td>A tool listed by name only. Its full description is loaded with <code>ToolSearch</code> when needed.</td></tr>
+              <tr><td><strong>MCP</strong></td><td>Model Context Protocol: the standard for connecting outside tools and services (connectors) to Claude.</td></tr>
+              <tr><td><strong>Skill</strong></td><td>A packaged set of instructions for one kind of task. Only its description is loaded until it is used.</td></tr>
+              <tr><td><strong>Messages</strong></td><td>The conversation: your messages, Claude's replies, and all tool calls and results.</td></tr>
+              <tr><td><strong>Compaction</strong></td><td>Replacing older conversation with a summary to free up room.</td></tr>
+              <tr><td><strong>Autocompact buffer</strong></td><td>The reserved 33k at the end of the window. Reaching it triggers compaction, and it leaves room to write the summary.</td></tr>
+              <tr><td><strong>Auto-compact window</strong></td><td>The window size compaction is measured against (1m here).</td></tr>
+              <tr><td><strong>CLAUDE.md</strong></td><td>A project memory file that Claude Code loads at the start of every session in that folder.</td></tr>
+              <tr><td><strong>Transcript (.jsonl)</strong></td><td>The full record of a session saved on disk; it is kept even after compaction.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">
+    Music App · Claude context as of 2026-11-14: what filled the 1m-token window of the Claude Code session that built the <a href="index.html">Music Practice App</a>.
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  // The categories, in the order /context fills the grid. Squares are rounded the way the screen shows them.
+  const CATS = [
+    {id:'system', name:'System prompt',          tokens:3100,   sq:1, color:'var(--c-system)'},
+    {id:'system', name:'System tools',           tokens:23600,  sq:5, color:'var(--c-system)'},
+    {id:'mcp',    name:'MCP server instructions', tokens:717,   sq:1, color:'var(--c-mcp)'},
+    {id:'skills', name:'Skills',                 tokens:6000,   sq:1, color:'var(--c-skills)'},
+    {id:'msg',    name:'Messages',               tokens:148100, sq:30, color:'var(--c-msg)'},
+    {id:'free',   name:'Free space',             tokens:785600, sq:155},
+    {id:'buffer', name:'Autocompact buffer',     tokens:33000,  sq:7}
+  ];
+  const fmt = t => t >= 1000 ? (t / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(t);
+  const grid = document.getElementById('grid'), info = document.getElementById('sqInfo');
+  const all = [];
+  CATS.forEach(c => {
+    for(let i = 0; i < c.sq; i++){
+      const s = document.createElement('div');
+      s.className = 'sq ' + c.id; s.dataset.cat = c.id;
+      s.title = `${c.name}: ${fmt(c.tokens)} tokens`;
+      s.dataset.name = s.title;
+      grid.appendChild(s); all.push(s);
+    }
+  });
+  function hot(cat, label){
+    all.forEach(s => s.classList.toggle('hot', s.dataset.cat === cat));
+    document.querySelectorAll('.row-cat').forEach(r => r.classList.toggle('hot', r.dataset.cat === cat));
+    info.textContent = label || '';
+  }
+  all.forEach(s => {
+    s.addEventListener('mouseenter', () => hot(s.dataset.cat, s.dataset.name));
+    s.addEventListener('click', () => hot(s.dataset.cat, s.dataset.name));
+  });
+  document.querySelectorAll('.row-cat').forEach(r => {
+    const h = () => hot(r.dataset.cat, r.textContent);
+    r.addEventListener('mouseenter', h); r.addEventListener('click', h);
+  });
+  grid.addEventListener('mouseleave', () => hot(null));
+
+  // The whole window as one bar
+  const stack = document.getElementById('stack');
+  CATS.forEach(c => {
+    const d = document.createElement('div');
+    d.style.width = (c.tokens / 1000000 * 100) + '%';
+    if(c.color) d.style.background = c.color; else d.className = c.id;
+    d.title = `${c.name}: ${fmt(c.tokens)} tokens (${(c.tokens / 10000).toFixed(1)}%)`;
+    stack.appendChild(d);
+  });
+})();
+</script>
+</body>
+</html>
