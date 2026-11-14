@@ -48,11 +48,8 @@
   html{ scroll-behavior:smooth; }
 
   .hero{ background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%); color:#fff; }
-  .accent-blue{ border-left:5px solid var(--biz-blue); }
-  .accent-green{ border-left:5px solid var(--biz-green); }
-  .accent-red{ border-left:5px solid var(--biz-red); }
-  .accent-yellow{ border-left:5px solid var(--biz-yellow); }
-  .accent-orange{ border-left:5px solid var(--biz-orange); }
+  /* every box: the same thin border all round */
+  .accent-blue, .accent-green, .accent-red, .accent-yellow, .accent-orange{ border:2px solid #c9d3e3; border-radius:.6rem; }
 
   .section-title{
     display:inline-flex; align-items:center; gap:.6rem;
@@ -144,21 +141,6 @@
 </header>
 
 <main class="container my-5">
-
-  <!-- COLOR KEY -->
-  <div class="mb-5">
-    <div class="card border-0 shadow-sm">
-      <div class="card-body py-3">
-        <div class="row g-2 small text-center text-md-start">
-          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-blue);"></span>Blue: how it works</div>
-          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-yellow);"></span>Yellow: definitions &amp; background</div>
-          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-green);"></span>Green: what you can do</div>
-          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-orange);"></span>Orange: this session's numbers</div>
-          <div class="col-12 col-md"><span class="color-key-dot" style="background:var(--biz-red);"></span>Red: watch out</div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <p class="mb-4"><a href="index.html" class="text-decoration-none">&larr; Back to the Music Practice App</a></p>
 
