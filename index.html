@@ -41,9 +41,7 @@
     background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.95rem; margin-right:.55rem; flex:none;
   }
   .step-title{ display:flex; align-items:center; font-weight:700; font-size:1.1rem; margin-bottom:.75rem; }
-  .accent-blue{ border-left:5px solid var(--biz-blue); }
-  .accent-yellow{ border-left:5px solid var(--biz-yellow); }
-  .accent-green{ border-left:5px solid var(--biz-green); }
+  .step-card{ border:2px solid #c9d3e3; border-radius:.6rem; }
   .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
 
   /* Instrument choice */
@@ -172,7 +170,7 @@
   <p class="text-muted mb-4">Pick a song, pick your instrument, press Play and follow the yellow notes.</p>
 
   <!-- STEP 1: song -->
-  <div class="card shadow-sm accent-blue mb-3">
+  <div class="card shadow-sm step-card mb-3">
     <div class="card-body">
       <div class="step-title"><span class="step-num">1</span>Choose a song</div>
       <div class="row g-2 align-items-center">
@@ -185,7 +183,7 @@
   </div>
 
   <!-- STEP 2: instrument -->
-  <div class="card shadow-sm accent-yellow mb-3" id="step2" hidden>
+  <div class="card shadow-sm step-card mb-3" id="step2" hidden>
     <div class="card-body">
       <div class="step-title"><span class="step-num">2</span>Which instrument are you practising on?</div>
       <div class="inst-choice" id="instChoice">
@@ -203,7 +201,7 @@
   </div>
 
   <!-- STEP 3: practice -->
-  <div class="card shadow-sm accent-green mb-3" id="step3" hidden>
+  <div class="card shadow-sm step-card mb-3" id="step3" hidden>
     <div class="card-body">
       <div class="step-title"><span class="step-num">3</span><span id="practiceTitle">Practice</span></div>
 
