@@ -17,7 +17,7 @@ The owner uses it for personal learning.
 | Path | What it is |
 |---|---|
 | `index.html` | The whole app: HTML, CSS and JS in one file. Bootstrap 5.3.3 comes from the jsDelivr CDN; there is no build step. |
-| `recorder.html` | Records another browser tab's audio (`getDisplayMedia`) to a 16-bit WAV and saves it in a chosen folder (File System Access API; the folder handle is remembered in IndexedDB). It also trims a file: it copies start–end seconds into `name-copy-<timestamp>.wav` in the same folder. It is linked from index.html. |
+| `recorder.html` | Records another browser tab's audio (`getDisplayMedia`) to a 16-bit WAV and saves it in a chosen folder (File System Access API; the folder handle is remembered in IndexedDB). It also trims a file: it copies start–end seconds into `name-copy-<timestamp>.wav` in the same folder. It is linked from the index.html footer. |
 | `logo.svg` | The logo in the top nav (a copy of the BLOG logo). |
 | `REFERENCE-AUDIO-FILES/song-library.js` | **The song list.** It defines `window.SONG_LIBRARY`, which fills the song drop-down. |
 | `REFERENCE-AUDIO-FILES/*.wav` | Song recordings, e.g. `SONG-1-inteha-ho-gayi-start.wav` (22 s, 4 MB). |
