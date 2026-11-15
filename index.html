@@ -319,6 +319,15 @@
       g.gain.linearRampToValueAtTime(opts.soft ? 0.5 : 0.85, t + 0.002);
       if(opts.tie) g.gain.setTargetAtTime(0, end, 0.012); else g.gain.setTargetAtTime(0, end + 0.08, 0.09);
       src.start(t); src.stop(Math.min(t + KS_SECONDS, end + 0.8)); track(src);
+    } else if(inst === 'accordion'){
+      // Reeds: two slightly detuned sawtooths (the "musette" beat) through a soft low-pass, with bellows swell.
+      const stopAt = end + 0.3;
+      const o1 = osc('sawtooth', f, t, stopAt, slide), o2 = osc('sawtooth', f * 1.004, t, stopAt, slide);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(5000, f * 6); lp.Q.value = 0.7;
+      o1.connect(lp); o2.connect(lp); lp.connect(g);
+      g.gain.linearRampToValueAtTime(0.16, t + 0.04);
+      g.gain.setTargetAtTime(0.13, t + 0.04, 0.3);
+      g.gain.setTargetAtTime(0, end, 0.05);
     } else {
       const stopAt = end + 0.6;
       const o1 = osc('triangle', f, t, stopAt, slide), o2 = osc('sine', f * 2, t, stopAt, slide);
@@ -422,8 +431,10 @@
     .catch(() => {});
   function instrumentFor(s){
     const v = songInst[s.file] || String(s.inst || '').toLowerCase();
-    return v === 'guitar' ? 'guitar' : 'piano';
+    return v === 'guitar' || v === 'accordion' ? v : 'piano';
   }
+  // Accordion songs use the keyboard view (a piano accordion's right hand is a piano-style keyboard).
+  const INST_LABEL = {piano: '🎹 Piano', guitar: '🎸 Guitar', accordion: '🪗 Accordion'};
 
   $('songSel').addEventListener('change', async () => {
     stop(true);
@@ -438,7 +449,7 @@
     const bits = [];
     if(cur.key) bits.push('Key: <strong>' + esc(cur.key) + '</strong>');
     bits.push(cur.notes.length ? cur.notes.length + ' notes' : 'no notes yet');
-    bits.push(inst === 'guitar' ? '🎸 Guitar' : '🎹 Piano');
+    bits.push(INST_LABEL[inst]);
     if(cur.file) bits.push('🎧 ' + esc(cur.file));
     $('songMeta').innerHTML = bits.join(' · ');
     buildPractice();
@@ -447,10 +458,10 @@
   /* ================= BUILD THE PRACTICE UI ================= */
   function buildPractice(){
     $('step3').hidden = false;
-    $('practiceTitle').textContent = `Practice "${cur.title}" on ${inst === 'guitar' ? '🎸 guitar' : '🎹 piano'}`;
-    $('pianoView').hidden = inst !== 'piano';
+    $('practiceTitle').textContent = `Practice "${cur.title}" on ${INST_LABEL[inst].replace(/ (\S+)$/, (a, w) => ' ' + w.toLowerCase())}`;
+    $('pianoView').hidden = inst === 'guitar';
     $('guitarView').hidden = inst !== 'guitar';
-    if(inst === 'piano') buildKeyboard(); else { buildFretboard(); buildTab(); }
+    if(inst !== 'guitar') buildKeyboard(); else { buildFretboard(); buildTab(); }
     buildChips();
     buildTimeline();
     showNowNext(-1);
@@ -607,7 +618,7 @@
   function targets(i){
     const n = cur.notes[i]; if(!n) return [];
     const out = [chips[i]];
-    if(inst === 'piano') n.ms.forEach(m => keyEls[m] && out.push(keyEls[m]));
+    if(inst !== 'guitar') n.ms.forEach(m => keyEls[m] && out.push(keyEls[m]));
     else { out.push(tabCols[i]); n.pos.forEach(([s, f]) => fbCells[s] && fbCells[s][f] && out.push(fbCells[s][f])); }
     return out.filter(Boolean);
   }
@@ -630,7 +641,7 @@
       const w = $('tabView'), left = col.offsetLeft, right = left + col.offsetWidth;
       if(left < w.scrollLeft + 60 || right > w.scrollLeft + w.clientWidth - 40) w.scrollLeft = left - w.clientWidth / 3;
     }
-    if(inst === 'piano'){
+    if(inst !== 'guitar'){
       const key = cur.notes[i].ms.map(m => keyEls[m]).find(Boolean), w = key && key.closest('.kb-wrap');
       if(key && w){ const kl = key.getBoundingClientRect().left - w.getBoundingClientRect().left;
         if(kl < 20 || kl > w.clientWidth - 40) w.scrollLeft += kl - w.clientWidth / 2; }

@@ -18,7 +18,7 @@ The owner uses it for personal learning.
 |---|---|
 | `index.html` | The whole app: HTML, CSS and JS in one file. Bootstrap 5.3.3 comes from the jsDelivr CDN; there is no build step. |
 | `recorder.html` | Records another browser tab's audio (`getDisplayMedia`) to a 16-bit WAV and saves it in a chosen folder (File System Access API; the folder handle is remembered in IndexedDB). It also trims a file: it copies start–end seconds into `name-copy-<timestamp>.wav` in the same folder. It is linked from the index.html footer. |
-| `SONG-INSTRUMENT.json` | Each song's instrument (`piano` or `guitar`), keyed by audio file name. Every song in the library needs an entry. |
+| `SONG-INSTRUMENT.json` | Each song's instrument (`piano`, `guitar` or `accordion`), keyed by audio file name. Every song in the library needs an entry. |
 | `logo.svg` | The logo in the top nav (a copy of the BLOG logo). |
 | `REFERENCE-AUDIO-FILES/song-library.js` | **The song list.** It defines `window.SONG_LIBRARY`, which fills the song drop-down. |
 | `REFERENCE-AUDIO-FILES/*.wav` | Song recordings, e.g. `SONG-1-inteha-ho-gayi-start.wav` (22 s, 4 MB). |
@@ -65,8 +65,9 @@ Note lines are parsed by `parseLine()` in index.html:
 To **add a song**:
 1. Copy the WAV into `REFERENCE-AUDIO-FILES/`.
 2. Add an entry to `song-library.js`.
-3. Add an entry to `SONG-INSTRUMENT.json`: `{ "audio": "<wav name>", "title": "...", "instrument": "piano" | "guitar" }`.
-   Use the same instrument as the song's `inst` field.
+3. Add an entry to `SONG-INSTRUMENT.json`: `{ "audio": "<wav name>", "title": "...", "instrument": "piano" | "guitar" | "accordion" }`.
+   Use the same instrument as the song's `inst` field. `accordion` uses the piano keyboard view
+   (a piano accordion's right hand is a piano-style keyboard) with its own reed sound.
 4. Commit and push.
 
 A song with no `audio` can't be played: the Play button is disabled.
@@ -79,7 +80,8 @@ They were then cleaned up by hand against the owner's tab.
 
 1. **Choose a song:** `#songSel` lists `library`. Choosing one shows the key, the note count and the file name in `#songMeta`.
 2. **Instrument:** there is **no instrument picker**; the owner asked for it to be removed. Choosing a song goes straight to
-   practice on that song's instrument (`instrumentFor()`), shown as 🎸 Guitar or 🎹 Piano in `#songMeta`.
+   practice on that song's instrument (`instrumentFor()`), shown as 🎸 Guitar, 🎹 Piano or 🪗 Accordion in `#songMeta` (`INST_LABEL`).
+   Accordion uses the keyboard view; everywhere the code branches, it is `inst === 'guitar'` vs. not.
    - The instrument comes from `SONG-INSTRUMENT.json`, matched by the audio file name.
    - On `file://` the page can't `fetch()` the JSON, so it falls back to the song's `inst` field in song-library.js.
      **Keep the two the same.** A song in neither defaults to piano.
@@ -106,7 +108,8 @@ They were then cleaned up by hand against the owner's tab.
 
 Clicking a note box, a key or a fret calls `hear()` / `tone()`. This is the only synth sound left:
 - piano is a triangle plus sine oscillator;
-- guitar is a Karplus-Strong plucked string (`ksBuffer`) through a small body EQ.
+- guitar is a Karplus-Strong plucked string (`ksBuffer`) through a small body EQ;
+- accordion is two slightly detuned sawtooths (musette beat) through a low-pass, with a soft bellows attack.
 
 ### Responsive fretboard
 

@@ -12,7 +12,8 @@
      title   name shown in the drop-down
      audio   file name in this folder (leave out for a synth-only song)
      key     shown under the song name
-     inst    the instrument the song is played on: 'piano' or 'guitar' (a suggestion, you can pick either)
+     inst    the instrument the song is played on: 'piano', 'guitar' or 'accordion' (accordion uses the keyboard).
+             Used only when SONG-INSTRUMENT.json can't be read (file://); keep the two the same.
      tempo   beats per minute; only used when the notes have no times
      notes   one line per note:   'time   notes   beats   label'
                time   seconds into the audio file when the note starts ('-' if you have no audio)
@@ -497,7 +498,7 @@ window.SONG_LIBRARY = [
     title: 'Anhoni Ko Honi: opening (Amar Akbar Anthony)',
     audio: 'SONG-5-anhoni-kph-honi-start.wav',
     key: 'Bb minor',
-    inst: 'piano',
+    inst: 'accordion',
     tempo: 90,
     // Main line measured from the recording (about 34 cents flat); see SONG-5-anhoni-kph-honi-notes.txt.
     notes: [
