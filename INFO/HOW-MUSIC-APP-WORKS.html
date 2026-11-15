@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the Music Practice App Works</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-red:#dc3545;
+    --biz-green:#198754;
+    --biz-orange:#e8710a;
+    --biz-purple:#6f42c1;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    --box-line:#c9d3e3;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav (same as the app and the blog) */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{ font-weight:600; font-size:1.05rem; color:var(--nav-yellow); letter-spacing:.15em; word-spacing:.6em; font-style:italic; }
+  @media (max-width:576px){ .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; } }
+
+  section[id]{ scroll-margin-top:84px; }
+  html{ scroll-behavior:smooth; }
+
+  .hero{ background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%); color:#fff; }
+
+  /* Every box: the same thin border all the way round (no thick line on the left) */
+  .box{ border:2px solid var(--box-line) !important; border-radius:.6rem; }
+
+  .section-title{ display:inline-flex; align-items:center; gap:.6rem; padding-bottom:.4rem; border-bottom:3px solid var(--biz-blue); margin-bottom:1.25rem; }
+  .toc-num{
+    display:inline-flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.85rem; margin-right:.5rem; flex:none;
+  }
+  .toc-list a{ text-decoration:none; color:#212529; }
+  .toc-list a:hover{ color:var(--biz-blue); text-decoration:underline; }
+  .toc-item{ display:flex; align-items:center; padding:.4rem 0; }
+  .back-to-top{ font-size:.85rem; }
+  .color-key-dot{ width:.9rem; height:.9rem; border-radius:50%; display:inline-block; margin-right:.4rem; flex:none; }
+  h5 .color-key-dot{ vertical-align:1px; }
+  table thead th{ background:#eef3fb; }
+  .glossary-table thead th{ background:#04264d; color:#fff; }
+
+  /* Code windows */
+  .code-window{ background:#084298; border-radius:.5rem; overflow:hidden; margin:1rem 0 1.5rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.3); }
+  .code-window .code-titlebar{ background:#323233; color:#ccc; padding:.45rem .9rem; font-size:.8rem; display:flex; align-items:center; gap:.4rem; font-family:'Segoe UI',Roboto,sans-serif; }
+  .code-window .dot{ width:.7rem; height:.7rem; border-radius:50%; display:inline-block; }
+  .dot-red{ background:#ff5f56; } .dot-yellow{ background:#ffbd2e; } .dot-green{ background:#27c93f; }
+  .code-window .code-filename{ margin-left:.5rem; opacity:.85; }
+  .code-window pre{ margin:0; padding:1rem 1.25rem; background:#084298; overflow-x:auto; }
+  .code-window code{ font-family:'Fira Code',Consolas,Monaco,monospace; font-size:.83rem; color:#fff; font-weight:600; white-space:pre; }
+  .code-window .cm{ color:#9ec5fe; font-weight:400; }
+
+  /* Step-by-step boxes */
+  .step-box{ background:#e9ecef; border:2px solid var(--box-line); border-radius:.6rem; overflow:hidden; margin:0 0 1.25rem; }
+  .step-box .step-bar{ background:var(--nav-blue); color:#5BF527; font-weight:700; padding:.5rem 1.1rem; font-size:.95rem; letter-spacing:.02em; }
+  .step-box .step-body{ padding:1rem 1.25rem; }
+  .step-box .step-body p:last-child, .step-box .step-body ul:last-child{ margin-bottom:0; }
+  .step-box .step-file{ font-family:'Fira Code',Consolas,Monaco,monospace; font-size:.8rem; margin-bottom:.7rem; }
+  .step-box .step-file mark{ background:var(--biz-yellow); color:#2b2b2b; padding:.15rem .5rem; border-radius:.25rem; font-weight:600; }
+
+  /* Flow diagram: nodes with a uniform border */
+  .flow{ display:flex; flex-wrap:wrap; gap:.4rem; align-items:stretch; }
+  .flow .node{ flex:1 1 140px; background:#fff; border:2px solid var(--box-line); border-radius:.5rem; padding:.55rem .65rem; font-size:.8rem; }
+  .flow .node b{ display:block; font-size:.86rem; }
+  .flow .arrow{ align-self:center; color:#6c757d; font-weight:700; }
+  .who{ font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+  .who.you{ color:var(--biz-green); } .who.claude{ color:var(--biz-purple); } .who.code{ color:var(--biz-blue); }
+
+  .callout-num{ display:inline-flex; align-items:center; justify-content:center; width:1.35rem; height:1.35rem; border-radius:50%; background:var(--biz-red); color:#fff; font-size:.72rem; font-weight:700; margin:0 .2rem; vertical-align:middle; }
+
+  /* ---------- Small mock-ups of the app's own UI (static copies of its CSS) ---------- */
+  .mock{ border:2px solid var(--box-line); border-radius:.6rem; background:#fff; padding:.9rem; font-size:.85rem; }
+  .mock .m-title{ display:flex; align-items:center; font-weight:700; margin-bottom:.6rem; }
+  .step-num{ display:inline-flex; align-items:center; justify-content:center; width:1.6rem; height:1.6rem; border-radius:50%; background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.85rem; margin-right:.5rem; flex:none; }
+  .m-select{ border:1px solid #adb5bd; border-radius:.35rem; padding:.3rem .6rem; background:#fff; display:flex; justify-content:space-between; }
+  .m-meta{ color:#6c757d; font-size:.8rem; margin-top:.4rem; }
+  .m-prompt{ background:linear-gradient(120deg,var(--biz-blue-dark),var(--biz-blue)); color:#fff; border-radius:.5rem; padding:.55rem .8rem; margin-bottom:.6rem; }
+  .now-box{ display:flex; gap:.6rem; flex-wrap:wrap; }
+  .now-card{ flex:1 1 160px; background:#fff; border:2px solid #dde3ec; border-radius:.5rem; padding:.45rem .7rem; }
+  .now-card.now{ border-color:#c79100; background:#fff8e1; }
+  .now-card .lbl{ font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; }
+  .now-card .val{ font-size:1.2rem; font-weight:800; line-height:1.2; }
+  .now-card .det{ font-size:.78rem; color:#5a6475; }
+
+  .keyboard{ position:relative; display:flex; height:120px; user-select:none; }
+  .key.white{ flex:1 0 24px; position:relative; background:linear-gradient(#fff,#f1f1f1); border:1px solid #b9bec7; border-radius:0 0 .35rem .35rem; margin-right:-1px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding-bottom:.3rem; font-size:.6rem; font-weight:700; color:#333; }
+  .key.black{ position:absolute; top:0; right:-31%; width:62%; height:60%; z-index:2; background:linear-gradient(#333,#111); border-radius:0 0 .3rem .3rem; color:#fff; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding-bottom:.25rem; font-size:.5rem; font-weight:700; }
+  .key.white.used{ background:linear-gradient(#fff,#d7f0e1); }
+  .key.black.used{ background:linear-gradient(#2c6e49,#174a2f); }
+  .key.white.playing{ background:linear-gradient(#fff3c4,var(--biz-yellow)); }
+  .key.black.playing{ background:linear-gradient(#ffd75e,#c79100); color:#000; }
+  .key.white.pressed{ background:linear-gradient(#cfe2ff,#9ec5fe); }
+
+  .fb{ display:grid; grid-template-columns:34px 30px repeat(7, 1fr); grid-template-rows:auto repeat(6, 24px); border-radius:.4rem; overflow:hidden; min-width:420px; background:linear-gradient(180deg,#5a3a22,#6e4628 50%,#5a3a22); }
+  .fb-lbl{ background:#f1f4f9; display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:700; color:#6c757d; padding:.1rem 0; }
+  .fb-name{ background:#f1f4f9; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.75rem; }
+  .fb-cell{ position:relative; border-right:3px solid #c9c9c9; display:flex; align-items:center; justify-content:center; }
+  .fb-cell.open{ background:#efe6d8; border-right:6px solid #f5f0e6; }
+  .fb-cell::before{ content:''; position:absolute; left:0; right:-3px; top:50%; height:2px; transform:translateY(-50%); background:linear-gradient(#f4f4f4,#a9a9a9); }
+  .fb-dot{ position:relative; z-index:1; min-width:20px; height:20px; padding:0 3px; border-radius:10px; font-size:.56rem; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .fb-cell.used .fb-dot{ background:#2c6e49; color:#fff; }
+  .fb-cell.playing .fb-dot{ background:var(--biz-yellow); color:#000; box-shadow:0 0 0 3px #fff8, 0 0 10px #ffc107; transform:scale(1.15); }
+
+  .tab-strip{ display:flex; font-family:Consolas,Monaco,monospace; background:#fff; border:1px solid #dde3ec; border-radius:.5rem; padding:.35rem .5rem; overflow-x:auto; }
+  .tab-names{ display:flex; flex-direction:column; padding-top:16px; margin-right:.25rem; }
+  .tab-names div, .tab-col .tc{ height:18px; line-height:18px; font-size:.75rem; font-weight:700; }
+  .tab-col{ display:flex; flex-direction:column; min-width:32px; border-radius:.3rem; }
+  .tab-col .tt{ height:16px; font-size:.64rem; font-weight:800; color:var(--biz-purple); text-align:center; white-space:nowrap; }
+  .tab-col .tc{ position:relative; text-align:center; }
+  .tab-col .tc::before{ content:''; position:absolute; left:0; right:0; top:50%; border-top:1px solid #9aa6b8; }
+  .tab-col .tc span{ position:relative; background:#fff; padding:0 2px; color:#084298; }
+  .tab-col.playing{ background:var(--biz-yellow); }
+  .tab-col.playing .tc span{ background:var(--biz-yellow); color:#000; }
+
+  .song-area{ background:#f1f4f9; border:2px dashed var(--box-line); border-radius:.6rem; padding:.7rem .6rem .5rem; display:flex; flex-wrap:wrap; gap:.45rem; align-items:center; }
+  .chip{ position:relative; background:#fff; border:2px solid var(--biz-blue); border-radius:.5rem; padding:.35rem .5rem .25rem; text-align:center; min-width:46px; }
+  .chip .cname{ font-weight:800; font-size:.86rem; line-height:1.2; }
+  .chip .charm{ font-size:.66rem; font-weight:700; color:#5a6475; line-height:1.1; margin-top:.15rem; }
+  .chip .cbeats{ font-size:.58rem; color:#6c757d; margin-top:.15rem; }
+  .chip .ctech{ position:absolute; top:-.6rem; left:-.45rem; min-width:1.15rem; height:1.15rem; padding:0 .2rem; border-radius:.6rem; background:var(--biz-purple); color:#fff; font-size:.66rem; font-weight:800; line-height:1.15rem; text-align:center; }
+  .chip.done{ opacity:.55; }
+  .chip.playing{ background:var(--biz-yellow); border-color:#c79100; transform:translateY(-3px); }
+
+  .m-btn{ display:inline-block; border-radius:.4rem; padding:.3rem .9rem; font-weight:700; font-size:.82rem; }
+  .m-btn.go{ background:var(--biz-green); color:#fff; }
+  .m-btn.stop{ border:1px solid var(--biz-red); color:var(--biz-red); }
+  .m-btn.rec{ background:var(--biz-red); color:#fff; }
+  .m-bar{ height:.45rem; background:#e9ecef; border-radius:1rem; overflow:hidden; }
+  .m-bar > div{ height:100%; background:var(--biz-yellow); }
+
+  /* signal-chain diagram for the single-note sounds */
+  .chain{ display:flex; flex-wrap:wrap; gap:.35rem; align-items:center; font-size:.78rem; }
+  .chain span.n{ background:#fff; border:2px solid var(--box-line); border-radius:.4rem; padding:.25rem .5rem; font-weight:600; }
+  .chain span.a{ color:#6c757d; font-weight:700; }
+
+  .wave{ width:100%; height:auto; display:block; }
+  .num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<!-- HERO -->
+<header class="hero py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-9">
+        <span class="badge rounded-pill bg-warning text-dark mb-3">Music Practice App · one HTML page · Claude Code</span>
+        <h1 class="display-6 fw-bold">How the Music Practice App Works</h1>
+        <p class="lead mb-0">A single web page for practising songs. You <strong>pick a song</strong> and press <strong>▶ Play</strong>: the song's <strong>original recording</strong> plays, and the note being played lights up in <strong>yellow</strong> on a piano keyboard, or on a guitar fretboard and tab, and in a row of little note boxes. The recordings are captured with a companion page, <code class="text-white">recorder.html</code>, and the notes are worked out by <strong>Claude Code</strong>, which analyses each recording with Python and writes the result into the song list. This document explains the recorder, the note analysis, the practice screen, how the highlight follows the music, and how tapping a key or fret makes a sound. <span class="d-block mt-2 small">Last updated 2026-11-15.</span></p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-5">
+
+  <!-- COLOR KEY -->
+  <div class="mb-5">
+    <div class="card shadow-sm box">
+      <div class="card-body py-3">
+        <div class="row g-2 small text-center text-md-start">
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-blue);"></span>Blue: how it works</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-green);"></span>Green: what you do</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-purple);"></span>Purple: what Claude Code does</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-yellow);"></span>Yellow: the highlight / background</div>
+          <div class="col-12 col-md"><span class="color-key-dot" style="background:var(--biz-red);"></span>Red: watch out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <section id="toc" class="mb-5">
+    <h2 class="section-title">Table of Contents</h2>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <div class="row toc-list">
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">1</span><a href="#overview">The Big Picture: from a Song to a Practice Screen</a></div>
+            <div class="toc-item"><span class="toc-num">2</span><a href="#recorder">How the Recorder (recorder.html) Works</a></div>
+            <div class="toc-item"><span class="toc-num">3</span><a href="#analysis">How Claude Code Finds the Notes in a Recording</a></div>
+            <div class="toc-item"><span class="toc-num">4</span><a href="#scripts">SCRIPTS: the Note-Analysis Scripts</a></div>
+            <div class="toc-item"><span class="toc-num">5</span><a href="#ai">How AI Helps, and How the LLM Learned to Analyse Audio</a></div>
+            <div class="toc-item"><span class="toc-num">6</span><a href="#ui">Using the App: Choose a Song, Press Play</a></div>
+          </div>
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">7</span><a href="#highlight">How the Notes Light Up While the Song Plays</a></div>
+            <div class="toc-item"><span class="toc-num">8</span><a href="#sound">Tapping a Key or Fret: How the Sound Is Made</a></div>
+            <div class="toc-item"><span class="toc-num">9</span><a href="#glossary">Glossary</a></div>
+            <div class="toc-item"><span class="toc-num">10</span><a href="#file-map">File Map</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1. OVERVIEW -->
+  <section id="overview" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">1</span>The Big Picture: from a Song to a Practice Screen</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>Four stages</h5>
+        <p>A new song goes through four stages. Two are done by you, one by Claude Code, and one by the page itself every time you press Play.</p>
+        <div class="flow">
+          <div class="node"><span class="who you">You · recorder.html</span><b>1. Record</b>Capture a few seconds of the song from a browser tab and save it as a WAV file in <code>REFERENCE-AUDIO-FILES</code>.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">Claude Code · Python</span><b>2. Find the notes</b>Analyse the WAV: pitch, note starts, tuning, tempo. Write one line per note.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">Claude Code · files</span><b>3. Add to the library</b>Add the song to <code>song-library.js</code> and its instrument to <code>SONG-INSTRUMENT.json</code>, commit, push.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">The page · index.html</span><b>4. Practise</b>Play the recording and light up each note on the instrument and in the note boxes, in time.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-yellow);"></span>Things worth knowing up front</h5>
+        <ul class="mb-0">
+          <li><strong>The whole app is one file</strong>, <code>index.html</code> (HTML, CSS and JavaScript). Bootstrap comes from a CDN; there is no build step and no server code.</li>
+          <li><strong>It works in two places:</strong> opened straight from disk (<code>file://</code>) and on GitHub Pages at <a href="https://ragchamp.github.io/MUSIC/">ragchamp.github.io/MUSIC</a>.</li>
+          <li><strong>Play always plays the real recording.</strong> The app never re-creates the song with a synthesiser. The only synthesised sound is the single note you hear when you tap a key, a fret or a note box.</li>
+          <li><strong>The notes are data, not code.</strong> Each song is a list of text lines such as <code>'10.16  G4@G  0.5'</code>: <em>when</em> the note starts in the recording, <em>which</em> note(s), and <em>how long</em>.</li>
+          <li><strong>Five songs today:</strong> Inteha Ho Gayi (guitar), Tip Tip Barsa Pani (piano), Pehla Nasha (piano), Chura Liya Hai (guitar) and Anhoni Ko Honi (accordion).</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 2. RECORDER -->
+  <section id="recorder" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">2</span>How the Recorder (recorder.html) Works</h2>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>What it is for</h5>
+        <p>The recorder is a second page in the same folder, linked from the footer of the practice page (<em>🎙️ Record or trim a song</em>). It does two jobs:</p>
+        <ul class="mb-0">
+          <li><strong>Record</strong> what <em>another browser tab</em> is playing (YouTube, a music site, even the practice page) into a <strong>16-bit WAV</strong> file.</li>
+          <li><strong>Trim</strong> an existing audio file: copy the part between a start and an end second into a new file, leaving the original untouched.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-lg-6">
+        <div class="mock h-100">
+          <div class="m-title"><span class="step-num">1</span>Choose what to record</div>
+          <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+            <span class="m-btn" style="background:var(--biz-blue);color:#fff">🗂️ Pick a tab to record</span>
+            <span class="badge text-bg-light border">🔊 YouTube – Inteha Ho Gayi</span>
+          </div>
+          <div class="m-title"><span class="step-num">2</span>Record</div>
+          <div class="d-flex gap-2 flex-wrap mb-2 small">
+            <span class="border rounded px-2 py-1 bg-light">✋ Manual</span>
+            <span class="border rounded px-2 py-1">⏱️ Fixed length</span>
+            <span class="border rounded px-2 py-1">🪄 Auto</span>
+          </div>
+          <div class="d-flex gap-2 mb-2"><span class="m-btn rec">● Record</span><span class="m-btn stop">■ Stop</span></div>
+          <div class="m-bar mb-1"><div style="width:62%;background:linear-gradient(90deg,#20c997,#ffc107,#dc3545)"></div></div>
+          <div class="small text-muted mb-3">-18.4 dB · Recording 00:22</div>
+          <div class="m-title"><span class="step-num">3</span>Listen and save</div>
+          <div class="d-flex gap-2 flex-wrap"><span class="m-btn go">💾 Save</span><span class="m-btn stop" style="border-color:#0d6efd;color:#0d6efd">📁 Choose folder…</span><span class="m-btn stop" style="border-color:#6c757d;color:#6c757d">⬇ Download instead</span></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="mock h-100">
+          <div class="m-title"><span class="step-num">✂️</span>Trim an audio file</div>
+          <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+            <span class="m-btn" style="background:var(--biz-blue);color:#fff">📂 Choose audio file…</span>
+            <span class="badge text-bg-light border">inteha-ho-gayi.wav · 33.0 s</span>
+          </div>
+          <div class="row g-2 mb-3 small">
+            <div class="col-6"><div class="text-muted fw-bold" style="font-size:.7rem">START (SECONDS)</div><div class="m-select">5.00 <span>⏱</span></div></div>
+            <div class="col-6"><div class="text-muted fw-bold" style="font-size:.7rem">END (SECONDS)</div><div class="m-select">27.00 <span>⏱</span></div></div>
+          </div>
+          <div class="d-flex gap-2 mb-3"><span class="m-btn go">📋 Copy audio</span><span class="m-btn stop" style="border-color:#0d6efd;color:#0d6efd">▶ Preview selection</span></div>
+          <div class="alert alert-success small mb-0 py-2">✅ Copied from 5.00 s to 27.00 s (22.00 s, 3.7 MB) to <b>inteha-ho-gayi-copy-20261115-101500.wav</b>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 1 · Pick a tab: <code style="color:#5BF527">getDisplayMedia()</code></div>
+      <div class="step-body">
+        <p>Clicking <strong>🗂️ Pick a tab to record</strong> calls the browser's screen-sharing API, <code>navigator.mediaDevices.getDisplayMedia()</code>. Chrome opens its picker; you choose the tab playing the music and switch on <strong>“Also share tab audio”</strong>. (Choosing <em>Entire screen</em> with <em>“Also share system audio”</em> records everything the PC plays.)</p>
+        <ul>
+          <li>Chrome only offers tab audio together with video, so the page asks for video too and simply ignores it.</li>
+          <li>Echo cancellation, noise suppression and auto gain are switched <strong>off</strong>, so the music is captured as it is.</li>
+          <li>If no audio track comes back, the page tells you to try again with “Also share tab audio” on.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 2 · Listen and record: Web Audio + ScriptProcessor</div>
+      <div class="step-body">
+        <p>The shared stream is fed into a Web Audio graph: <code>MediaStreamSource → ScriptProcessor(4096) → silent gain → speakers</code>. The processor hands the page every block of 4096 samples as raw numbers (one array per channel). A ScriptProcessor is used on purpose: it <strong>keeps running while the recorder tab is in the background</strong> (you are usually looking at the other tab), whereas <code>requestAnimationFrame</code> would pause.</p>
+        <p>For each block the page works out the loudness in dB (for the level meter) and, while recording, keeps a copy of the block. Three ways to start and stop:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small bg-white mb-2">
+            <thead><tr><th>Mode</th><th>Starts</th><th>Stops</th></tr></thead>
+            <tbody>
+              <tr><td>✋ <strong>Manual</strong></td><td>When you press ● Record</td><td>When you press ■ Stop</td></tr>
+              <tr><td>⏱️ <strong>Fixed length</strong></td><td>When you press ● Record</td><td>After the number of seconds you set; the file is cut to exactly that length</td></tr>
+              <tr><td>🪄 <strong>Auto</strong></td><td>When the sound first rises above the threshold (default −45 dB); the block just before is kept, so the first note is not clipped</td><td>After N seconds of silence (default 3 s); trailing silence is dropped, keeping half a second</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>If you close the shared tab or stop sharing, recording stops by itself.</p>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 3 · Build the WAV file</div>
+      <div class="step-body">
+        <p>When recording stops, <code>encodeWav()</code> writes a standard <strong>RIFF/WAVE</strong> file in memory: a 44-byte header (format 1 = PCM, channels, sample rate, 16 bits) followed by the samples, each one clipped to −1…+1 and stored as a 16-bit integer, channels interleaved. The result is a <code>Blob</code> you can play back in the page's audio player before saving.</p>
+        <div class="code-window mb-0">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">recorder.html · the WAV layout</span></div>
+<pre><code>"RIFF" &lt;file size&gt; "WAVE"
+"fmt " 16  PCM=1  channels  sampleRate  byteRate  blockAlign  16-bit
+"data" &lt;bytes&gt;  L R L R L R …   <span class="cm">← each sample: round(x × 32767), x clipped to −1…+1</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 4 · Save into a folder: File System Access API + IndexedDB</div>
+      <div class="step-body">
+        <ul>
+          <li><strong>💾 Save</strong> writes the file straight into a folder on your PC using <code>showDirectoryPicker()</code> and <code>createWritable()</code>. The first time, you pick <code>C:\Daya\RAGchamp\MUSIC\REFERENCE-AUDIO-FILES</code>.</li>
+          <li>The folder <em>handle</em> is stored in <strong>IndexedDB</strong> (database <code>music-recorder</code>), so next time the page already knows the folder; Chrome may just ask you to allow access again.</li>
+          <li>The folder name turns red if it isn't <code>REFERENCE-AUDIO-FILES</code>, as a reminder.</li>
+          <li><strong>⬇ Download instead</strong> works in any browser: the file goes to your Downloads folder.</li>
+          <li>After saving, the page shows a ready-made <code>song-library.js</code> entry for the new file.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Trim · Copy part of a file</div>
+      <div class="step-body">
+        <ul>
+          <li>Choose a file, play it in the player, and set <strong>Start</strong> and <strong>End</strong> (type the seconds, or press <em>⏱ Player position</em> to take the player's current time). <em>▶ Preview selection</em> plays just that part.</li>
+          <li><strong>WAV files are copied byte for byte</strong> (<code>parseWav()</code> + <code>cutWav()</code>): the page reads the RIFF chunks, keeps the original <code>fmt</code> chunk and copies only the sample bytes between the two positions. The copy has exactly the same format and quality as the original.</li>
+          <li><strong>Other formats</strong> (MP3, M4A…) are decoded with <code>decodeAudioData()</code> and the selected part is saved as a 16-bit WAV.</li>
+          <li>The copy is named <code>name-copy-YYYYMMDD-HHMMSS.wav</code> and saved in the <strong>same folder</strong> as the original. If the page doesn't yet have permission for that folder, Chrome asks you to pick it once.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-red);"></span>Watch out</h5>
+        <ul class="mb-0">
+          <li>Recording and folder-saving need <strong>Chrome or Edge</strong> on a laptop. Other browsers show a warning; Download still works.</li>
+          <li>Forgetting to tick <strong>“Also share tab audio”</strong> gives no sound. The meter stays at the bottom.</li>
+          <li>Starting a new recording when the last one wasn't saved asks before throwing it away.</li>
+          <li>There is also a Python recorder, <code>BLOG\AUDIO-RECORDER.py</code> (WASAPI loopback), which records whatever the PC is playing.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 3. ANALYSIS -->
+  <section id="analysis" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">3</span>How Claude Code Finds the Notes in a Recording</h2>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-purple);"></span>The idea</h5>
+        <p>A recording is just a long list of air-pressure numbers (44 100 or 48 000 per second). To light up notes in time, the app needs something very different: <em>“at 10.16 s, a G4 starts and lasts half a beat”</em>. Claude Code bridges the gap by writing and running small <strong>Python</strong> scripts (numpy and scipy) that look at the sound's frequencies over time, find where notes start, and decide which note is sounding. It then checks and cleans the result, and writes it into the song list.</p>
+        <p class="mb-0">You ask in plain words, e.g. <em>“Add SONG-4-chura-liya-hai-start.wav as a guitar song with its notes”</em>. Claude Code does the rest and shows you the summary before committing.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>What the analysis looks at</h5>
+        <svg class="wave" viewBox="0 0 800 210" role="img" aria-label="A sketch: waveform on top, spectrogram-like note bars below, onsets marked with dashed lines">
+          <rect x="0" y="0" width="800" height="210" fill="#fff"/>
+          <text x="8" y="16" font-size="12" font-weight="700" fill="#6c757d">1 · waveform (what the WAV holds)</text>
+          <path d="M20 55 L60 55 L64 30 L68 80 L72 35 L76 75 L80 45 L90 62 L100 50 L110 58 L140 55 L180 55 L184 25 L188 85 L192 32 L196 78 L200 42 L215 64 L230 50 L260 55 L300 55 L304 33 L308 77 L312 40 L316 70 L330 52 L350 57 L420 55 L424 28 L428 82 L432 36 L436 74 L446 46 L470 60 L500 54 L560 55 L564 30 L568 80 L572 38 L576 72 L590 50 L620 58 L680 55 L684 35 L688 76 L692 44 L700 64 L780 55" fill="none" stroke="#084298" stroke-width="1.5"/>
+          <text x="8" y="112" font-size="12" font-weight="700" fill="#6c757d">2 · frequency over time (STFT) → strongest note per moment</text>
+          <g fill="#6f42c1" opacity=".85">
+            <rect x="64" y="160" width="110" height="9" rx="3"/><rect x="184" y="140" width="110" height="9" rx="3"/>
+            <rect x="304" y="140" width="110" height="9" rx="3"/><rect x="424" y="125" width="130" height="9" rx="3"/>
+            <rect x="564" y="140" width="110" height="9" rx="3"/><rect x="684" y="160" width="90" height="9" rx="3"/>
+          </g>
+          <g fill="#6f42c1" opacity=".3">
+            <rect x="64" y="182" width="110" height="7" rx="3"/><rect x="184" y="170" width="110" height="7" rx="3"/><rect x="424" y="158" width="130" height="7" rx="3"/>
+          </g>
+          <g stroke="#dc3545" stroke-dasharray="4 3" stroke-width="1.5">
+            <line x1="64" y1="22" x2="64" y2="198"/><line x1="184" y1="22" x2="184" y2="198"/><line x1="304" y1="22" x2="304" y2="198"/>
+            <line x1="424" y1="22" x2="424" y2="198"/><line x1="564" y1="22" x2="564" y2="198"/><line x1="684" y1="22" x2="684" y2="198"/>
+          </g>
+          <g font-size="11" font-weight="700" fill="#212529">
+            <text x="68" y="156">B4</text><text x="188" y="136">E5</text><text x="308" y="136">E5</text><text x="428" y="121">G5</text><text x="568" y="136">E5</text><text x="688" y="156">B4</text>
+          </g>
+          <text x="560" y="205" font-size="11" fill="#dc3545">dashed red = note starts (onsets)</text>
+          <text x="180" y="205" font-size="11" fill="#6f42c1">pale bars = overtones, ignored</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 1 · Load and look at the whole clip</div>
+      <div class="step-body">
+        <p>Read the WAV with scipy, mix the two channels to one, and scale to −1…+1. Note the length and sample rate, and listen to where the interesting part (the intro, the hook) is. If needed, the clip is trimmed first in the recorder.</p>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 2 · STFT: turn sound into a picture of frequency over time</div>
+      <div class="step-body">
+        <p>A <strong>Short-Time Fourier Transform</strong> cuts the audio into short overlapping windows (tens of milliseconds each) and measures how strong every frequency is in each window. The result is a grid: time across, frequency up, loudness as the value. A held note shows up as a bright horizontal line at its frequency, plus fainter lines at 2×, 3×, 4× that frequency (its <strong>overtones</strong>).</p>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 3 · Tuning offset: how sharp or flat the recording is</div>
+      <div class="step-body">
+        <p>Old film recordings are rarely tuned exactly to A = 440 Hz; tape speed drifts. The strongest peaks are compared with the nearest exact note frequencies, and the average difference is the <strong>tuning offset</strong> in cents (100 cents = one semitone). All later note decisions are shifted by it, so a slightly flat B4 isn't read as a Bb4.</p>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle small bg-white mb-0">
+            <thead><tr><th>Song</th><th>Tuning</th><th>Key</th><th class="num">Tempo</th><th class="num">Notes</th><th>Instrument</th></tr></thead>
+            <tbody>
+              <tr><td>Inteha Ho Gayi (guitar intro)</td><td>about −10 cents</td><td>E minor</td><td class="num">154 BPM</td><td class="num">68</td><td>🎸 guitar</td></tr>
+              <tr><td>Tip Tip Barsa Pani (opening)</td><td>about −18 cents</td><td>F# minor</td><td class="num">109 BPM</td><td class="num">93</td><td>🎹 piano</td></tr>
+              <tr><td>Pehla Nasha (opening)</td><td>about −15 cents</td><td>F major</td><td class="num">76 BPM</td><td class="num">186</td><td>🎹 piano</td></tr>
+              <tr><td>Chura Liya Hai (guitar intro)</td><td>about −28 cents</td><td>Bb minor</td><td class="num">150 BPM</td><td class="num">82</td><td>🎸 guitar</td></tr>
+              <tr><td>Anhoni Ko Honi (opening)</td><td>about −34 cents</td><td>Bb minor</td><td class="num">90 BPM</td><td class="num">141</td><td>🪗 accordion</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 4 · Harmonic salience: which note is really sounding</div>
+      <div class="step-body">
+        <p>Because every note also lights up its overtones, the loudest single frequency is often the <em>wrong</em> note (an octave or a fifth too high). So each of the 12 notes per octave in the range of interest (e.g. C3 to C6) gets a <strong>salience score</strong>: the energy at its own frequency <em>plus</em> the energy at its 2nd, 3rd, 4th… harmonics, with the higher harmonics counting less. The real note collects energy from all of its harmonics and wins.</p>
+        <p class="mb-0">For the guitar songs there is a special <strong>double-stop</strong> score: most Inteha notes are two strings at the same fret (e.g. <code>E5+B4</code> at fret 12), so pairs of notes a fourth apart are scored together.</p>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 5 · Spectral-flux onsets: where each note starts</div>
+      <div class="step-body">
+        <p><strong>Spectral flux</strong> measures how much the spectrum suddenly <em>gains</em> energy from one window to the next. A plucked string, a struck key or a new syllable makes a sharp jump. Peaks in this curve, above a threshold and not too close together, are the <strong>onsets</strong>: the start times written into the song list (e.g. <code>10.16</code>).</p>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 6 · Pick, clean and measure the beats</div>
+      <div class="step-body">
+        <ul>
+          <li>At each onset, keep the note with the highest salience in the melody range (e.g. C4–A5 for the vocal tunes, so the bass drone underneath is ignored).</li>
+          <li>Drop weak readings; merge quick repeats of the same note; drop known overtone and bass readings.</li>
+          <li>Find the <strong>tempo</strong> from the typical gap between onsets, and turn each note's length (gap to the next onset) into <strong>beats</strong>: 0.5, 1, 1.5, 2…</li>
+          <li>Fix obvious mistakes by hand. For Chura Liya Hai, for example, three readings were corrected (6.22 s G5 → C4, 11.42 s C6 → F4, 21.77 s G5 → C4) and four overtone readings were removed. The Inteha notes were checked against your own tab.</li>
+          <li>Write down what is uncertain: busy sections where the band drowns the melody, octaves that could be either way.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">Step 7 · Write the results</div>
+      <div class="step-body">
+        <div class="step-file"><mark>REFERENCE-AUDIO-FILES/SONG-n-…-notes.txt</mark> <span class="text-muted">human-readable report: tuning, key, tempo, method, the note table</span></div>
+        <div class="step-file"><mark>REFERENCE-AUDIO-FILES/song-library.js</mark> <span class="text-muted">the entry the app reads, one line per note</span></div>
+        <div class="step-file"><mark>SONG-INSTRUMENT.json</mark> <span class="text-muted">the song's instrument, matched by file name</span></div>
+        <div class="code-window">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">song-library.js · part of the Inteha entry</span></div>
+<pre><code>{
+  title: 'Inteha Ho Gayi: guitar intro (Sharaabi)',
+  audio: 'SONG-1-inteha-ho-gayi-start.wav',
+  key:   'E minor',
+  inst:  'guitar',
+  tempo: 154,
+  notes: [
+    <span class="cm">// time    notes                 beats  label</span>
+    ' 0.61  E4+B3+G3+E3+B2+E2        2  Em chord',
+    ' 1.43  B4+F#4                 0.5',
+    ' 2.10  ~E5+B4                   1',       <span class="cm">// ~ = slide into the note</span>
+    '10.16  G4@G                   0.5',       <span class="cm">// @G = play it on the G string</span>
+  ]
+}</code></pre>
+        </div>
+        <p class="mb-0">Claude Code then opens the page in headless Chrome, plays the song in real time and checks that the highlight moves through every note, takes phone and laptop screenshots, commits, and <strong>asks before pushing</strong> to GitHub (pushing updates the live site).</p>
+      </div>
+    </div>
+
+    <div class="code-window">
+      <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">SCRIPTS/musicdsp.py · the core of it, shortened</span></div>
+<pre><code>sr, x = scipy.io.wavfile.read(wav);  x = mono(x) / 32768
+f, t, S = scipy.signal.stft(x, sr, nperseg=4096, noverlap=3840)      <span class="cm"># frequency × time grid</span>
+mag = np.abs(S)
+
+cents = tuning_offset(mag, f)                                        <span class="cm"># e.g. -28 for Chura Liya Hai</span>
+sal = {m: sum(w**k * energy(mag, f, midi_to_hz(m, cents) * (k+1))   <span class="cm"># note + its harmonics</span>
+          for k in range(6)) for m in range(lo, hi)}
+
+flux = np.maximum(np.diff(np.log1p(mag), axis=1), 0).sum(axis=0)     <span class="cm"># sudden energy gains</span>
+onsets = scipy.signal.find_peaks(flux, height=thr, distance=min_gap)[0]
+
+for i in onsets:                                                     <span class="cm"># strongest note at each start</span>
+    m = max(sal, key=lambda m: sal[m][i])
+    ...                                                              <span class="cm"># drop weak, merge repeats, beats</span></code></pre>
+    </div>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-green);"></span>Run it yourself</h5>
+        <p class="mb-0">The whole method is saved as scripts in <code>C:\Daya\RAGchamp\MUSIC\SCRIPTS</code>. Section <a href="#scripts">4. SCRIPTS</a> explains each one.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-red);"></span>Limits of the analysis</h5>
+        <ul class="mb-0">
+          <li>It finds <strong>the melody line only</strong>, not full chords (Inteha's opening E minor chord was added by hand).</li>
+          <li>When the band gets loud and busy (Pehla Nasha after about 47.8 s, Anhoni Ko Honi after about 27 s), the strongest note may belong to the accompaniment, not the tune.</li>
+          <li><strong>Octaves</strong> are not always certain (Bb3 vs Bb4 in Chura Liya Hai).</li>
+          <li>The <code>-notes.txt</code> files are reports; the app reads only <code>song-library.js</code>. The old Inteha notes file comes from an <em>earlier</em> recording and its times don't match the current WAV.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 4. SCRIPTS -->
+  <section id="scripts" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">4</span>SCRIPTS: the Note-Analysis Scripts</h2>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>What is in the folder</h5>
+        <p>The method from section 3 is saved as four small Python files in <code>C:\Daya\RAGchamp\MUSIC\SCRIPTS</code>. They need only <strong>numpy</strong> and <strong>scipy</strong> (<code>pip install numpy scipy</code>) and are run from that folder in Git Bash. Each takes about 5 seconds per song. <code>SCRIPTS\README.md</code> has the same information in short form.</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small mb-3">
+            <thead><tr><th>File</th><th>Kind</th><th>Job</th><th>Used when</th></tr></thead>
+            <tbody>
+              <tr><td><code>musicdsp.py</code></td><td>Library</td><td>The toolkit every script imports: load WAV, STFT, tuning, salience, onsets, tempo, key.</td><td>Never run on its own</td></tr>
+              <tr><td><code>analyze_notes.py</code></td><td>Command</td><td>Makes the <strong>first draft</strong> of a song's notes.</td><td>A new recording arrives</td></tr>
+              <tr><td><code>inspect_time.py</code></td><td>Command</td><td>Shows <strong>what is sounding</strong> at chosen seconds.</td><td>A note in the draft looks doubtful</td></tr>
+              <tr><td><code>check_library.py</code></td><td>Command</td><td><strong>Checks</strong> the finished <code>song-library.js</code> against the recordings.</td><td>After editing the song list</td></tr>
+              <tr><td><code>README.md</code></td><td>Notes</td><td>Usage, options, method, limits.</td><td>Quick reference</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flow">
+          <div class="node"><span class="who you">Input</span><b>WAV file</b>in <code>REFERENCE-AUDIO-FILES</code></div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">analyze_notes.py</span><b>Draft</b>report + <code>song-library.js</code> lines</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">inspect_time.py</span><b>Look closer</b>at weak or odd notes; fix by hand</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">Edit</span><b>song-library.js</b>paste the cleaned lines</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">check_library.py</span><b>Check</b>every line against the audio</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- musicdsp.py -->
+    <div class="step-box">
+      <div class="step-bar">musicdsp.py · the shared toolkit</div>
+      <div class="step-body">
+        <p>All the signal processing lives here, so the three commands stay short and always measure things the same way. Each function is one step of the method:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small bg-white">
+            <thead><tr><th>Function</th><th>What it does</th><th>Key settings</th></tr></thead>
+            <tbody>
+              <tr><td><code>load_wav()</code></td><td>Reads the WAV (16-bit, 32-bit or 8-bit), mixes stereo to mono, scales to −1…+1, cuts <code>start…end</code>, resamples. Returns the offset so every time stays in <em>file seconds</em>.</td><td>22 050 Hz (enough for pitch; half the work of 48 kHz)</td></tr>
+              <tr><td><code>spectrogram()</code></td><td>STFT with a Hann window: magnitude of every frequency in every frame. Frame times are window centres.</td><td>pitch: 4096 samples (0.19 s), every 256 (12 ms), zero-padded to 8192, up to 6 kHz</td></tr>
+              <tr><td><code>estimate_tuning()</code></td><td>Finds spectral peaks, measures each exactly with a parabola through 3 bins, and takes the loudness-weighted <em>circular</em> mean of their distance from the nearest note.</td><td>peaks 100–2000 Hz, ≥ 15% of the frame's loudest</td></tr>
+              <tr><td><code>salience()</code></td><td>Score per note per frame: own energy + 0.8 × 2nd harmonic + 0.8² × 3rd … Magnitudes are square-rooted first so one loud partial can't dominate.</td><td>6 harmonics, ±35 cents window around each</td></tr>
+              <tr><td><code>onset_envelope()</code></td><td>Spectral flux: the summed <em>increase</em> in log-magnitude from one short frame to the next.</td><td>1024 samples (46 ms), every 128 (6 ms), 30 Hz–8 kHz</td></tr>
+              <tr><td><code>detect_onsets()</code></td><td>Flux peaks higher than the local median by <code>delta</code> and at least <code>min_gap</code> apart = note starts.</td><td>delta 0.06, min gap 0.07 s, median over 0.5 s</td></tr>
+              <tr><td><code>tempo_candidates()</code></td><td>Autocorrelation of the flux, with a comb over 1–4 beats and a gentle preference for about 110 BPM. Returns the top 3 tempos.</td><td>60–200 BPM</td></tr>
+              <tr><td><code>estimate_key()</code></td><td>Krumhansl-Kessler: correlates the pitch-class histogram (weighted by beats) with 24 major/minor key profiles.</td><td>—</td></tr>
+              <tr><td><code>Analysis</code> (class)</td><td>Runs all of the above once for a file and answers <code>notes_between(t0, t1)</code> and <code>ranked(t0, t1)</code>: which notes are strongest in that time span.</td><td>note range <code>lo…hi</code>, e.g. C3…C6</td></tr>
+              <tr><td><code>midi_to_name()</code>, <code>name_to_midi()</code>, <code>midi_to_hz()</code></td><td>Convert between <code>C4</code> / 60 / 261.6 Hz (shifted by the tuning offset). Names use sharps, as in <code>song-library.js</code>; flats like <code>Bb3</code> are accepted.</td><td>A4 = 440 Hz = 69</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-0 small text-muted">There are two window sizes on purpose: long windows tell close notes apart (C3 and C#3 are only 8 Hz apart), and short windows pin down <em>when</em> a note starts.</p>
+      </div>
+    </div>
+
+    <!-- analyze_notes.py -->
+    <div class="step-box">
+      <div class="step-bar">analyze_notes.py · the first draft of a song's notes</div>
+      <div class="step-body">
+        <div class="step-file"><mark>python analyze_notes.py &lt;wav&gt; [options]</mark></div>
+        <p><strong>What it does, step by step:</strong></p>
+        <ol>
+          <li>Builds an <code>Analysis</code> of the file (tuning, salience, onsets, tempo) and logs each result.</li>
+          <li>At every onset, averages the salience from 0.03 s after it (skipping the noisy attack) to 0.18 s or the next onset, and keeps the <strong>strongest note between <code>--lo</code> and <code>--hi</code></strong>. Notes in <code>--drop</code> are ignored.</li>
+          <li>With <code>--double-stop</code>, it also looks for the best pair a fourth apart (e.g. E5+B4) and keeps the pair if the lower note is at least 45% as strong.</li>
+          <li>Drops readings weaker than <code>--weak</code> × the median, and merges a repeat of the same note closer than <code>--merge-gap</code>.</li>
+          <li>Turns the gap to the next note into <strong>beats</strong> (rounded to ½, between ½ and 8) and estimates the key.</li>
+          <li>Prints a <strong>report</strong> in the style of the <code>-notes.txt</code> files, with a <em>strength</em> column (1.00 = a typical note; below 0.6 = less sure), then the <strong>lines to paste</strong> into <code>song-library.js</code>. <code>--out</code> also saves the report.</li>
+        </ol>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle small bg-white">
+            <thead><tr><th>Option</th><th>Default</th><th>Use it when</th></tr></thead>
+            <tbody>
+              <tr><td><code>--start</code> / <code>--end</code></td><td>whole file</td><td>only part of the clip matters (times stay in file seconds)</td></tr>
+              <tr><td><code>--lo</code> / <code>--hi</code></td><td>C4 / A5</td><td>the melody sits elsewhere; keeps bass and drones out</td></tr>
+              <tr><td><code>--drop A#2,C3</code></td><td>none</td><td>a drone or a known overtone keeps winning</td></tr>
+              <tr><td><code>--double-stop</code></td><td>off</td><td>guitar parts played as pairs a fourth apart, like Inteha</td></tr>
+              <tr><td><code>--tempo 150</code></td><td>measured</td><td>the measured tempo is half or double (the log lists the other candidates)</td></tr>
+              <tr><td><code>--tuning -28</code></td><td>measured</td><td>you already know the offset</td></tr>
+              <tr><td><code>--delta 0.04</code></td><td>0.06</td><td>soft playing and notes are missed (lower = more onsets)</td></tr>
+              <tr><td><code>--min-gap</code></td><td>0.07 s</td><td>very fast notes, or too many double triggers</td></tr>
+              <tr><td><code>--weak 0.5</code></td><td>0.35</td><td>too many ghost notes</td></tr>
+              <tr><td><code>--merge-gap 0.2</code></td><td>0.12 s</td><td>a held note is split into several boxes</td></tr>
+              <tr><td><code>--title</code>, <code>--out</code></td><td>file name / none</td><td>naming and saving the report</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-window mb-0">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">real output · Chura Liya Hai (shortened)</span></div>
+<pre><code>$ python analyze_notes.py ../REFERENCE-AUDIO-FILES/SONG-4-chura-liya-hai-start.wav --lo C3 --hi C6 --drop A#2
+[analyze] loaded …SONG-4-chura-liya-hai-start.wav: 23.00 s (from 0.00 s), 22050 Hz mono
+[analyze] tuning offset: -34.8 cents
+[analyze] salience: 37 notes (C3..C6) x 1983 frames
+[analyze] onsets: 129, tempo about 83 BPM (other candidates: 167, 111)   <span class="cm"># real: ~150, so pass --tempo 150</span>
+[analyze] merged 20 quick repeats -> 109 notes
+
+  time   beats  note           strength
+  ------ -----  -------------  --------
+   0.07s   0.5  F3               0.76
+   2.80s   0.5  F4               1.13
+   3.01s   0.5  C#4              0.98
+   3.34s   0.5  C4               1.05
+   6.21s   0.5  C4               1.10     <span class="cm"># found directly; the old draft read G5 here</span>
+   …
+// ---- song-library.js lines ----
+    notes: [
+      '  0.07  F3                        0.5',
+      …</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- inspect_time.py -->
+    <div class="step-box">
+      <div class="step-bar">inspect_time.py · what is sounding at these seconds?</div>
+      <div class="step-body">
+        <div class="step-file"><mark>python inspect_time.py &lt;wav&gt; &lt;seconds&gt; [&lt;seconds&gt; …] [--lo C3 --hi C6 --span 0.15 --top 6 --tuning N]</mark></div>
+        <p>For each time it averages the salience over the next <code>--span</code> seconds and prints the <code>--top</code> strongest notes with their frequency (after the tuning offset), score, score relative to the best, and a bar. It lists the onsets within 0.3 s, so you can see whether the time is right. Among the three strongest, it points out any note that is a <strong>2nd–5th harmonic</strong> of another. That is the usual reason a reading is an octave or a fifth too high.</p>
+        <div class="code-window mb-2">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">real output · Chura Liya Hai at 6.22 s</span></div>
+<pre><code>$ python inspect_time.py ../REFERENCE-AUDIO-FILES/SONG-4-chura-liya-hai-start.wav 6.22
+
+6.22 s   onsets nearby: 6.01, 6.21, 6.39
+   note   Hz       score   relative
+   C4      256.4    0.510   1.00  ####################
+   C5      512.8    0.445   0.87  #################
+   G5      768.4    0.423   0.83  #################
+   F3      171.1    0.342   0.67  #############
+   G4      384.2    0.331   0.65  #############
+   C3      128.2    0.323   0.63  #############
+   note: C5 could be the 2nd harmonic of C4
+   note: G5 could be the 3rd harmonic of C4</code></pre>
+        </div>
+        <p class="mb-0">Read it like this: C4, C5 and G5 are all strong, but C5 and G5 sit exactly where C4's 2nd and 3rd harmonics fall, so the note played is <strong>C4</strong>. The Hz column shows the tuning offset at work: C4 is 256.4 Hz here, not 261.6, because the recording is about 35 cents flat.</p>
+      </div>
+    </div>
+
+    <!-- check_library.py -->
+    <div class="step-box">
+      <div class="step-bar">check_library.py · check song-library.js against the recordings</div>
+      <div class="step-body">
+        <div class="step-file"><mark>python check_library.py [part of a title or file name] [--rank 3] [--all] [--span 0.15]</mark></div>
+        <ul>
+          <li><strong>Reads <code>song-library.js</code> with Python</strong> (regular expressions, no JavaScript engine): title, audio file and every note line of each song. Comments are skipped; <code>~</code>, <code>^</code> and <code>@string</code> are understood.</li>
+          <li>For each song with audio, it analyses the WAV over the song's own note range (± 5 semitones).</li>
+          <li>For every timed line, it ranks all notes by salience just after that time. The line is <strong>OK</strong> if any of its notes (for a double stop or chord, either one) is in the top <code>--rank</code>. Otherwise it is printed with <code>??</code> and what the recording suggests instead.</li>
+          <li>It ends each song with the measured tuning and a score. <code>--all</code> prints every line, not only the doubtful ones.</li>
+        </ul>
+        <div class="code-window mb-2">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">real output · Inteha Ho Gayi</span></div>
+<pre><code>$ python check_library.py inteha
+
+=== Inteha Ho Gayi: guitar intro (Sharaabi)  (SONG-1-inteha-ho-gayi-start.wav, 68 notes)
+   ??   2.71  E5+B4                  rank 4   strongest here: E3 E4 E2
+   ??  10.16  G4                     rank 4   strongest here: D4 D3 D2
+   ??  10.63  E5                     rank 5   strongest here: D4 G3 E4
+   ??  12.69  B4+F#4                 rank 5   strongest here: A4 D5 D3
+   ??  20.02  B4+F#4                 rank 5   strongest here: E4 A#4 A4
+   tuning -11 cents · 63 of 68 lines have a listed note in the top 3 (93%)</code></pre>
+        </div>
+        <p class="mb-2">A <code>??</code> line is <em>where to listen first</em>, not proof of a mistake. At 2.71 s, for example, the low E strings are still ringing under the double stop. Results on the whole library (2026-11-15):</p>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle small bg-white mb-0">
+            <thead><tr><th>Song</th><th>Measured tuning</th><th class="num">Lines OK</th></tr></thead>
+            <tbody>
+              <tr><td>Inteha Ho Gayi</td><td>−11 cents</td><td class="num">63 / 68 (93%)</td></tr>
+              <tr><td>Tip Tip Barsa Pani</td><td>−18 cents</td><td class="num">93 / 93 (100%)</td></tr>
+              <tr><td>Pehla Nasha</td><td>−14 cents</td><td class="num">186 / 186 (100%)</td></tr>
+              <tr><td>Chura Liya Hai</td><td>−35 cents</td><td class="num">81 / 82 (99%)</td></tr>
+              <tr><td>Anhoni Ko Honi</td><td>−44 cents</td><td class="num">123 / 141 (87%)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-green);"></span>A typical session for a new song</h5>
+        <div class="code-window mb-0">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">Git Bash · C:\Daya\RAGchamp\MUSIC\SCRIPTS</span></div>
+<pre><code><span class="cm"># 1. first draft (melody between C4 and A5)</span>
+python analyze_notes.py ../REFERENCE-AUDIO-FILES/SONG-6-xyz-start.wav --out draft.txt
+
+<span class="cm">#    guitar with double stops / a song with a low drone</span>
+python analyze_notes.py ../REFERENCE-AUDIO-FILES/SONG-1-inteha-ho-gayi-start.wav --lo E4 --hi G5 --double-stop
+python analyze_notes.py ../REFERENCE-AUDIO-FILES/SONG-4-chura-liya-hai-start.wav --lo C3 --hi C6 --drop A#2 --tempo 150
+
+<span class="cm"># 2. look at doubtful notes (strength &lt; 0.6, out of key, octave jumps)</span>
+python inspect_time.py ../REFERENCE-AUDIO-FILES/SONG-6-xyz-start.wav 6.22 11.42
+
+<span class="cm"># 3. paste the cleaned lines into song-library.js, then check them</span>
+python check_library.py xyz</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-red);"></span>Watch out</h5>
+        <ul class="mb-0">
+          <li><strong>Tempo is the weakest step.</strong> Half and double speed fit the same notes. The measured tempo was right for Inteha, Tip Tip and Anhoni but not for Chura Liya Hai or Pehla Nasha. Check the candidates in the log and pass <code>--tempo</code>. Tempo only changes the beat lengths (box widths), not the note times.</li>
+          <li><strong>Melody only:</strong> one note, or one double stop, per onset. Chords like Inteha's opening Em are added by hand.</li>
+          <li><strong>Tuning re-measured:</strong> these scripts measure Chura Liya Hai at −35 and Anhoni Ko Honi at −44 cents. The earlier reports (in the table in section 3) said −28 and −34. The scripts estimate tuning a little differently from the original one-off analysis.</li>
+          <li>The draft is a <strong>starting point</strong>: listen against the recording before it goes into the app.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 5. AI -->
+  <section id="ai" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">5</span>How AI Helps, and How the LLM Learned to Analyse Audio</h2>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-purple);"></span>The short answer</h5>
+        <p>The AI here is <strong>Claude</strong>, a large language model (LLM), working through <strong>Claude Code</strong>, which lets it read and write files and run programs on your PC. Claude <strong>does not listen</strong> to the music. It can't take a WAV file as input the way it takes text or a picture. Instead it acts like an <strong>audio engineer with a lab</strong>: it knows the theory, writes the measuring tools (Python scripts), runs them, reads the numbers they print, judges whether they make musical sense, and fixes what doesn't.</p>
+        <p class="mb-0">So the numbers (frequencies, onset times) come from <strong>numpy and scipy</strong>. The <strong>choices</strong> come from the AI: which method to use, which settings, which readings to trust, and how to turn them into a clean song list that the app can use.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>Where AI is used, and where it isn't</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small mb-0">
+            <thead><tr><th>Stage</th><th>Who does it</th><th>What AI contributes</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Recording</strong> (recorder.html)</td><td>You + the browser</td><td><strong>None at run time.</strong> Claude Code wrote the recorder page, but recording is plain browser code.</td></tr>
+              <tr><td><strong>Finding the notes</strong></td><td>Claude Code + Python</td><td><strong>The main contribution.</strong> Picks the method, writes and runs the scripts, reads the results, corrects mistakes, writes the report.</td></tr>
+              <tr><td><strong>Adding the song</strong></td><td>Claude Code</td><td>Turns the analysis into <code>song-library.js</code> lines (including guitar strings, slides, chord labels), updates <code>SONG-INSTRUMENT.json</code>, tests the page in headless Chrome, commits.</td></tr>
+              <tr><td><strong>Checking by ear</strong></td><td><strong>You</strong></td><td>None. You are the final judge: if a note sounds wrong against the recording, you say so and Claude fixes it.</td></tr>
+              <tr><td><strong>Practising</strong> (index.html)</td><td>The browser</td><td><strong>None at run time.</strong> Claude Code wrote the app, but playing and highlighting are plain JavaScript. No AI service is called, so the app works offline and costs nothing to run.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">The AI's working loop for one song</div>
+      <div class="step-body">
+        <div class="flow mb-3">
+          <div class="node"><span class="who claude">Plan</span><b>Choose a method</b>e.g. melody only between C4 and A5, because a drone sits underneath.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">Write</span><b>Write a script</b>STFT, tuning, salience, onsets, with settings for this clip.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">Run</span><b>Python measures</b>It prints tables: onset times, the strongest notes, the tuning in cents.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">Judge</span><b>Does it make sense?</b>Notes outside the key? Octave jumps? Notes too close together?</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">Fix</span><b>Adjust and repeat</b>Change thresholds, drop overtones, correct readings by hand.</div>
+        </div>
+        <p class="mb-0">A real example from Chura Liya Hai: at 6.22 s the strongest reading was <strong>G5</strong>. The song is in Bb minor and the notes around it are low, so Claude treated G5 as an <em>overtone</em> (G5 is the 3rd harmonic of C4: 3 × 262 Hz ≈ 785 Hz, an octave and a fifth above it) and corrected it to <strong>C4</strong>. A plain script can't make that judgement; it needs musical knowledge plus reasoning about this particular clip.</p>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-lg-6">
+        <div class="card shadow-sm box h-100"><div class="card-body">
+          <h5><span class="color-key-dot" style="background:var(--biz-green);"></span>What AI adds</h5>
+          <ul class="mb-0 small">
+            <li><strong>Signal-processing know-how:</strong> which tools fit (STFT, harmonic salience, spectral flux) and how to set them up.</li>
+            <li><strong>Music knowledge:</strong> keys and scales, overtones, tempo and beats, guitar fingering (double stops on the e and B strings, slides, hammer-ons), what a piano accordion is.</li>
+            <li><strong>Judgement:</strong> spotting readings that are physically possible but musically wrong.</li>
+            <li><strong>Glue:</strong> turns measurements into the exact text format the app reads, then tests the page.</li>
+            <li><strong>Honesty about uncertainty:</strong> each <code>-notes.txt</code> report says which parts are less reliable.</li>
+            <li><strong>Speed:</strong> a clip is analysed in minutes instead of an evening of transcribing by ear.</li>
+          </ul>
+        </div></div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card shadow-sm box h-100"><div class="card-body">
+          <h5><span class="color-key-dot" style="background:var(--biz-red);"></span>What AI does not do</h5>
+          <ul class="mb-0 small">
+            <li>It doesn't <strong>hear</strong> the song. It only sees numbers, so it can be fooled where the numbers are ambiguous (a loud band, octaves).</li>
+            <li>It doesn't <strong>guarantee</strong> correct notes. The results are a well-reasoned draft for you to check by ear.</li>
+            <li>It doesn't <strong>remember</strong> between sessions by itself. What it learns about this project is written into <code>.claude/CLAUDE.md</code> and the notes files.</li>
+            <li>It isn't <strong>involved when you practise</strong>. The app is ordinary code.</li>
+          </ul>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-yellow);"></span>How the LLM was trained, and why it can analyse audio at all</h5>
+        <p>Claude was <strong>not trained specifically to transcribe music</strong>, and it was not trained on these songs. Its ability here comes from general training, in broadly three stages (Anthropic publishes the outline; the exact data and recipes are not public):</p>
+        <div class="step-box mb-3">
+          <div class="step-bar">Stage 1 · Pre-training: learning from a very large amount of text and code</div>
+          <div class="step-body">
+            <p class="mb-0">The model learns to predict the next word (token) across a huge collection of public text and code. To predict well it has to absorb what that text contains: <strong>music theory</strong>, <strong>acoustics</strong> (why a string has harmonics), <strong>signal-processing textbooks and research papers</strong> (including the field of <em>music information retrieval</em>, where onset detection and pitch estimation are standard topics), <strong>numpy and scipy documentation</strong>, and countless example programs. Here it picks up <em>knowing how</em> to analyse audio.</p>
+          </div>
+        </div>
+        <div class="step-box mb-3">
+          <div class="step-bar">Stage 2 · Fine-tuning with feedback: learning to be a helpful assistant</div>
+          <div class="step-body">
+            <p class="mb-0">The model is then trained with human feedback and with Anthropic's written principles (<em>Constitutional AI</em>) to follow instructions, explain itself, admit uncertainty and avoid harm. This is why it writes a report that says “octaves are not always certain” instead of presenting a guess as fact.</p>
+          </div>
+        </div>
+        <div class="step-box mb-0">
+          <div class="step-bar">Stage 3 · Training as an agent: learning to use tools</div>
+          <div class="step-body">
+            <p class="mb-0">Models like Claude are also trained, largely with reinforcement learning, on tasks where they must <strong>write code, run it, read the output and errors, and try again</strong> until the job is done. This is what turns textbook knowledge into a working process: Claude Code can run Python on your PC, look at what comes back, and improve the script, the loop shown above.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>Compare: AI models trained directly on audio</h5>
+        <p>There is a different kind of AI that <em>is</em> trained on sound. It learns from thousands of recordings paired with the exact notes played (for example the MAESTRO set of piano performances recorded with their MIDI). Examples are Google Magenta's <em>Onsets and Frames</em> and <em>MT3</em>, Spotify's <em>Basic Pitch</em>, and <em>CREPE</em> for pitch. This app doesn't use them today.</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small mb-0">
+            <thead><tr><th></th><th>This app: LLM + classic signal processing</th><th>An audio-trained transcription model</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Input</strong></td><td>Numbers measured by Python scripts</td><td>The audio itself</td></tr>
+              <tr><td><strong>Learned from</strong></td><td>Text and code about music and audio</td><td>Recordings labelled with their notes</td></tr>
+              <tr><td><strong>Strengths</strong></td><td>Explains every step; uses knowledge about the song (key, guitar fingering); easy to correct by talking to it; writes the app's format directly</td><td>Often more accurate on dense, polyphonic music (full chords, a busy band)</td></tr>
+              <tr><td><strong>Weaknesses</strong></td><td>Can be fooled by overtones, octaves and loud accompaniment</td><td>A black box; needs installing; output still has to be cleaned up and converted (string, fret, slides, beats)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small text-muted mt-2 mb-0">The two can be combined: an audio model could make the first draft of the notes, and Claude Code could check it against the key, place it on the guitar and write it into <code>song-library.js</code>.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 6. UI -->
+  <section id="ui" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">6</span>Using the App: Choose a Song, Press Play</h2>
+
+    <div class="row g-3 mb-3">
+      <div class="col-lg-7">
+        <div class="mock h-100">
+          <div class="m-title"><span class="step-num">1</span>Choose a song <span class="callout-num">A</span></div>
+          <div class="m-select mb-1"><span>🎵 Inteha Ho Gayi: guitar intro (Sharaabi)</span><span>▾</span></div>
+          <div class="m-meta">Key: <strong>E minor</strong> · 68 notes · 🎸 Guitar · 🎧 SONG-1-inteha-ho-gayi-start.wav <span class="callout-num">B</span></div>
+          <hr>
+          <div class="m-title"><span class="step-num">2</span>Practice "Inteha Ho Gayi" on guitar</div>
+          <div class="m-prompt">🎼 Ready! Press <strong>▶ Play</strong> and follow the yellow highlight on the fretboard and tab. <span class="callout-num" style="background:#fff;color:#dc3545">C</span></div>
+          <div class="d-flex flex-wrap gap-3 align-items-center mb-2">
+            <span><span class="m-btn go">▶ Play</span> <span class="m-btn stop">■ Stop</span> <span class="callout-num">D</span></span>
+            <span class="small"><b class="text-muted" style="font-size:.7rem">SPEED: 75%</b> ━━━━●━━━ <span class="callout-num">E</span></span>
+            <span class="small">☑ 🔁 Loop <span class="callout-num">F</span></span>
+          </div>
+          <div class="m-bar mb-2"><div style="width:35%"></div></div>
+          <div class="now-box"><div class="now-card now"><div class="lbl">Now playing</div><div class="val">E5 + B4</div><div class="det">e string fret 12 + B string fret 12</div></div><div class="now-card"><div class="lbl">Next</div><div class="val">G5 + D5</div><div class="det">e string fret 15 + B string fret 15</div></div></div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card shadow-sm box h-100">
+          <div class="card-body small">
+            <h6 class="fw-bold">What each part does</h6>
+            <p class="mb-2"><span class="callout-num">A</span><strong>Song picker</strong> (<code>#songSel</code>). Filled from <code>window.SONG_LIBRARY</code>. 🎵 = has notes, 🔈 = audio only.</p>
+            <p class="mb-2"><span class="callout-num">B</span><strong>Song details</strong>: key, number of notes, instrument, file name.</p>
+            <p class="mb-2"><span class="callout-num">C</span><strong>Prompt</strong>: tells you what to do, and what went wrong if the audio file is missing.</p>
+            <p class="mb-2"><span class="callout-num">D</span><strong>▶ Play / ■ Stop</strong>. <kbd>Space</kbd> does the same.</p>
+            <p class="mb-2"><span class="callout-num">E</span><strong>Speed</strong> 50–125%. Slows the recording down <em>without</em> changing its pitch.</p>
+            <p class="mb-0"><span class="callout-num">F</span><strong>Loop</strong>: start again automatically at the end.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">When the page opens</div>
+      <div class="step-body">
+        <ul>
+          <li><code>song-library.js</code> is loaded with a plain <code>&lt;script src&gt;</code>. A web page can't list a folder, and from <code>file://</code> it can't <code>fetch()</code> a JSON file, but a script tag works everywhere. That is why the song list is a <code>.js</code> file.</li>
+          <li>Every note line is parsed by <code>parseLine()</code>: time, note names (<code>C4</code>, <code>F#4</code>, <code>Bb3</code>), slide <code>~</code> or hammer-on <code>^</code>, forced string <code>@G</code>, beats, label. For guitar, <code>placeOnGuitar()</code> works out which string and fret each note goes on.</li>
+          <li>At the same time the page tries to <code>fetch('SONG-INSTRUMENT.json')</code> to learn each song's instrument.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">When you choose a song</div>
+      <div class="step-body">
+        <ul>
+          <li><strong>There is no instrument picker.</strong> <code>instrumentFor()</code> takes the instrument from <code>SONG-INSTRUMENT.json</code> (matched by audio file name). If that file can't be read (opened from disk), it uses the song's <code>inst</code> field. If neither says, it's piano.</li>
+          <li><code>buildPractice()</code> draws the right view: <strong>🎹 piano</strong> and <strong>🪗 accordion</strong> get a keyboard; <strong>🎸 guitar</strong> gets a fretboard and a tab. Then the note boxes, the timeline, and the Now/Next cards.</li>
+          <li>The page scrolls down to the practice box. If the song has no audio, Play is disabled.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-bar">When you press ▶ Play</div>
+      <div class="step-body">
+        <ul>
+          <li><code>playRecording()</code> creates <code>new Audio('REFERENCE-AUDIO-FILES/&lt;file&gt;.wav')</code>, sets <code>playbackRate</code> from the Speed slider and <code>preservesPitch = true</code>, and plays it.</li>
+          <li>Once it starts, the highlight loop <code>tick()</code> begins (next section).</li>
+          <li>If the file can't be played, the prompt says which file is missing and where it should be.</li>
+          <li>At the end: with Loop on, it plays again; otherwise “👏 Well played!”. <strong>■ Stop</strong> pauses, clears the highlight and returns to the start.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 7. HIGHLIGHT -->
+  <section id="highlight" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">7</span>How the Notes Light Up While the Song Plays</h2>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>The clock is the recording itself</h5>
+        <p>Before playing, <code>buildTimeline()</code> makes a list of start times, one per note. If the notes have measured times (all current songs do), those are used. If a song's times are <code>-</code>, the start times are added up from <em>beats × 60 / tempo</em>.</p>
+        <p>While playing, <code>tick()</code> runs on every screen refresh (<code>requestAnimationFrame</code>, about 60 times a second):</p>
+        <div class="code-window mb-2">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">index.html · tick()</span></div>
+<pre><code>const now = audioEl.currentTime;                     <span class="cm">// where the recording is, in seconds</span>
+let i = -1;
+while(i + 1 &lt; timeline.length &amp;&amp; timeline[i + 1] &lt;= now) i++;   <span class="cm">// last note that has started</span>
+highlight(i);                                        <span class="cm">// light it up</span>
+progBar.style.width = now / audioEl.duration * 100 + '%';
+requestAnimationFrame(tick);</code></pre>
+        </div>
+        <p class="mb-0">Because the time comes from <code>audio.currentTime</code>, the highlight stays in step even at 50% speed, after a stall, or on a slow phone.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-yellow);"></span>What <code>highlight(i)</code> changes</h5>
+        <ul class="mb-0">
+          <li>Removes the class <code>.playing</code> from the previous note's elements and adds it to note <em>i</em>'s: its <strong>note box</strong>, its <strong>keys</strong> (piano/accordion) or its <strong>fret cells and tab column</strong> (guitar). CSS turns <code>.playing</code> yellow (<code>#ffc107</code>).</li>
+          <li>Fades the note boxes already played (<code>.done</code>, 55% opacity), so you can see how far you are.</li>
+          <li>Fills the <strong>Now playing</strong> and <strong>Next</strong> cards (<code>describe()</code>): note names, and on guitar which string and fret (“e string fret 12 + B string fret 12”), plus “slide in” or “hammer-on / pull-off”.</li>
+          <li>Scrolls the note box area, the tab and the keyboard so the current note stays in view.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h5 class="mt-4">🎹 Piano and 🪗 accordion: the keyboard</h5>
+    <div class="mock mb-2" style="overflow-x:auto">
+      <div class="keyboard" style="min-width:380px">
+        <div class="key white"><span>C4</span><div class="key black used"><span>C♯4</span></div></div>
+        <div class="key white"><span>D4</span><div class="key black"><span>D♯4</span></div></div>
+        <div class="key white"><span>E4</span></div>
+        <div class="key white"><span>F4</span><div class="key black playing"><span>F♯4</span></div></div>
+        <div class="key white used"><span>G4</span><div class="key black used"><span>G♯4</span></div></div>
+        <div class="key white playing"><span>A4</span><div class="key black"><span>A♯4</span></div></div>
+        <div class="key white used"><span>B4</span></div>
+        <div class="key white"><span>C5</span><div class="key black used"><span>C♯5</span></div></div>
+        <div class="key white"><span>D5</span><div class="key black"><span>D♯5</span></div></div>
+        <div class="key white"><span>E5</span></div>
+        <div class="key white"><span>F5</span><div class="key black"><span>F♯5</span></div></div>
+        <div class="key white pressed"><span>G5</span><div class="key black"><span>G♯5</span></div></div>
+        <div class="key white"><span>A5</span><div class="key black"><span>A♯5</span></div></div>
+        <div class="key white"><span>B5</span></div>
+      </div>
+    </div>
+    <p class="small text-muted"><code>buildKeyboard()</code> draws keys from a C at or below the lowest note (at least from C3) to a C at or above the highest (at least to C6). <span style="background:#d7f0e1;padding:0 .3rem">Green</span> keys are used somewhere in the song, <span style="background:var(--biz-yellow);padding:0 .3rem">yellow</span> keys are sounding now (here A4 and F♯4 for illustration), and a <span style="background:#9ec5fe;padding:0 .3rem">blue</span> flash means you tapped it.</p>
+
+    <h5 class="mt-4">🎸 Guitar: the fretboard and the tab</h5>
+    <div class="mock mb-2" style="overflow-x:auto">
+      <div class="fb">
+        <div class="fb-lbl">string</div><div class="fb-lbl">open</div><div class="fb-lbl">9</div><div class="fb-lbl">10</div><div class="fb-lbl">11</div><div class="fb-lbl">12</div><div class="fb-lbl">13</div><div class="fb-lbl">14</div><div class="fb-lbl">15</div>
+        <div class="fb-name">e</div><div class="fb-cell open"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell used"><span class="fb-dot">D5</span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell playing"><span class="fb-dot">E5</span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell used"><span class="fb-dot">G5</span></div>
+        <div class="fb-name">B</div><div class="fb-cell open"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell used"><span class="fb-dot">A4</span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell playing"><span class="fb-dot">B4</span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell used"><span class="fb-dot">D5</span></div>
+        <div class="fb-name">G</div><div class="fb-cell open used"><span class="fb-dot">G3</span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell used"><span class="fb-dot">G4</span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div>
+        <div class="fb-name">D</div><div class="fb-cell open"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div>
+        <div class="fb-name">A</div><div class="fb-cell open"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div>
+        <div class="fb-name">E</div><div class="fb-cell open used"><span class="fb-dot">E2</span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div><div class="fb-cell"><span class="fb-dot"></span></div>
+      </div>
+    </div>
+    <p class="small text-muted">A slice of the real board (open + frets 1–15). <code>buildFretboard()</code> puts a <span style="background:#2c6e49;color:#fff;padding:0 .3rem;border-radius:.3rem">green dot</span> on every string and fret the song uses; the note sounding now turns <span style="background:var(--biz-yellow);padding:0 .3rem;border-radius:.3rem">yellow</span> and grows. On a phone the same board is <strong>turned 90°</strong> (open strings at the bottom, fret 15 at the top) by <code>layoutFretboard()</code>.</p>
+
+    <div class="mb-2">
+      <div class="tab-strip">
+        <div class="tab-names"><div>e</div><div>B</div><div>G</div><div>D</div><div>A</div><div>E</div></div>
+        <div class="tab-col" style="min-width:52px"><div class="tt">Em chord</div><div class="tc"><span>0</span></div><div class="tc"><span>0</span></div><div class="tc"><span>0</span></div><div class="tc"><span>2</span></div><div class="tc"><span>2</span></div><div class="tc"><span>0</span></div></div>
+        <div class="tab-col"><div class="tt"></div><div class="tc"></div><div class="tc"><span>7</span></div><div class="tc"></div><div class="tc"></div><div class="tc"></div><div class="tc"></div></div>
+        <div class="tab-col"><div class="tt">/</div><div class="tc"><span>12</span></div><div class="tc"><span>12</span></div><div class="tc"></div><div class="tc"></div><div class="tc"></div><div class="tc"></div></div>
+        <div class="tab-col playing"><div class="tt"></div><div class="tc"><span>12</span></div><div class="tc"><span>12</span></div><div class="tc"></div><div class="tc"></div><div class="tc"></div><div class="tc"></div></div>
+        <div class="tab-col"><div class="tt"></div><div class="tc"><span>10</span></div><div class="tc"><span>10</span></div><div class="tc"></div><div class="tc"></div><div class="tc"></div><div class="tc"></div></div>
+        <div class="tab-col"><div class="tt"></div><div class="tc"><span>15</span></div><div class="tc"><span>15</span></div><div class="tc"></div><div class="tc"></div><div class="tc"></div><div class="tc"></div></div>
+        <div class="tab-col"><div class="tt">p</div><div class="tc"><span>12</span></div><div class="tc"><span>12</span></div><div class="tc"></div><div class="tc"></div><div class="tc"></div><div class="tc"></div></div>
+        <div class="tab-col"><div class="tt"></div><div class="tc"></div><div class="tc"></div><div class="tc"><span>12</span></div><div class="tc"></div><div class="tc"></div><div class="tc"></div></div>
+      </div>
+    </div>
+    <p class="small text-muted"><code>buildTab()</code>: one column per note, wider for longer notes. The fret numbers sit on the six lines (e on top). The top row shows a label (<em>Em chord</em>) or the technique: <code>/</code> slide up, <code>\</code> slide down, <code>h</code> hammer-on, <code>p</code> pull-off. The playing column turns yellow and the tab scrolls to keep it in view.</p>
+
+    <h5 class="mt-4">🎵 The note boxes: the whole song broken down</h5>
+    <div class="song-area mb-2">
+      <div class="chip done"><div class="cname">Em chord</div><div class="charm">6 notes</div><div class="cbeats">2 beats</div></div>
+      <div class="chip done"><div class="cname">fret 7</div><div class="charm">B4 F♯4</div><div class="cbeats">½ beats</div></div>
+      <div class="chip done"><span class="ctech">↗</span><div class="cname">fret 12</div><div class="charm">E5 B4</div><div class="cbeats">1 beat</div></div>
+      <div class="chip playing"><div class="cname">fret 12</div><div class="charm">E5 B4</div><div class="cbeats">½ beats</div></div>
+      <div class="chip"><div class="cname">fret 10</div><div class="charm">D5 A4</div><div class="cbeats">½ beats</div></div>
+      <div class="chip"><div class="cname">fret 15</div><div class="charm">G5 D5</div><div class="cbeats">½ beats</div></div>
+      <div class="chip"><span class="ctech">P</span><div class="cname">fret 12</div><div class="charm">E5 B4</div><div class="cbeats">½ beats</div></div>
+      <div class="chip"><div class="cname">G4</div><div class="cbeats">½ beats</div></div>
+      <div class="chip"><div class="cname">F♯4</div><div class="cbeats">1 beat</div></div>
+    </div>
+    <p class="small text-muted"><code>buildChips()</code> makes one box per note line, in order. <strong>Guitar</strong> boxes show “fret N” big and the note names small; <strong>piano/accordion</strong> boxes show the note name (and any extra notes played with it). The bottom line is the length in beats. A <span style="background:var(--biz-purple);color:#fff;padding:0 .3rem;border-radius:.5rem">purple badge</span> marks a slide (↗ ↘) or a hammer-on / pull-off (H / P). Played boxes fade; the current one is <span style="background:var(--biz-yellow);padding:0 .3rem">yellow</span> and lifted slightly.</p>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 8. SOUND -->
+  <section id="sound" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">8</span>Tapping a Key or Fret: How the Sound Is Made</h2>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-green);"></span>What you can tap</h5>
+        <ul class="mb-0">
+          <li><strong>A piano key</strong> → that one note, and the key flashes blue.</li>
+          <li><strong>A fret cell</strong> (any string, any fret, even ones the song doesn't use; hover shows the note name) → that note on that string.</li>
+          <li><strong>A note box or a tab column</strong> → all the notes of that step together (a chord is strummed, 30 ms apart, low to high), and their keys or frets flash.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>From tap to sound</h5>
+        <div class="chain mb-3">
+          <span class="n">pointerdown / click</span><span class="a">→</span>
+          <span class="n"><code>hear([midi…])</code></span><span class="a">→</span>
+          <span class="n"><code>ensureCtx()</code>: one AudioContext, master gain 0.7 → compressor → speakers</span><span class="a">→</span>
+          <span class="n"><code>tone(m, t, 0.5 s, inst)</code></span>
+        </div>
+        <p>Every note is identified by its <strong>MIDI number</strong> (C4 = 60, A4 = 69). Its frequency is <code>440 × 2<sup>(m − 69)/12</sup></code>, so A4 = 440 Hz and E5 = 659 Hz. The sound is generated live with the <strong>Web Audio API</strong>; no sound files are used. Each instrument has its own recipe:</p>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-lg-4">
+        <div class="card shadow-sm box h-100"><div class="card-body">
+          <h6 class="fw-bold">🎹 Piano</h6>
+          <div class="chain mb-2"><span class="n">triangle f</span><span class="a">+</span><span class="n">sine 2f × 0.25</span><span class="a">→</span><span class="n">gain envelope</span></div>
+          <p class="small mb-0">A triangle wave at the note's frequency gives a soft, round tone; a quiet sine an octave up adds brightness. The volume jumps up in 10 ms (the hammer strike), then decays towards a lower level and fades out, like a struck string dying away.</p>
+        </div></div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card shadow-sm box h-100"><div class="card-body">
+          <h6 class="fw-bold">🎸 Guitar: Karplus-Strong</h6>
+          <div class="chain mb-2"><span class="n">noise burst</span><span class="a">→</span><span class="n">delay line, averaged each pass</span><span class="a">→</span><span class="n">high-pass 70 Hz</span><span class="a">→</span><span class="n">body EQ 180 Hz</span><span class="a">→</span><span class="n">“air” 2.8 kHz</span></div>
+          <p class="small mb-0"><code>ksBuffer()</code> simulates a real plucked string: a short burst of random noise, exactly one wave-period long, goes round and round a loop; each time round, neighbouring samples are averaged, so the high frequencies die first, just as on a real string. What's left is a pitched pluck that rings and fades over about 2.6 s. Two EQ bumps imitate the guitar body. The buffers are cached per note.</p>
+        </div></div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card shadow-sm box h-100"><div class="card-body">
+          <h6 class="fw-bold">🪗 Accordion</h6>
+          <div class="chain mb-2"><span class="n">sawtooth f</span><span class="a">+</span><span class="n">sawtooth f × 1.004</span><span class="a">→</span><span class="n">low-pass</span><span class="a">→</span><span class="n">bellows envelope</span></div>
+          <p class="small mb-0">Two reeds a tiny bit apart in pitch beat against each other: the wavering <em>musette</em> sound. A low-pass filter takes off the buzz, and the volume swells in over 40 ms (the bellows) instead of starting with a strike.</p>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-red);"></span>Good to know</h5>
+        <ul class="mb-0">
+          <li>Browsers only allow sound after a tap or click, so the AudioContext is created (or resumed) on your first tap.</li>
+          <li>These synthesised notes are only for hearing one note or chord. <strong>▶ Play never uses them</strong>: it always plays the original recording.</li>
+          <li>The slide (<code>~</code>) shape is in the code too: the pitch can glide in from the previous note over up to 110 ms.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 9. GLOSSARY -->
+  <section id="glossary" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">9</span>Glossary</h2>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small mb-0 glossary-table">
+            <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><strong>WAV</strong></td><td>An uncompressed audio file: a short header, then the raw samples.</td></tr>
+              <tr><td><strong>Sample rate</strong></td><td>How many sound measurements per second (44 100 or 48 000 Hz).</td></tr>
+              <tr><td><strong>dB</strong></td><td>Loudness on a log scale; 0 dB is full scale, −45 dB is quiet.</td></tr>
+              <tr><td><strong>STFT</strong></td><td>Short-Time Fourier Transform: the strength of every frequency in short slices of time.</td></tr>
+              <tr><td><strong>Harmonics / overtones</strong></td><td>The quieter frequencies at 2×, 3×, 4×… a note's pitch that give an instrument its colour.</td></tr>
+              <tr><td><strong>Salience</strong></td><td>A score for how strongly a note is present, adding up its pitch and its harmonics.</td></tr>
+              <tr><td><strong>Onset</strong></td><td>The moment a note starts.</td></tr>
+              <tr><td><strong>Spectral flux</strong></td><td>How much new energy appears from one slice to the next; peaks mark onsets.</td></tr>
+              <tr><td><strong>Cents</strong></td><td>One hundredth of a semitone; used for the tuning offset.</td></tr>
+              <tr><td><strong>MIDI number</strong></td><td>A number per note: C4 = 60, each semitone +1.</td></tr>
+              <tr><td><strong>Double stop</strong></td><td>Two strings played together, e.g. e and B at fret 12 (E5 + B4).</td></tr>
+              <tr><td><strong>Slide / hammer-on / pull-off</strong></td><td>Ways to reach a note without a new pick: slide the finger along the string; tap a finger down; pull it off.</td></tr>
+              <tr><td><strong>Tab</strong></td><td>Guitar notation: six lines for the strings, numbers for the frets.</td></tr>
+              <tr><td><strong>Karplus-Strong</strong></td><td>A simple, classic way to synthesise a plucked string from noise and a delay loop.</td></tr>
+              <tr><td><strong>LLM</strong></td><td>Large language model: an AI trained on large amounts of text and code to predict and produce text. Claude is one.</td></tr>
+              <tr><td><strong>Pre-training / fine-tuning</strong></td><td>The first broad training on text, then further training with feedback to make the model a careful, helpful assistant.</td></tr>
+              <tr><td><strong>Musette</strong></td><td>The shimmering accordion sound from reeds tuned slightly apart.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 10. FILE MAP -->
+  <section id="file-map" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">10</span>File Map</h2>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle small mb-0">
+            <thead><tr><th>Path</th><th>What it is</th></tr></thead>
+            <tbody>
+              <tr><td><code>index.html</code></td><td>The whole practice app: song picker, playback, highlight, keyboard, fretboard, tab, note boxes, single-note sounds.</td></tr>
+              <tr><td><code>recorder.html</code></td><td>Record another tab's audio to WAV; trim a file. Linked from the app's footer.</td></tr>
+              <tr><td><code>REFERENCE-AUDIO-FILES/song-library.js</code></td><td>The song list (<code>window.SONG_LIBRARY</code>) with every note line.</td></tr>
+              <tr><td><code>REFERENCE-AUDIO-FILES/*.wav</code></td><td>The recordings, e.g. <code>SONG-1-inteha-ho-gayi-start.wav</code>. File names are case-sensitive on GitHub Pages.</td></tr>
+              <tr><td><code>REFERENCE-AUDIO-FILES/*-notes.txt</code></td><td>Claude Code's analysis reports (not read by the app).</td></tr>
+              <tr><td><code>SONG-INSTRUMENT.json</code></td><td>Each song's instrument: piano, guitar or accordion, by audio file name.</td></tr>
+              <tr><td><code>logo.svg</code></td><td>The logo in the top bar.</td></tr>
+              <tr><td><code>.claude/CLAUDE.md</code></td><td>Notes for Claude Code: how the app is built and the owner's choices.</td></tr>
+              <tr><td><code>SCRIPTS/</code></td><td>The note-analysis scripts (Python, numpy + scipy) and their README; see <a href="#scripts">section 4</a>.</td></tr>
+              <tr><td><code>INFO/HOW-MUSIC-APP-WORKS.html</code></td><td>This document.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">
+    Music Practice App: how the recorder, Claude Code's note analysis and the practice page fit together · <a href="../index.html" target="_blank" rel="noopener">Open the app</a> · <a href="../recorder.html" target="_blank" rel="noopener">Open the recorder</a>
+  </div>
+</footer>
+
+</body>
+</html>

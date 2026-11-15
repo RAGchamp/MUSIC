@@ -24,6 +24,8 @@ The owner uses it for personal learning.
 | `REFERENCE-AUDIO-FILES/*.wav` | Song recordings, e.g. `SONG-1-inteha-ho-gayi-start.wav` (22 s, 4 MB). |
 | `REFERENCE-AUDIO-FILES/SONG-1-inteha-ho-gayi-notes.txt` | Old analysis notes. Its times come from an **earlier** recording and **do not** match the current WAV. The app doesn't use it. |
 | `readme` | The original one-line readme from GitHub. |
+| `SCRIPTS/` | Note-analysis scripts (numpy + scipy): `analyze_notes.py` drafts note lines from a WAV, `inspect_time.py` shows the strongest notes at given seconds, `check_library.py` checks `song-library.js` against the recordings, `musicdsp.py` is the shared toolkit. See `SCRIPTS/README.md`. |
+| `INFO/HOW-MUSIC-APP-WORKS.html` | Explainer page: recorder, note analysis, AI's role, the practice UI, highlight, single-note sounds. |
 
 ## Why the song list is a .js file
 
@@ -125,6 +127,8 @@ Clicking a note box, a key or a fret calls `hear()` / `tone()`. This is the only
 - **Top nav:** the same as the BLOG site: sticky, deep blue `#04264d`, yellow `#ffd60a`, `logo.svg` on the left, and the tagline **"Music Practice App"** on the right.
 - **Step boxes:** cards with a **uniform** 2px `#c9d3e3` border (`.step-card`). The owner asked for the coloured left accent lines to be removed.
 - **Highlight colour:** yellow `--biz-yellow` (#ffc107).
+- **Pink "How this App works and how AI plays a part?" box** (`.about-box`) at the top of `<main>`, under the nav:
+  a ~400-character summary of `INFO/HOW-MUSIC-APP-WORKS.html` and a **Learn more →** link to it.
 
 ## Working on it
 

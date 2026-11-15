@@ -154,6 +154,12 @@
 
   footer{ background:var(--nav-blue); }
   footer a{ color:#fff; }
+
+  /* Pink "how it works" box under the top nav */
+  .about-box{ background:#fde2ec; border:2px solid #f5a3c0; border-radius:.6rem; padding:.9rem 1.1rem; }
+  .about-box h2{ font-size:1.05rem; font-weight:700; color:#8a1f4a; margin-bottom:.4rem; }
+  .about-box p{ font-size:.92rem; color:#3b2a31; }
+  .about-box a{ color:#b0185a; font-weight:700; }
 </style>
 </head>
 <body>
@@ -165,6 +171,13 @@
 </div>
 
 <main class="container my-4">
+
+  <!-- How it works (pink box) -->
+  <div class="about-box mb-4">
+    <h2>How this App works and how AI plays a part?</h2>
+    <p class="mb-1">Pick a song and press Play: the original recording plays while each note lights up in yellow on the keyboard or guitar fretboard and in the note boxes. Songs are captured with the recorder page. The notes were extracted ahead of time with Claude Code, an AI coding agent, which analysed each audio file with Python scripts (measuring pitch, note starts and tuning), checked the results and saved them in the song list. The app itself is fully deterministic: it uses no AI while you practise. <strong>PLEASE NOTE: You don't need Claude Code to use this app.</strong></p>
+    <a href="INFO/HOW-MUSIC-APP-WORKS.html" target="_blank" rel="noopener">Learn more →</a>
+  </div>
 
   <h1 class="h3 fw-bold mb-1">🎶 Song Practice</h1>
   <p class="text-muted mb-4">Pick a song, press Play and follow the yellow notes.</p>
@@ -242,7 +255,7 @@
 </main>
 
 <footer class="text-white py-4 mt-5">
-  <div class="container text-center small">Music Practice App · for personal practice · <a href="recorder.html">🎙️ Record or trim a song</a></div>
+  <div class="container text-center small">Music Practice App · for personal practice · <a href="recorder.html" target="_blank" rel="noopener">🎙️ Record or trim a song</a></div>
 </footer>
 
 <!-- The song list (edit this file to add songs) -->
