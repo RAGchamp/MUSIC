@@ -44,19 +44,6 @@
   .step-card{ border:2px solid #c9d3e3; border-radius:.6rem; }
   .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
 
-  /* Instrument choice */
-  .inst-choice{ display:flex; flex-wrap:wrap; gap:.75rem; }
-  .inst-opt{
-    display:flex; align-items:center; gap:.6rem; cursor:pointer; user-select:none;
-    border:2px solid #c9d3e3; border-radius:.6rem; padding:.7rem 1.1rem; background:#fff; min-width:190px;
-  }
-  .inst-opt:hover{ border-color:var(--biz-blue); }
-  .inst-opt .form-check-input{ width:1.3rem; height:1.3rem; margin:0; border-radius:.3rem; cursor:pointer; }
-  .inst-opt .big{ font-size:1.6rem; line-height:1; }
-  .inst-opt .nm{ font-weight:800; }
-  .inst-opt .sub{ font-size:.75rem; color:#6c757d; }
-  .inst-opt.checked{ border-color:var(--biz-blue); background:#eef3fb; box-shadow:0 0 0 3px #0d6efd22; }
-
   .song-meta{ font-size:.85rem; color:#6c757d; }
   .stat-pill{ background:#eef3fb; border-radius:2rem; padding:.2rem .7rem; font-size:.8rem; font-weight:600; }
 
@@ -180,7 +167,7 @@
 <main class="container my-4">
 
   <h1 class="h3 fw-bold mb-1">🎶 Song Practice</h1>
-  <p class="text-muted mb-4">Pick a song, pick your instrument, press Play and follow the yellow notes.</p>
+  <p class="text-muted mb-4">Pick a song, press Play and follow the yellow notes.</p>
 
   <!-- STEP 1: song -->
   <div class="card shadow-sm step-card mb-3">
@@ -195,28 +182,10 @@
     </div>
   </div>
 
-  <!-- STEP 2: instrument -->
-  <div class="card shadow-sm step-card mb-3" id="step2" hidden>
-    <div class="card-body">
-      <div class="step-title"><span class="step-num">2</span>Which instrument are you practising on?</div>
-      <div class="inst-choice" id="instChoice">
-        <label class="inst-opt" data-inst="piano">
-          <input class="form-check-input" type="checkbox" value="piano" id="instPiano">
-          <span class="big">🎹</span><span><span class="nm d-block">Piano</span><span class="sub">keyboard + note boxes</span></span>
-        </label>
-        <label class="inst-opt" data-inst="guitar">
-          <input class="form-check-input" type="checkbox" value="guitar" id="instGuitar">
-          <span class="big">🎸</span><span><span class="nm d-block">Guitar</span><span class="sub">fretboard + tab + note boxes</span></span>
-        </label>
-      </div>
-      <div class="small text-muted mt-2" id="instHint"></div>
-    </div>
-  </div>
-
-  <!-- STEP 3: practice -->
+  <!-- STEP 2: practice (the instrument comes from SONG-INSTRUMENT.json) -->
   <div class="card shadow-sm step-card mb-3" id="step3" hidden>
     <div class="card-body">
-      <div class="step-title"><span class="step-num">3</span><span id="practiceTitle">Practice</span></div>
+      <div class="step-title"><span class="step-num">2</span><span id="practiceTitle">Practice</span></div>
 
       <div class="prompt mb-3" id="prompt" aria-live="polite"></div>
 
@@ -442,38 +411,38 @@
   const keyEls = {}, fbCells = [];
   let chips = [], tabCols = [];
 
-  $('songSel').addEventListener('change', () => {
+  /* ================= INSTRUMENT PER SONG (SONG-INSTRUMENT.json) =================
+     Each song's instrument comes from SONG-INSTRUMENT.json, matched by audio file name.
+     A page opened from disk (file://) cannot fetch() a JSON file, so then the song's
+     inst field in song-library.js is used instead. */
+  let songInst = {};
+  const songInstReady = fetch('SONG-INSTRUMENT.json', { cache:'no-cache' })
+    .then(r => r.ok ? r.json() : [])
+    .then(list => { (Array.isArray(list) ? list : []).forEach(e => { if(e && e.audio && e.instrument) songInst[e.audio] = String(e.instrument).toLowerCase(); }); })
+    .catch(() => {});
+  function instrumentFor(s){
+    const v = songInst[s.file] || String(s.inst || '').toLowerCase();
+    return v === 'guitar' ? 'guitar' : 'piano';
+  }
+
+  $('songSel').addEventListener('change', async () => {
     stop(true);
     const v = $('songSel').value;
     cur = v === '' ? null : library[+v];
     inst = null;
-    ['instPiano','instGuitar'].forEach(id => $(id).checked = false);
-    refreshInstOpts();
     $('step3').hidden = true;
-    $('step2').hidden = !cur;
     if(!cur){ $('songMeta').innerHTML = ''; return; }
+    await songInstReady;
+    if(cur !== library[+$('songSel').value]) return;   // the song changed while waiting
+    inst = instrumentFor(cur);
     const bits = [];
     if(cur.key) bits.push('Key: <strong>' + esc(cur.key) + '</strong>');
     bits.push(cur.notes.length ? cur.notes.length + ' notes' : 'no notes yet');
+    bits.push(inst === 'guitar' ? '🎸 Guitar' : '🎹 Piano');
     if(cur.file) bits.push('🎧 ' + esc(cur.file));
     $('songMeta').innerHTML = bits.join(' · ');
-    $('instHint').innerHTML = cur.inst ? `This song is played on <strong>${cur.inst}</strong> in the recording, but you can practise it on either.` : '';
-    $('step2').scrollIntoView({block:'nearest', behavior:'smooth'});
+    buildPractice();
   });
-
-  // Piano / Guitar: two checkboxes that work as a pair (ticking one unticks the other)
-  ['instPiano','instGuitar'].forEach(id => $(id).addEventListener('change', e => {
-    if(e.target.checked){
-      ['instPiano','instGuitar'].forEach(o => { if(o !== id) $(o).checked = false; });
-      inst = e.target.value;
-    } else inst = null;
-    refreshInstOpts();
-    stop(true);
-    if(inst) buildPractice(); else $('step3').hidden = true;
-  }));
-  function refreshInstOpts(){
-    document.querySelectorAll('.inst-opt').forEach(el => el.classList.toggle('checked', el.querySelector('input').checked));
-  }
 
   /* ================= BUILD THE PRACTICE UI ================= */
   function buildPractice(){

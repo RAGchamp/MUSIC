@@ -18,6 +18,7 @@ The owner uses it for personal learning.
 |---|---|
 | `index.html` | The whole app: HTML, CSS and JS in one file. Bootstrap 5.3.3 comes from the jsDelivr CDN; there is no build step. |
 | `recorder.html` | Records another browser tab's audio (`getDisplayMedia`) to a 16-bit WAV and saves it in a chosen folder (File System Access API; the folder handle is remembered in IndexedDB). It also trims a file: it copies start–end seconds into `name-copy-<timestamp>.wav` in the same folder. It is linked from the index.html footer. |
+| `SONG-INSTRUMENT.json` | Each song's instrument (`piano` or `guitar`), keyed by audio file name. Every song in the library needs an entry. |
 | `logo.svg` | The logo in the top nav (a copy of the BLOG logo). |
 | `REFERENCE-AUDIO-FILES/song-library.js` | **The song list.** It defines `window.SONG_LIBRARY`, which fills the song drop-down. |
 | `REFERENCE-AUDIO-FILES/*.wav` | Song recordings, e.g. `SONG-1-inteha-ho-gayi-start.wav` (22 s, 4 MB). |
@@ -38,7 +39,7 @@ window.SONG_LIBRARY = [
     title: 'Inteha Ho Gayi: guitar intro (Sharaabi)',
     audio: 'SONG-1-inteha-ho-gayi-start.wav',   // file in REFERENCE-AUDIO-FILES (case-sensitive on GitHub Pages!)
     key:   'E minor',                            // shown under the picker
-    inst:  'guitar',                             // what the recording is played on; only a hint
+    inst:  'guitar',                             // fallback instrument when SONG-INSTRUMENT.json can't be read (file://)
     tempo: 154,                                  // only used when the notes have no times
     notes: [
       // 'time   notes   beats   label'
@@ -64,7 +65,9 @@ Note lines are parsed by `parseLine()` in index.html:
 To **add a song**:
 1. Copy the WAV into `REFERENCE-AUDIO-FILES/`.
 2. Add an entry to `song-library.js`.
-3. Commit and push.
+3. Add an entry to `SONG-INSTRUMENT.json`: `{ "audio": "<wav name>", "title": "...", "instrument": "piano" | "guitar" }`.
+   Use the same instrument as the song's `inst` field.
+4. Commit and push.
 
 A song with no `audio` can't be played: the Play button is disabled.
 
@@ -75,8 +78,11 @@ They were then cleaned up by hand against the owner's tab.
 ## How the page works (index.html)
 
 1. **Choose a song:** `#songSel` lists `library`. Choosing one shows the key, the note count and the file name in `#songMeta`.
-2. **Instrument:** two **checkboxes**, `#instPiano` and `#instGuitar`, that act as a pair: ticking one unticks the other.
-   The owner asked for checkboxes, so keep them; don't switch to radio buttons.
+2. **Instrument:** there is **no instrument picker**; the owner asked for it to be removed. Choosing a song goes straight to
+   practice on that song's instrument (`instrumentFor()`), shown as 🎸 Guitar or 🎹 Piano in `#songMeta`.
+   - The instrument comes from `SONG-INSTRUMENT.json`, matched by the audio file name.
+   - On `file://` the page can't `fetch()` the JSON, so it falls back to the song's `inst` field in song-library.js.
+     **Keep the two the same.** A song in neither defaults to piano.
 3. **Practice** (`buildPractice()`):
    - **Piano:** `buildKeyboard()` draws keys from C ≤ the lowest note (at least C3) up to C ≥ the highest note (at least C6). Keys the song uses are green.
    - **Guitar:**

@@ -1,0 +1,103 @@
+Tip Tip Barsa Pani: melody notes measured from SONG-2-tip-tip-barsa-pani-start.wav (0 s to 29 s)
+Tuning: the recording is about -18 cents flat. Key: F# minor (F#, C# and G# are the strongest notes).
+Tempo: about 109 BPM (a beat is about 0.55 s; the notes fall on a sixteenth grid of about 0.137 s).
+Method: STFT, harmonic salience per semitone, spectral-flux onsets. At each onset the strongest note between
+C4 and A5 was kept (the band holds an F#3 drone underneath), weak readings were dropped, and quick repeats of
+the same note were merged. It is the main melody line only, not the chords. Check it against the recording.
+The hook A4 A4 G#4 F#4 comes back at 7.95 s, 12.39 s, 19.31 s, 21.24 s and 25.66 s.
+
+  time   beats  note
+  ------ -----  ----
+   0.30s     2  F#4
+   1.29s   0.5  F#4
+   1.57s   0.5  F#5
+   1.71s   0.5  F#4
+   1.98s   0.5  F#5
+   2.27s     1  F#4
+   2.69s   0.5  F#4
+   2.96s     1  F#4
+   3.38s   0.5  F#5
+   3.51s   0.5  F#4
+   3.80s   0.5  F#4
+   3.93s     1  F#5
+   4.48s   0.5  F#4
+   4.62s   0.5  G#4
+   4.90s   0.5  F#4
+   5.04s   0.5  C#4
+   5.31s   0.5  F#4
+   5.60s   0.5  F#4
+   5.73s     1  G#4
+   6.15s   0.5  C#4
+   6.29s   0.5  F#4
+   6.70s   0.5  F#4
+   6.84s   0.5  G#4
+   6.98s     1  F#4
+   7.54s   0.5  F#4
+   7.81s   0.5  F#5
+   7.95s   0.5  A4   <- hook
+   8.23s   0.5  A4
+   8.37s   0.5  G#4
+   8.65s   0.5  F#4
+   8.92s   0.5  F#4
+   9.06s     1  G#4
+   9.62s   0.5  E4
+   9.75s   0.5  F#4
+  10.04s   0.5  F#4
+  10.17s     1  G#4
+  10.59s   0.5  C#5
+  10.72s   0.5  E4
+  10.86s     1  F#4
+  11.28s     1  G#4
+  11.70s   0.5  C#4
+  11.98s   0.5  F#4
+  12.25s   0.5  F#4
+  12.39s   0.5  A4   <- hook
+  12.67s   0.5  A4
+  12.80s   0.5  G#4
+  13.07s   1.5  F#4
+  13.91s   0.5  C#4
+  14.19s   0.5  C#5
+  14.46s   0.5  C#5
+  14.61s   0.5  G#4
+  14.89s   0.5  C#4
+  15.03s   0.5  G#4
+  15.29s   0.5  F#4
+  15.57s     1  C#4
+  16.13s   0.5  C#5
+  16.41s   0.5  F#4
+  16.68s   0.5  C#4
+  16.82s   0.5  A4
+  17.12s   0.5  C#4
+  17.24s     1  G#4
+  17.78s   0.5  F#4
+  17.93s   1.5  G#4
+  18.62s   0.5  F#4
+  18.90s   0.5  F#4
+  19.03s   0.5  G#4
+  19.31s   0.5  A4   <- hook
+  19.45s   0.5  G#4
+  19.71s     2  F#4
+  20.83s   0.5  F#4
+  21.10s   0.5  F#4
+  21.24s   0.5  A4   <- hook
+  21.52s   0.5  A4
+  21.66s     2  G#4
+  22.76s   0.5  C#4
+  23.04s   0.5  F#4
+  23.18s   0.5  C#5
+  23.31s   0.5  F#4
+  23.46s     1  G#4
+  24.01s   0.5  C#4
+  24.41s     1  F#4
+  24.97s   0.5  C#4
+  25.24s   0.5  F#4
+  25.51s   0.5  F#4
+  25.66s   0.5  A4   <- hook
+  25.94s   0.5  A4
+  26.08s   2.5  G#4
+  27.46s   0.5  F#4
+  27.87s   0.5  G#4
+  28.01s     1  F#4
+  28.43s   0.5  E4
+  28.56s   0.5  F#4
+  28.84s   0.5  F#4
