@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Recorder</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-red:#dc3545;
+    --biz-green:#198754;
+    --biz-purple:#6f42c1;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav: same as the blog and index.html */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+  }
+
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.9rem; height:1.9rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.95rem; margin-right:.55rem; flex:none;
+  }
+  .step-title{ display:flex; align-items:center; font-weight:700; font-size:1.1rem; margin-bottom:.75rem; }
+  .step-card{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
+  .stat-pill{ background:#eef3fb; border-radius:2rem; padding:.2rem .7rem; font-size:.8rem; font-weight:600; }
+
+  /* Mode choice (looks like the instrument choice on index.html) */
+  .mode-choice{ display:flex; flex-wrap:wrap; gap:.75rem; }
+  .mode-opt{
+    display:flex; align-items:center; gap:.6rem; cursor:pointer; user-select:none;
+    border:2px solid #c9d3e3; border-radius:.6rem; padding:.7rem 1.1rem; background:#fff; flex:1 1 200px;
+  }
+  .mode-opt:hover{ border-color:var(--biz-blue); }
+  .mode-opt .form-check-input{ width:1.3rem; height:1.3rem; margin:0; cursor:pointer; flex:none; }
+  .mode-opt .big{ font-size:1.6rem; line-height:1; }
+  .mode-opt .nm{ font-weight:800; }
+  .mode-opt .sub{ font-size:.75rem; color:#6c757d; }
+  .mode-opt.checked{ border-color:var(--biz-blue); background:#eef3fb; box-shadow:0 0 0 3px #0d6efd22; }
+
+  /* Prompt + status cards */
+  .prompt{
+    background:linear-gradient(120deg,var(--biz-blue-dark),var(--biz-blue)); color:#fff;
+    border-radius:.6rem; padding:.9rem 1.1rem; font-size:1.05rem; min-height:3.2rem;
+  }
+  .now-box{ display:flex; gap:.75rem; flex-wrap:wrap; }
+  .now-card{ flex:1 1 200px; background:#fff; border:2px solid #dde3ec; border-radius:.6rem; padding:.6rem .9rem; }
+  .now-card.now{ border-color:#c79100; background:#fff8e1; }
+  .now-card.rec{ border-color:var(--biz-red); background:#fdecee; }
+  .now-card .lbl{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; }
+  .now-card .val{ font-size:1.5rem; font-weight:800; line-height:1.2; min-height:1.8rem; font-variant-numeric:tabular-nums; }
+  .now-card .det{ font-size:.85rem; color:#5a6475; min-height:1.2rem; }
+  .big-play{ font-size:1.15rem; font-weight:700; padding:.6rem 1.8rem; }
+
+  .rec-dot{ display:inline-block; width:.8rem; height:.8rem; border-radius:50%; background:#adb5bd; margin-right:.4rem; vertical-align:baseline; }
+  .rec-dot.on{ background:var(--biz-red); animation:blink 1s infinite; }
+  .rec-dot.wait{ background:var(--biz-yellow); }
+  @keyframes blink{ 50%{ opacity:.25; } }
+
+  /* Level meter */
+  .meter{ position:relative; height:1.1rem; background:#e9edf3; border-radius:.4rem; overflow:hidden; }
+  .meter .fill{ position:absolute; left:0; top:0; bottom:0; width:0;
+    background:linear-gradient(90deg,var(--biz-green) 0%,var(--biz-green) 70%,var(--biz-yellow) 85%,var(--biz-red) 100%);
+    background-size:var(--mw,100%) 100%; transition:width .06s linear; }
+  .meter .thr{ position:absolute; top:-2px; bottom:-2px; width:2px; background:#04264d; }
+
+  .file-box{ background:#f1f4f9; border:2px dashed #c9d3e3; border-radius:.6rem; padding:.75rem; }
+  .folder-name{ font-family:Consolas,Monaco,monospace; font-weight:700; }
+  pre.snippet{ background:#fff; border:1px solid #dde3ec; border-radius:.5rem; padding:.6rem .8rem; font-size:.8rem; margin:0; white-space:pre-wrap; word-break:break-all; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+
+  <h1 class="h3 fw-bold mb-1">🎙️ Audio Recorder</h1>
+  <p class="text-muted mb-4">Record what another browser tab is playing (YouTube, a music site, the practice page…) and save it as a WAV file in <span class="folder-name">REFERENCE-AUDIO-FILES</span>.
+    <a href="index.html" class="ms-1">Back to Song Practice</a></p>
+
+  <div class="alert alert-warning" id="unsupported" hidden></div>
+
+  <!-- STEP 1: source -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">1</span>Choose what to record</div>
+      <p class="small text-muted mb-2">Click the button, pick the <b>Chrome tab</b> that plays the music, and make sure <b>“Also share tab audio”</b> is switched on.
+        (Choosing <b>Entire screen</b> with <b>“Also share system audio”</b> records everything the PC plays, like AUDIO-RECORDER.py.)</p>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <button type="button" class="btn btn-primary" id="pickBtn">🗂️ Pick a tab to record</button>
+        <button type="button" class="btn btn-outline-secondary" id="releaseBtn" disabled>Stop sharing</button>
+        <span class="stat-pill" id="srcInfo">No source chosen</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: record -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">2</span>Record</div>
+
+      <div class="prompt mb-3" id="prompt" aria-live="polite">Pick a tab in step 1 first.</div>
+
+      <span class="ctrl-label">How should recording start and stop?</span>
+      <div class="mode-choice mb-3" id="modeChoice">
+        <label class="mode-opt checked">
+          <input class="form-check-input" type="radio" name="mode" value="manual" checked>
+          <span class="big">✋</span><span><span class="nm d-block">Manual</span><span class="sub">press Stop when you're done</span></span>
+        </label>
+        <label class="mode-opt">
+          <input class="form-check-input" type="radio" name="mode" value="fixed">
+          <span class="big">⏱️</span><span><span class="nm d-block">Fixed length</span><span class="sub">stop after a set number of seconds</span></span>
+        </label>
+        <label class="mode-opt">
+          <input class="form-check-input" type="radio" name="mode" value="auto">
+          <span class="big">🪄</span><span><span class="nm d-block">Auto</span><span class="sub">wait for sound, stop after silence</span></span>
+        </label>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-sm-4" id="secondsWrap" hidden>
+          <label class="ctrl-label" for="seconds">Length (seconds)</label>
+          <input type="number" class="form-control" id="seconds" min="1" step="1" value="30">
+        </div>
+        <div class="col-sm-4" id="silenceWrap" hidden>
+          <label class="ctrl-label" for="silence">Stop after silence of (seconds)</label>
+          <input type="number" class="form-control" id="silence" min="0.5" step="0.5" value="3">
+        </div>
+        <div class="col-sm-4" id="threshWrap" hidden>
+          <label class="ctrl-label" for="threshold">Counts as sound above: <span id="threshVal">-45</span> dB</label>
+          <input type="range" class="form-range" id="threshold" min="-70" max="-15" step="1" value="-45">
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mb-3">
+        <button type="button" class="btn btn-danger big-play" id="recBtn" disabled>● Record</button>
+        <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled>■ Stop</button>
+      </div>
+
+      <span class="ctrl-label">Level</span>
+      <div class="meter mb-1" aria-label="Audio level"><div class="fill" id="meterFill"></div><div class="thr" id="meterThr" hidden></div></div>
+      <div class="small text-muted mb-3" id="dbText">– dB</div>
+
+      <div class="now-box">
+        <div class="now-card" id="stateCard"><div class="lbl">Status</div><div class="val"><span class="rec-dot" id="recDot"></span><span id="stateVal">Idle</span></div><div class="det" id="stateDet"></div></div>
+        <div class="now-card"><div class="lbl">Recorded</div><div class="val" id="timeVal">00:00</div><div class="det" id="fmtDet"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: save -->
+  <div class="card shadow-sm step-card mb-3" id="step3" hidden>
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">3</span>Listen and save</div>
+
+      <audio id="preview" controls class="w-100 mb-3"></audio>
+
+      <div class="row g-2 align-items-end mb-3">
+        <div class="col-md-8">
+          <label class="ctrl-label" for="fileName">File name</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="fileName" spellcheck="false">
+            <span class="input-group-text">.wav</span>
+          </div>
+        </div>
+        <div class="col-md-4 d-flex gap-2 flex-wrap">
+          <span class="stat-pill" id="sizeInfo"></span>
+          <span class="stat-pill" id="lenInfo"></span>
+        </div>
+      </div>
+
+      <div class="file-box mb-3">
+        <div class="small mb-2">Save folder: <span class="folder-name" id="folderName">not chosen yet</span></div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-success big-play" id="saveBtn">💾 Save</button>
+          <button type="button" class="btn btn-outline-primary" id="folderBtn">📁 Choose folder…</button>
+          <button type="button" class="btn btn-outline-secondary" id="downloadBtn">⬇ Download instead</button>
+          <button type="button" class="btn btn-outline-danger" id="discardBtn">🗑 Discard</button>
+        </div>
+        <div class="small text-muted mt-2" id="saveHint">The first time you save, pick the <span class="folder-name">C:\Daya\RAGchamp\MUSIC\REFERENCE-AUDIO-FILES</span> folder. The page remembers it next time.</div>
+      </div>
+
+      <div id="savedBox" hidden>
+        <div class="alert alert-success mb-2" id="savedMsg"></div>
+        <span class="ctrl-label">To add it to the practice page, put an entry like this in song-library.js</span>
+        <pre class="snippet" id="snippet"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRIM: copy part of an existing audio file -->
+  <div class="card shadow-sm step-card mb-3" id="trimCard">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">✂️</span>Trim an audio file</div>
+      <p class="small text-muted mb-2">Choose an audio file, set the start and end second, and press <b>Copy audio</b>.
+        The part you chose is saved in the <b>same folder</b> as the original, as <code>name-copy-YYYYMMDD-HHMMSS.wav</code>. The original file is not changed.</p>
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <button type="button" class="btn btn-primary" id="trimPick">📂 Choose audio file…</button>
+        <span class="stat-pill" id="trimInfo">No file chosen</span>
+      </div>
+      <input type="file" id="trimInput" accept="audio/*,.wav" hidden>
+
+      <div id="trimBody" hidden>
+        <audio id="trimAudio" controls class="w-100 mb-3"></audio>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="ctrl-label" for="trimStart">Start position (seconds)</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="trimStart" min="0" step="0.01" value="0">
+              <button type="button" class="btn btn-outline-secondary" id="trimStartNow" title="Use the player's current position">⏱ Player position</button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="ctrl-label" for="trimEnd">End position (seconds)</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="trimEnd" min="0" step="0.01" value="0">
+              <button type="button" class="btn btn-outline-secondary" id="trimEndNow" title="Use the player's current position">⏱ Player position</button>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <button type="button" class="btn btn-success big-play" id="trimCopy" disabled>📋 Copy audio</button>
+          <button type="button" class="btn btn-outline-primary" id="trimPreview" disabled>▶ Preview selection</button>
+          <span class="stat-pill" id="trimLen"></span>
+        </div>
+        <div class="alert mt-3 mb-0" id="trimMsg" hidden></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">Music Practice App · for personal practice · only record music you're allowed to</div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const FOLDER = 'REFERENCE-AUDIO-FILES';
+
+  /* ================= STATE ================= */
+  let stream = null;          // the shared tab/screen MediaStream
+  let ctx = null, srcNode = null, proc = null, sink = null;
+  let rate = 48000, channels = 2;
+  let phase = 'idle';         // idle | wait | rec
+  let chunks = [];            // [[Float32Array per channel], ...]
+  let framesWritten = 0, lastLoudFrame = -1;
+  let opts = null;            // settings captured when Record is pressed
+  let preroll = null;         // last block heard while waiting (auto mode)
+  let curDb = -90;
+  let wavBlob = null, previewUrl = null, saved = false;
+  let dirHandle = null;
+
+  /* ================= SUPPORT CHECK ================= */
+  const canCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  const canPickFolder = 'showDirectoryPicker' in window;
+  if(!canCapture){
+    const u = $('unsupported'); u.hidden = false;
+    u.textContent = 'This browser cannot capture tab audio. Please open this page in Chrome or Edge on a laptop or desktop.';
+    $('pickBtn').disabled = true;
+  }
+  if(!canPickFolder){
+    $('folderBtn').hidden = true;
+    $('saveHint').textContent = 'This browser cannot write into a folder, so Save downloads the file. Move it into REFERENCE-AUDIO-FILES afterwards (Chrome or Edge can save there directly).';
+  }
+
+  /* ================= HELPERS ================= */
+  const fmtTime = s => { s = Math.max(0, Math.floor(s)); return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); };
+  const fmtSize = b => b > 1048576 ? (b/1048576).toFixed(1) + ' MB' : Math.round(b/1024) + ' KB';
+  const timeStamp = () => { const d = new Date(), p = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; };
+  const stamp = () => 'recording-' + timeStamp();
+  const say = html => { $('prompt').innerHTML = html; };
+  const mode = () => document.querySelector('input[name=mode]:checked').value;
+
+  function setState(text, dot, det){
+    $('stateVal').textContent = text;
+    $('recDot').className = 'rec-dot' + (dot ? ' ' + dot : '');
+    $('stateCard').className = 'now-card' + (dot === 'on' ? ' rec' : dot === 'wait' ? ' now' : '');
+    $('stateDet').textContent = det || '';
+  }
+
+  function levelDb(blockChannels){
+    let sum = 0, n = 0;
+    for(const ch of blockChannels){ for(let i = 0; i < ch.length; i++){ sum += ch[i]*ch[i]; } n += ch.length; }
+    if(!n) return -90;
+    return Math.max(-90, 20 * Math.log10(Math.sqrt(sum / n) + 1e-9));
+  }
+
+  /* ================= MODE UI ================= */
+  function syncMode(){
+    const m = mode();
+    document.querySelectorAll('.mode-opt').forEach(l => l.classList.toggle('checked', l.querySelector('input').checked));
+    $('secondsWrap').hidden = m !== 'fixed';
+    $('silenceWrap').hidden = m !== 'auto';
+    $('threshWrap').hidden = m !== 'auto';
+    $('meterThr').hidden = m !== 'auto';
+    placeThreshold();
+    if(stream && phase === 'idle') readyPrompt();
+  }
+  function placeThreshold(){
+    const t = +$('threshold').value;
+    $('threshVal').textContent = t;
+    $('meterThr').style.left = Math.max(0, Math.min(100, (t + 60) / 60 * 100)) + '%';
+  }
+  document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', syncMode));
+  $('threshold').addEventListener('input', placeThreshold);
+
+  function readyPrompt(){
+    const m = mode();
+    if(m === 'auto') say('Ready. Press <b>● Record</b>, then start the song in the other tab. Recording begins when sound starts and ends after ' + (+$('silence').value || 3) + ' s of silence.');
+    else if(m === 'fixed') say('Ready. Press <b>● Record</b> and start the song. It stops by itself after ' + (+$('seconds').value || 30) + ' s.');
+    else say('Ready. Press <b>● Record</b>, start the song in the other tab, and press <b>■ Stop</b> when it ends.');
+  }
+
+  /* ================= STEP 1: PICK A SOURCE ================= */
+  $('pickBtn').addEventListener('click', async () => {
+    if(phase !== 'idle') return;
+    try{
+      const s = await navigator.mediaDevices.getDisplayMedia({
+        video: true,  // Chrome only offers tab audio together with video
+        audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false, suppressLocalAudioPlayback:false },
+        preferCurrentTab: false, selfBrowserSurface: 'exclude', surfaceSwitching: 'include', systemAudio: 'include'
+      });
+      const at = s.getAudioTracks()[0];
+      if(!at){
+        s.getTracks().forEach(t => t.stop());
+        say('⚠️ No audio was shared. Try again and switch on <b>“Also share tab audio”</b> in the picker.');
+        return;
+      }
+      releaseSource();
+      stream = s;
+      at.addEventListener('ended', () => { if(phase !== 'idle') stopRecording('The shared tab was closed or sharing was stopped.'); releaseSource(); });
+      await startAudioGraph();
+      const vt = s.getVideoTracks()[0];
+      $('srcInfo').textContent = '🔊 ' + ((vt && vt.label) || at.label || 'Shared audio');
+      $('recBtn').disabled = false; $('releaseBtn').disabled = false;
+      $('fmtDet').textContent = rate + ' Hz, ' + channels + ' ch, 16-bit WAV';
+      setState('Listening', '', 'The meter shows what the tab is playing.');
+      readyPrompt();
+    }catch(err){
+      if(err && err.name === 'NotAllowedError') say('Sharing was cancelled. Click <b>Pick a tab to record</b> to try again.');
+      else say('⚠️ Could not start capture: ' + (err && err.message || err));
+    }
+  });
+
+  $('releaseBtn').addEventListener('click', () => { if(phase !== 'idle') stopRecording(); releaseSource(); });
+
+  function releaseSource(){
+    if(proc){ proc.onaudioprocess = null; try{ proc.disconnect(); }catch(e){} proc = null; }
+    if(srcNode){ try{ srcNode.disconnect(); }catch(e){} srcNode = null; }
+    if(ctx){ ctx.close(); ctx = null; }
+    if(stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
+    $('recBtn').disabled = true; $('releaseBtn').disabled = true;
+    $('srcInfo').textContent = 'No source chosen';
+    $('meterFill').style.width = '0%'; $('dbText').textContent = '– dB';
+    if(phase === 'idle'){ setState('Idle', ''); if(!wavBlob) say('Pick a tab in step 1 first.'); }
+  }
+
+  async function startAudioGraph(){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC();
+    if(ctx.state === 'suspended') await ctx.resume();
+    rate = ctx.sampleRate;
+    const at = stream.getAudioTracks()[0];
+    const st = at.getSettings ? at.getSettings() : {};
+    channels = Math.max(1, Math.min(2, st.channelCount || 2));
+    srcNode = ctx.createMediaStreamSource(stream);
+    // ScriptProcessor keeps running while this tab is in the background (requestAnimationFrame does not),
+    // so all start/stop decisions are made here, as in the Python callback loop.
+    proc = ctx.createScriptProcessor(4096, channels, channels);
+    sink = ctx.createGain(); sink.gain.value = 0;   // the processor must be connected to run; keep it silent
+    srcNode.connect(proc); proc.connect(sink); sink.connect(ctx.destination);
+    proc.onaudioprocess = onAudio;
+  }
+
+  /* ================= THE RECORDING LOOP ================= */
+  function onAudio(e){
+    const ib = e.inputBuffer, block = [];
+    for(let c = 0; c < channels; c++) block.push(new Float32Array(ib.getChannelData(Math.min(c, ib.numberOfChannels - 1))));
+    const len = block[0].length;
+    curDb = levelDb(block);
+    if(phase === 'idle') return;
+
+    const loud = curDb > opts.threshold;
+    if(phase === 'wait'){
+      if(!loud){ preroll = block; return; }
+      phase = 'rec';
+      if(preroll){ chunks.push(preroll); framesWritten += preroll[0].length; preroll = null; }
+    }
+    chunks.push(block);
+    framesWritten += len;
+    if(loud) lastLoudFrame = framesWritten;
+
+    const elapsed = framesWritten / rate;
+    if(opts.mode === 'fixed' && elapsed >= opts.seconds){ stopRecording(); return; }
+    if(opts.mode === 'auto' && lastLoudFrame >= 0 && (framesWritten - lastLoudFrame) / rate >= opts.silence){
+      stopRecording(opts.silence + ' s of silence, so the song has ended.');
+    }
+  }
+
+  /* ================= METER / TIMER (screen only) ================= */
+  function draw(){
+    if(ctx){
+      const pct = Math.max(0, Math.min(100, (curDb + 60) / 60 * 100));
+      const f = $('meterFill'); f.style.width = pct + '%';
+      f.style.setProperty('--mw', pct > 0 ? (100 / pct * 100) + '%' : '100%');
+      $('dbText').textContent = curDb.toFixed(1) + ' dB';
+      if(phase === 'rec'){
+        setState('Recording', 'on', opts.mode === 'fixed' ? 'stops at ' + fmtTime(opts.seconds) : opts.mode === 'auto' ? 'stops after ' + opts.silence + ' s of silence' : 'press Stop when done');
+      }
+      if(phase !== 'idle') $('timeVal').textContent = fmtTime(framesWritten / rate);
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  /* ================= RECORD / STOP ================= */
+  $('recBtn').addEventListener('click', startRecording);
+  $('stopBtn').addEventListener('click', () => stopRecording('Stopped by you.'));
+
+  function startRecording(){
+    if(!ctx || phase !== 'idle') return;
+    if(wavBlob && !saved && !confirm('The last recording has not been saved. Record a new one and throw it away?')) return;
+    clearResult();
+    if(ctx.state === 'suspended') ctx.resume();
+    const m = mode();
+    const secs = +$('seconds').value, sil = +$('silence').value;
+    if(m === 'fixed' && !(secs > 0)){ say('⚠️ Enter a length greater than 0 seconds.'); return; }
+    opts = { mode:m, seconds:secs, silence: sil > 0 ? sil : 3, threshold: m === 'auto' ? +$('threshold').value : -Infinity };
+    chunks = []; framesWritten = 0; lastLoudFrame = -1; preroll = null;
+    phase = m === 'auto' ? 'wait' : 'rec';
+    $('recBtn').disabled = true; $('stopBtn').disabled = false; $('pickBtn').disabled = true;
+    document.querySelectorAll('input[name=mode], #seconds, #silence, #threshold').forEach(i => i.disabled = true);
+    $('timeVal').textContent = '00:00';
+    if(phase === 'wait'){ setState('Waiting for sound', 'wait', 'start the song in the other tab'); say('🪄 Waiting for audio… start your song in the other tab now.'); }
+    else say('🔴 Recording. Switch to the other tab and play the song.' + (m === 'manual' ? ' Come back and press <b>■ Stop</b> when it ends.' : ''));
+  }
+
+  function stopRecording(reason){
+    if(phase === 'idle') return;
+    const wasWaiting = phase === 'wait';
+    phase = 'idle';
+    $('stopBtn').disabled = true; $('recBtn').disabled = !ctx; $('pickBtn').disabled = !canCapture;
+    document.querySelectorAll('input[name=mode], #seconds, #silence, #threshold').forEach(i => i.disabled = false);
+
+    let keep = framesWritten;
+    if(opts.mode === 'fixed') keep = Math.min(keep, Math.round(opts.seconds * rate));       // exactly the asked length
+    else if(opts.mode === 'auto' && lastLoudFrame >= 0) keep = Math.min(keep, lastLoudFrame + Math.round(0.5 * rate)); // drop the trailing silence
+
+    if(wasWaiting || keep === 0){
+      setState(ctx ? 'Listening' : 'Idle', '', '');
+      say('Nothing was recorded, so there is nothing to save.' + (reason ? ' (' + reason + ')' : ''));
+      chunks = [];
+      return;
+    }
+    wavBlob = encodeWav(chunks, keep, channels, rate);
+    chunks = [];
+    saved = false;
+    const dur = keep / rate;
+    $('timeVal').textContent = fmtTime(dur);
+    setState(ctx ? 'Listening' : 'Idle', '', 'last take: ' + dur.toFixed(1) + ' s');
+    showResult(dur);
+    say('✅ ' + (reason ? reason + ' ' : '') + 'Recorded ' + fmtTime(dur) + ' (' + dur.toFixed(1) + ' s). Listen below, then press <b>💾 Save</b>.');
+  }
+
+  /* ================= WAV ENCODER (16-bit PCM) ================= */
+  function encodeWav(blocks, frames, nch, sr){
+    const bytes = frames * nch * 2;
+    const buf = new ArrayBuffer(44 + bytes), v = new DataView(buf);
+    const str = (o, s) => { for(let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + bytes, true); str(8, 'WAVE');
+    str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, nch, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * nch * 2, true); v.setUint16(32, nch * 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, bytes, true);
+    let off = 44, left = frames;
+    for(const b of blocks){
+      const n = Math.min(b[0].length, left);
+      for(let i = 0; i < n; i++){
+        for(let c = 0; c < nch; c++){
+          let s = b[c][i]; s = s < -1 ? -1 : s > 1 ? 1 : s;
+          v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true); off += 2;
+        }
+      }
+      left -= n;
+      if(left <= 0) break;
+    }
+    return new Blob([buf], { type:'audio/wav' });
+  }
+
+  /* ================= STEP 3: PREVIEW + SAVE ================= */
+  function showResult(dur){
+    if(previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(wavBlob);
+    $('preview').src = previewUrl;
+    $('fileName').value = stamp();
+    $('sizeInfo').textContent = fmtSize(wavBlob.size);
+    $('lenInfo').textContent = dur.toFixed(1) + ' s';
+    $('savedBox').hidden = true;
+    $('step3').hidden = false;
+    $('step3').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  function clearResult(){
+    if(previewUrl){ URL.revokeObjectURL(previewUrl); previewUrl = null; }
+    $('preview').removeAttribute('src'); $('preview').load();
+    wavBlob = null; saved = false;
+    $('step3').hidden = true;
+  }
+
+  function fileName(){
+    let n = $('fileName').value.trim().replace(/\.wav$/i, '').replace(/[\\/:*?"<>|]+/g, '-');
+    if(!n){ n = stamp(); $('fileName').value = n; }
+    return n + '.wav';
+  }
+
+  // Remember the chosen folder between visits (IndexedDB can store the folder handle).
+  function idb(){ return new Promise((res, rej) => { const r = indexedDB.open('music-recorder', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+  async function idbGet(k){ try{ const db = await idb(); return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); }catch(e){ return null; } }
+  async function idbSet(k, val){ try{ const db = await idb(); db.transaction('kv', 'readwrite').objectStore('kv').put(val, k); }catch(e){} }
+
+  function showFolder(){
+    $('folderName').textContent = dirHandle ? dirHandle.name : 'not chosen yet';
+    $('folderName').classList.toggle('text-danger', !!dirHandle && dirHandle.name !== FOLDER);
+  }
+
+  async function chooseFolder(){
+    try{
+      dirHandle = await window.showDirectoryPicker({ id:'music-ref-audio', mode:'readwrite', startIn: dirHandle || 'music' });
+    }catch(err){ return false; }
+    if(dirHandle.name !== FOLDER && !confirm('You chose "' + dirHandle.name + '", not ' + FOLDER + '. Save there anyway?')){ dirHandle = null; showFolder(); return false; }
+    await idbSet('dir', dirHandle);
+    showFolder();
+    return true;
+  }
+  $('folderBtn').addEventListener('click', chooseFolder);
+
+  async function permitted(h){
+    const o = { mode:'readwrite' };
+    if(await h.queryPermission(o) === 'granted') return true;
+    return (await h.requestPermission(o)) === 'granted';
+  }
+
+  $('saveBtn').addEventListener('click', async () => {
+    if(!wavBlob) return;
+    const name = fileName();
+    if(!canPickFolder){ download(name); return; }
+    try{
+      if(!dirHandle || !(await permitted(dirHandle))){ if(!(await chooseFolder())) return; }
+      let exists = false;
+      try{ await dirHandle.getFileHandle(name); exists = true; }catch(e){}
+      if(exists && !confirm(name + ' already exists in ' + dirHandle.name + '. Replace it?')) return;
+      const fh = await dirHandle.getFileHandle(name, { create:true });
+      const w = await fh.createWritable();
+      await w.write(wavBlob); await w.close();
+      markSaved(name, 'Saved <b>' + name + '</b> (' + fmtSize(wavBlob.size) + ') in <span class="folder-name">' + dirHandle.name + '</span>.');
+    }catch(err){
+      say('⚠️ Could not save into the folder: ' + (err && err.message || err) + '. Use <b>Download instead</b>.');
+    }
+  });
+
+  function download(name){
+    const a = document.createElement('a');
+    a.href = previewUrl; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    markSaved(name, 'Downloaded <b>' + name + '</b>. Move it into <span class="folder-name">' + FOLDER + '</span> so the practice page can find it.');
+  }
+  $('downloadBtn').addEventListener('click', () => { if(wavBlob) download(fileName()); });
+
+  $('discardBtn').addEventListener('click', () => {
+    if(wavBlob && !saved && !confirm('Throw this recording away?')) return;
+    clearResult();
+    if(stream) readyPrompt(); else say('Pick a tab in step 1 first.');
+  });
+
+  function markSaved(name, html){
+    saved = true;
+    $('savedMsg').innerHTML = html;
+    const title = name.replace(/\.wav$/i, '').replace(/[-_]+/g, ' ');
+    $('snippet').textContent =
+`  {
+    title: '${title}',
+    audio: '${name}',
+    key:   '',
+    inst:  'guitar',
+    tempo: 120,
+    notes: [
+      // 'time   notes   beats   label'
+    ]
+  },`;
+    $('savedBox').hidden = false;
+    say('💾 ' + html);
+  }
+
+  window.addEventListener('beforeunload', e => {
+    if(phase !== 'idle' || (wavBlob && !saved)){ e.preventDefault(); e.returnValue = ''; }
+  });
+
+  /* ================= TRIM: COPY PART OF AN AUDIO FILE ================= */
+  const canOpenFile = 'showOpenFilePicker' in window;
+  let trimFile = null, trimHandle = null, trimBuf = null, trimWav = null, trimDur = 0, trimUrl = null;
+  let trimDir = null;        // last folder chosen for trimming (remembered)
+  let trimStopAt = null;     // preview stops here
+
+  function trimMsg(html, kind){ const m = $('trimMsg'); m.className = 'alert mt-3 mb-0 alert-' + (kind || 'info'); m.innerHTML = html; m.hidden = false; }
+  function downloadBlob(blob, name){
+    const u = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 10000);
+  }
+
+  $('trimPick').addEventListener('click', async () => {
+    if(!canOpenFile){ $('trimInput').click(); return; }
+    try{
+      const [h] = await window.showOpenFilePicker({
+        id:'music-trim', startIn: trimDir || dirHandle || 'music',
+        types:[{ description:'Audio files', accept:{ 'audio/*':['.wav','.mp3','.m4a','.ogg','.flac','.webm','.aac'] } }]
+      });
+      await loadTrimFile(await h.getFile(), h);
+    }catch(err){ if(err && err.name !== 'AbortError') trimMsg('⚠️ Could not open the file: ' + (err.message || err), 'danger'); }
+  });
+  $('trimInput').addEventListener('change', e => { const f = e.target.files[0]; if(f) loadTrimFile(f, null); e.target.value = ''; });
+
+  async function loadTrimFile(f, h){
+    trimFile = f; trimHandle = h;
+    $('trimMsg').hidden = true; $('trimBody').hidden = false;
+    if(trimUrl) URL.revokeObjectURL(trimUrl);
+    trimUrl = URL.createObjectURL(f);
+    const a = $('trimAudio');
+    const meta = new Promise(res => { a.onloadedmetadata = () => res(a.duration); a.onerror = () => res(0); });
+    a.src = trimUrl;
+    trimBuf = await f.arrayBuffer();
+    trimWav = parseWav(trimBuf);
+    trimDur = trimWav ? trimWav.dur : await meta;
+    if(!isFinite(trimDur)) trimDur = 0;
+    $('trimInfo').textContent = '🎵 ' + f.name + ' · ' + (trimDur ? trimDur.toFixed(2) + ' s · ' : '') + fmtSize(f.size);
+    $('trimStart').value = '0';
+    $('trimEnd').value = trimDur ? trimDur.toFixed(2) : '0';
+    $('trimStart').max = $('trimEnd').max = trimDur.toFixed(2);
+    if(!trimDur) trimMsg('⚠️ This file could not be read as audio.', 'danger');
+    if(!canOpenFile) trimMsg('This browser cannot write into folders, so <b>Copy audio</b> will download the new file. Move it next to the original yourself.', 'info');
+    syncTrim();
+  }
+
+  function trimRange(){
+    const s = parseFloat($('trimStart').value), e = parseFloat($('trimEnd').value);
+    const ok = trimDur > 0 && isFinite(s) && isFinite(e) && s >= 0 && e > s && e <= trimDur + 0.005;
+    return { s, e: Math.min(e, trimDur), ok };
+  }
+  function syncTrim(){
+    const r = trimRange();
+    $('trimCopy').disabled = !r.ok; $('trimPreview').disabled = !r.ok;
+    $('trimLen').textContent = r.ok ? 'Copy length: ' + (r.e - r.s).toFixed(2) + ' s'
+      : trimDur ? 'Start must be smaller than End, both within 0–' + trimDur.toFixed(2) + ' s' : '';
+    $('trimLen').classList.toggle('text-danger', !r.ok && trimDur > 0);
+  }
+  ['trimStart', 'trimEnd'].forEach(id => $(id).addEventListener('input', syncTrim));
+  $('trimStartNow').addEventListener('click', () => { $('trimStart').value = $('trimAudio').currentTime.toFixed(2); syncTrim(); });
+  $('trimEndNow').addEventListener('click', () => { $('trimEnd').value = $('trimAudio').currentTime.toFixed(2); syncTrim(); });
+
+  $('trimPreview').addEventListener('click', () => {
+    const r = trimRange(); if(!r.ok) return;
+    const a = $('trimAudio');
+    a.currentTime = r.s; trimStopAt = r.e; a.play();
+  });
+  $('trimAudio').addEventListener('timeupdate', () => {
+    const a = $('trimAudio');
+    if(trimStopAt !== null && a.currentTime >= trimStopAt){ a.pause(); trimStopAt = null; }
+  });
+  $('trimAudio').addEventListener('pause', () => { trimStopAt = null; });
+
+  // Read the RIFF chunks of a WAV file. Returns null for anything that is not a plain WAV.
+  function parseWav(buf){
+    const v = new DataView(buf), n = buf.byteLength;
+    const tag = o => String.fromCharCode(v.getUint8(o), v.getUint8(o+1), v.getUint8(o+2), v.getUint8(o+3));
+    if(n < 12 || tag(0) !== 'RIFF' || tag(8) !== 'WAVE') return null;
+    let o = 12, fmt = null, data = null;
+    while(o + 8 <= n){
+      const id = tag(o), size = v.getUint32(o + 4, true), body = o + 8;
+      if(id === 'fmt ' && body + 16 <= n) fmt = { off:o, size, rate:v.getUint32(body + 4, true), blockAlign:v.getUint16(body + 12, true) };
+      else if(id === 'data'){ data = { off:body, size:Math.min(size, n - body) }; break; }
+      o = body + size + (size & 1);
+    }
+    if(!fmt || !data || !fmt.rate || !fmt.blockAlign) return null;
+    return { fmt, data, frames: Math.floor(data.size / fmt.blockAlign), dur: Math.floor(data.size / fmt.blockAlign) / fmt.rate };
+  }
+
+  // WAV: copy the samples byte for byte, so the copy keeps the exact format of the original.
+  function cutWav(buf, w, s, e){
+    const ba = w.fmt.blockAlign;
+    const f0 = Math.min(w.frames, Math.round(s * w.fmt.rate)), f1 = Math.min(w.frames, Math.round(e * w.fmt.rate));
+    const nBytes = (f1 - f0) * ba;
+    const fmtLen = Math.min(8 + w.fmt.size + (w.fmt.size & 1), buf.byteLength - w.fmt.off);
+    const out = new Uint8Array(12 + fmtLen + 8 + nBytes + (nBytes & 1));
+    const v = new DataView(out.buffer);
+    const str = (o, t) => { for(let i = 0; i < 4; i++) out[o + i] = t.charCodeAt(i); };
+    str(0, 'RIFF'); v.setUint32(4, out.length - 8, true); str(8, 'WAVE');
+    out.set(new Uint8Array(buf, w.fmt.off, fmtLen), 12);
+    const d = 12 + fmtLen;
+    str(d, 'data'); v.setUint32(d + 4, nBytes, true);
+    out.set(new Uint8Array(buf, w.data.off + f0 * ba, nBytes), d + 8);
+    return new Blob([out], { type:'audio/wav' });
+  }
+
+  // Other formats (MP3, M4A, …): decode, then save the part as a 16-bit WAV.
+  async function cutOther(buf, s, e){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const dc = new AC();
+    try{
+      const ab = await dc.decodeAudioData(buf.slice(0));
+      const sr = ab.sampleRate, nch = Math.min(2, ab.numberOfChannels);
+      const f0 = Math.min(ab.length, Math.round(s * sr)), f1 = Math.min(ab.length, Math.round(e * sr));
+      const block = [];
+      for(let c = 0; c < nch; c++) block.push(ab.getChannelData(c).subarray(f0, f1));
+      return encodeWav([block], f1 - f0, nch, sr);
+    }finally{ dc.close(); }
+  }
+
+  // Find a folder we already have access to that directly holds the chosen file.
+  async function knownFolderOf(h){
+    for(const d of [trimDir, dirHandle]){
+      if(!d) continue;
+      try{ const p = await d.resolve(h); if(p && p.length === 1 && await permitted(d)) return d; }catch(e){}
+    }
+    return null;
+  }
+
+  $('trimCopy').addEventListener('click', async () => {
+    const r = trimRange(); if(!r.ok || !trimBuf) return;
+    const base = trimFile.name.replace(/\.[^.]+$/, '');
+    const outName = base + '-copy-' + timeStamp() + '.wav';
+    $('trimCopy').disabled = true;
+    try{
+      // Ask for the folder first, while the click still counts as a user action.
+      let dir = null;
+      if(trimHandle && canPickFolder){
+        dir = await knownFolderOf(trimHandle);
+        if(!dir){
+          trimMsg('Chrome needs your OK to write next to the file: in the window that opens, choose the folder that holds <b>' + trimFile.name + '</b>.', 'info');
+          try{ dir = await window.showDirectoryPicker({ id:'music-trim-dir', mode:'readwrite', startIn: trimHandle }); }
+          catch(err){ trimMsg('Copy cancelled: no folder was chosen.', 'warning'); return; }
+          let inside = false;
+          try{ const p = await dir.resolve(trimHandle); inside = !!p && p.length === 1; }catch(e){}
+          if(!inside && !confirm('"' + trimFile.name + '" is not in the folder "' + dir.name + '". Save the copy there anyway?')){ trimMsg('Copy cancelled.', 'warning'); return; }
+          trimDir = dir; idbSet('trimDir', dir);
+        }
+      }
+      const blob = trimWav ? cutWav(trimBuf, trimWav, r.s, r.e) : await cutOther(trimBuf, r.s, r.e);
+      const what = 'from ' + r.s.toFixed(2) + ' s to ' + r.e.toFixed(2) + ' s (' + (r.e - r.s).toFixed(2) + ' s, ' + fmtSize(blob.size) + ')';
+      if(dir){
+        const fh = await dir.getFileHandle(outName, { create:true });
+        const w = await fh.createWritable(); await w.write(blob); await w.close();
+        trimMsg('✅ Copied ' + what + ' to <b>' + outName + '</b> in <span class="folder-name">' + dir.name + '</span>.', 'success');
+      }else{
+        downloadBlob(blob, outName);
+        trimMsg('⬇ Downloaded <b>' + outName + '</b> (' + what + '). Move it next to the original file.', 'success');
+      }
+    }catch(err){
+      trimMsg('⚠️ Could not copy the audio: ' + (err && err.message || err), 'danger');
+    }finally{ syncTrim(); }
+  });
+
+  /* ================= START ================= */
+  syncMode();
+  if(canPickFolder){
+    idbGet('dir').then(h => { if(h){ dirHandle = h; showFolder(); } });
+    idbGet('trimDir').then(h => { if(h) trimDir = h; });
+  }
+})();
+</script>
+</body>
+</html>
