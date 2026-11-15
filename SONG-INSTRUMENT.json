@@ -1,5 +1,7 @@
 [
   { "audio": "SONG-1-inteha-ho-gayi-start.wav",     "title": "Inteha Ho Gayi: guitar intro (Sharaabi)", "instrument": "guitar" },
   { "audio": "SONG-2-tip-tip-barsa-pani-start.wav", "title": "Tip Tip Barsa Pani: opening (Mohra)",     "instrument": "piano" },
-  { "audio": "SONG-3-pehla-nasha-start.wav",          "title": "Pehla Nasha: opening (Jo Jeeta Wohi Sikandar)", "instrument": "piano" }
+  { "audio": "SONG-3-pehla-nasha-start.wav",          "title": "Pehla Nasha: opening (Jo Jeeta Wohi Sikandar)", "instrument": "piano" },
+  { "audio": "SONG-4-chura-liya-hai-start.wav",       "title": "Chura Liya Hai: guitar intro (Yaadon Ki Baaraat)", "instrument": "guitar" },
+  { "audio": "SONG-5-anhoni-kph-honi-start.wav",       "title": "Anhoni Ko Honi: opening (Amar Akbar Anthony)", "instrument": "piano" }
 ]

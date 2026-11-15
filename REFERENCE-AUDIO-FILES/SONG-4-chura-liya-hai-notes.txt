@@ -1,0 +1,94 @@
+Chura Liya Hai: guitar intro notes measured from SONG-4-chura-liya-hai-start.wav (0 s to 23 s)
+Tuning: the recording is about -28 cents flat. Key: Bb minor (Bb is by far the strongest note; Db, C, F, Gb, Eb also appear).
+A low Bb (A#2) bass/drone sounds under most of the clip; it is left out of the list.
+Tempo: about 150 BPM (a beat is about 0.4 s); most notes are 0.2 s apart (half a beat).
+Method: STFT, harmonic salience per semitone (C3 to C6), spectral-flux onsets. At each onset the strongest note
+was kept, weak repeats of the same note were merged, and a few readings were fixed by hand
+(6.22 s G5 -> C4, 11.42 s C6 -> F4, 21.77 s G5 -> C4; overtone readings dropped at 6.38, 8.99, 12.85, 21.91 s).
+Octaves are not always certain (Bb3 vs Bb4 in particular). It is the lead guitar line only. Check it against the recording.
+82 notes.
+
+  time   beats  note
+  ------ -----  ----
+   0.07s   0.5  F3
+   0.20s     1  F4
+   0.57s     1  F3
+   0.99s   1.5  F3
+   1.55s   1.5  A#3
+   2.06s   0.5  A#3
+   2.25s   0.5  F3
+   2.41s     1  F3
+   2.80s   0.5  F4
+   3.01s     1  C#4
+   3.34s   0.5  C4
+   3.49s   0.5  C4
+   3.69s   0.5  A#3
+   3.89s     1  F3
+   4.23s   0.5  F4
+   4.46s     1  F4
+   4.95s   0.5  F3
+   5.14s   1.5  A#3
+   5.68s   0.5  F4
+   5.89s     1  C#4
+   6.22s     1  C4
+   6.57s   0.5  A#4
+   6.76s   1.5  F#3
+   7.32s     1  A#4
+   7.81s     2  A#3
+   8.57s   0.5  C#4
+   8.76s   0.5  C4
+   8.87s   0.5  C4
+   9.09s   0.5  A#3
+   9.25s   0.5  A#3
+   9.44s   0.5  F#3
+   9.64s     1  D#3
+   9.97s   0.5  D#3
+  10.18s   1.5  D#3
+  10.71s   0.5  A#3
+  10.90s   1.5  A#3
+  11.42s   0.5  F4
+  11.64s     1  D#4
+  11.98s   0.5  C5
+  12.17s   0.5  D#3
+  12.33s   0.5  A#3
+  12.53s   0.5  A3
+  12.71s     1  F3
+  13.08s     1  A3
+  13.47s   0.5  C4
+  13.59s   0.5  F4
+  13.80s   0.5  C4
+  13.93s   0.5  F3
+  14.18s   0.5  A4
+  14.30s   0.5  A4
+  14.50s     1  A3
+  14.87s     1  F3
+  15.23s   0.5  F3
+  15.42s     2  A#3
+  16.12s     1  A#3
+  16.42s   0.5  A#4
+  16.68s   0.5  F4
+  16.76s     2  F4
+  17.47s   0.5  G4
+  17.56s     1  G#4
+  17.92s     1  G#4
+  18.33s   0.5  C5
+  18.44s     1  A#4
+  18.89s     1  F3
+  19.24s   0.5  A#3
+  19.36s   0.5  A#4
+  19.59s     1  C4
+  19.95s   0.5  A#3
+  20.08s   0.5  A#4
+  20.31s   0.5  C5
+  20.48s   0.5  A#3
+  20.68s   0.5  A#4
+  20.81s   0.5  A#3
+  21.04s   0.5  A#3
+  21.19s   0.5  A#3
+  21.40s   0.5  A#4
+  21.53s   0.5  A#4
+  21.77s     1  C4
+  22.13s   0.5  A#4
+  22.26s   0.5  A#4
+  22.47s     1  A#4
+  22.85s   0.5  A#4
