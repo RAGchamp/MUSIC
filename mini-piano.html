@@ -206,7 +206,13 @@
   const KEYMAP = {KeyA:'C5', KeyW:'C#5', KeyS:'D5', KeyE:'D#5', KeyD:'E5', KeyF:'F5', KeyT:'F#5', KeyG:'G5', KeyY:'G#5', KeyH:'A5', KeyU:'A#5', KeyJ:'B5', KeyK:'C6'};
 
   const PRESETS = {
-    pehla: {name: 'Pehla Nasha', rows: 'F5 F5 F5 E5 F5 C6 F5 E5 D5 E5 F5 A5 F5 F5 G5 G5 G5 C5 F5 G5 A5 G5 F5 E5 F5'.split(' ').map(k => ({key: k, wait: 400}))},
+    // Waits from the song's rhythm: bars 25-31 of the Pehla Nasha piano arrangement (SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt,
+    // 48.21-58.08 s, quarter = 146, so an eighth note = 205 ms). The 73 s film clip does not contain this tune.
+    pehla: {name: 'Pehla Nasha', ver: 2, rows: (() => {
+      const keys = 'F5 F5 F5 E5 F5 C6 F5 E5 D5 E5 F5 A5 F5 F5 G5 G5 G5 C5 F5 G5 A5 G5 F5 E5 F5'.split(' ');
+      const waits = [616, 205, 1027, 205, 205, 411, 411, 205, 2466, 205, 205, 205, 205, 205, 411, 205, 1027, 205, 205, 205, 205, 205, 205, 205, 1000];
+      return keys.map((k, i) => ({key: k, wait: waits[i]}));
+    })()},
     empty: {name: 'My tune', rows: Array.from({length: 5}, () => ({key: 'C5', wait: 500}))},
   };
 
@@ -556,7 +562,9 @@
 
   /* ================= START ================= */
   const saved = store.get('miniPianoTable');
-  if(saved && Array.isArray(saved.rows) && saved.rows.length){
+  // A saved table that is just the old Pehla Nasha default (every wait 400 ms, never edited) gets the new waits.
+  const oldDefault = saved && !saved.dirty && saved.name === 'Pehla Nasha' && Array.isArray(saved.rows) && saved.rows.every(r => +r.wait === 400);
+  if(saved && Array.isArray(saved.rows) && saved.rows.length && !oldDefault){
     $('speed').value = saved.speed || 100; $('speedVal').textContent = $('speed').value + '%';
     $('loopBox').checked = !!saved.loop;
     setRows(saved.rows, saved.name || 'My tune'); dirty = !!saved.dirty;

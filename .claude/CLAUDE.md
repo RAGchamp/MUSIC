@@ -217,7 +217,7 @@ Made for the owner's picture of a phone piano app showing "Pehla Nasha: F5 F5 F5
   between taps (rounded to 50 ms; last row 500 ms) and switches to Automated.
 - **🤖 Automated:** table rows = key drop-down + wait (ms, whole 50–5000, else red box and Play disabled) + 🗑; ➕ Add row
   copies the last row. A row's wait = time from its key to the next key; the last row's wait is how long the last note rings;
-  each note sounds for its wait (0.1–1.5 s). Starts with the owner's 25-note Pehla Nasha tune (400 ms each); presets
+  each note sounds for its wait (0.1–1.5 s). Starts with the owner's 25-note Pehla Nasha tune, waits from the song's rhythm in the 5-min piano arrangement (bars 25–31, 48.21–58.08 s, ♩ = 146, eighth = 205 ms; the 73 s film clip does not contain this tune; an unedited saved table with the old 400 ms waits is replaced); presets
   Pehla Nasha / Empty (5 rows). Tap a row's # then piano keys to fill rows in turn. ▶ Play schedules every note on
   `ctx.currentTime`; a rAF loop lights the key, the table row and the strip note. ■ Stop, Speed 50–150 %, 🔁 Loop, Space.
 - Saved in localStorage: `miniPianoTable` (rows, name, speed, loop), `miniPianoMode`.

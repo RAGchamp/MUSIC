@@ -69,8 +69,8 @@ Copy the sound part of `piano.html` (section "SOUND: recorded piano samples"):
 
 - The first time it opens, it is filled with the owner's Pehla Nasha tune, **25 rows**
   (owner's choice, instead of 5 plain rows):
-  `F5 F5 F5 E5 F5 C6 F5 E5 D5 E5 F5 A5 F5 F5 G5 G5 G5 C5 F5 G5 A5 G5 F5 E5 F5`, each with a 400 ms wait
-  (the owner can tune the waits by ear).
+  `F5 F5 F5 E5 F5 C6 F5 E5 D5 E5 F5 A5 F5 F5 G5 G5 G5 C5 F5 G5 A5 G5 F5 E5 F5`, with waits from the song's rhythm (2026-11-17: bars 25–31 of the
+  5-minute piano arrangement, eighth note = 205 ms; first built with 400 ms each).
 - **Key to press:** a drop-down with the 13 keys (C5, C#5, D5 … C6), so no typing on a phone and no invalid names.
   Tapping a piano key while a row's drop-down is focused also fills it (quick entry).
 - **Wait (ms):** a number box (`inputmode="numeric"`), whole numbers 50–5000. An empty or invalid value turns the box
