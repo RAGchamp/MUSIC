@@ -192,6 +192,15 @@ Made 2026-11-16: the owner wanted to see *how* a song is played. One self-contai
 - **Score:** staff notation like the sheet page, built from the lines: bars from "bar N" labels (else 4 beats), each
   line a column, right hand on the treble and left hand on the bass staff, note lengths until that hand's next line;
   inside a fixed-height frame that scrolls to the current row; the current column is yellow; clicking a column plays from there.
+- **Phones (≤ 576 px, added 2026-11-16 after the owner tried it on a phone):** slim one-line top bar that does not stick;
+  ▶ ■ ⏱ as icons; the range row, finger numbers and sound status sit behind a ⚙️ button (`.extras`); when the whole
+  keyboard can't fit at 18 px a white key, keys are drawn 18–34 px wide (sized so the two hands' usual span fits, 85th
+  percentile) and `#kbdPan` slides (CSS transform) to keep both hands in the middle; the score packs ~2 bars a row
+  (drawn smaller, note names bigger). Laptop layout is unchanged.
+- **Falling notes view** (🎼 Staff / ⬇ Falling notes switch; phones start in falling notes): a canvas above the keys,
+  3 s look-ahead, each note a bar over its key (orange right / blue left, darker for black keys), touching the keyboard
+  when pressed and as long as it is held, glowing while down, with C lines and the note letter on long bars.
+  `buildBars()` runs on load even when the score is hidden (the bar range needs it).
 - `window.__pianoNotes` = {load(text, name), play(t), stop, showAt, lines(), songTime} for headless tests.
 
 ## Für Elise from a vector PDF (2026-11-16)

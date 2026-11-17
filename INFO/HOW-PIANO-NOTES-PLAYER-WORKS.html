@@ -183,8 +183,9 @@
         <p class="lead mb-0">The <strong>Piano Notes Player</strong> (<code class="text-white">NOTES-TESTER/Piano-notes.html</code>) takes a <strong>notes file</strong>, plays it on a
           recorded piano sound, shows <strong>two hands</strong> pressing the keys with numbered fingers, and scrolls the <strong>score</strong> underneath with the
           current notes in <strong>yellow</strong>. Part 1 walks through the page step by step, from loading the file to the hands, the sound, the score and playing a range of bars.
-          Part 2 explains how the 5-minute Pehla Nasha notes file was made from a PDF of the sheet music.
-          <span class="d-block mt-2 small">Last updated 2026-11-16.</span></p>
+          Part 2 explains how the notes files were made from sheet music: the 5-minute Bollywood song <em>Pehla Nasha</em> from screenshots (partly by eye),
+          and Beethoven's <em>Für Elise</em> from a MuseScore PDF (fully by code). Both songs play in the <a class="text-white fw-bold" href="../piano.html">Piano demo</a>.
+          <span class="d-block mt-2 small">Last updated 2026-11-16 (Für Elise added).</span></p>
       </div>
     </div>
   </div>
@@ -223,15 +224,17 @@
             <div class="toc-item"><span class="toc-num">6</span><a href="#sound">How the Sound Is Made</a></div>
             <div class="toc-item"><span class="toc-num">7</span><a href="#score">The Score and the Yellow Highlight</a></div>
             <div class="toc-item"><span class="toc-num">8</span><a href="#range">Playing a Range of Bars</a></div>
+            <div class="toc-item"><span class="toc-num">9</span><a href="#phone">On a Phone: Bigger Keys and Falling Notes</a></div>
           </div>
           <div class="col-md-6">
-            <div class="part-label">Part 2 · From the PDF to the notes file</div>
-            <div class="toc-item"><span class="toc-num">9</span><a href="#pdf">What Was in the PDF</a></div>
-            <div class="toc-item"><span class="toc-num">10</span><a href="#omr">Finding Staves, Bar Lines and Note Heads</a></div>
-            <div class="toc-item"><span class="toc-num">11</span><a href="#reading">Reading Each Bar</a></div>
-            <div class="toc-item"><span class="toc-num">12</span><a href="#write">Checking and Writing the File</a></div>
-            <div class="toc-item"><span class="toc-num">13</span><a href="#limits">What Was Automatic, What Was Not</a></div>
-            <div class="toc-item"><span class="toc-num">14</span><a href="#file-map">File Map</a></div>
+            <div class="part-label">Part 2 · From sheet music to the notes file</div>
+            <div class="toc-item"><span class="toc-num">10</span><a href="#pdf">Pehla Nasha: What Was in the PDF</a></div>
+            <div class="toc-item"><span class="toc-num">11</span><a href="#omr">Finding Staves, Bar Lines and Note Heads</a></div>
+            <div class="toc-item"><span class="toc-num">12</span><a href="#reading">Reading Each Bar</a></div>
+            <div class="toc-item"><span class="toc-num">13</span><a href="#write">Checking and Writing the File</a></div>
+            <div class="toc-item"><span class="toc-num">14</span><a href="#limits">What Was Automatic, What Was Not</a></div>
+            <div class="toc-item"><span class="toc-num">15</span><a href="#fur-elise">Für Elise: a PDF Code Can Read by Itself</a></div>
+            <div class="toc-item"><span class="toc-num">16</span><a href="#file-map">File Map</a></div>
           </div>
         </div>
       </div>
@@ -247,7 +250,8 @@
       <div class="card-body">
         <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>From a text file to moving hands</h5>
         <p>Everything starts from a plain text file of note lines. The page turns it into a list of lines, decides which hand and finger plays each note,
-          and then drives three things from <strong>one clock</strong>: the sound, the hands on the keyboard, and the score.</p>
+          and then drives three things from <strong>one clock</strong>: the sound, the hands on the keyboard, and the score (as staff notation, or as
+          falling notes on a phone; see <a href="#phone">section 9</a>).</p>
         <div class="flow">
           <div class="node"><span class="who you">You</span><b>1. Choose a file</b>Pick a .txt from <code>REFERENCE-AUDIO-FILES</code>, e.g. the 5-minute Pehla Nasha notes.</div>
           <div class="arrow">→</div>
@@ -268,6 +272,24 @@
           <li><strong>The hands are a sensible guess.</strong> The notes file does not say which hand or finger plays a note, so the page works it out. It is a reasonable fingering, not the arranger's.</li>
           <li><strong>No AI runs in the page.</strong> Every step is ordinary, repeatable code: the same file always gives the same hands, fingers and sound.</li>
         </ul>
+      </div>
+    </div>
+    <div class="card shadow-sm box mt-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-green);"></span>Follow along with Für Elise</h5>
+        <p>Open the <a href="../piano.html">Piano demo</a>, press <strong>▶ Try it</strong> and choose <strong>🎼 Für Elise</strong>. Every idea in Part 1 shows up in its first few bars:</p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Bars</th><th>What you hear</th><th>What to watch</th><th>Section</th></tr></thead>
+            <tbody>
+              <tr><td class="num">0–1</td><td>The famous E5 D♯5 E5 D♯5 E5 B4 D5 C5</td><td>Only the right hand moves; for D♯5 (a black key) the finger <strong>reaches</strong> up into the key, for E5 it just <strong>taps</strong>.</td><td><a href="#moves">5</a></td></tr>
+              <tr><td class="num">2</td><td>A4, then a rising A minor arpeggio A2 E3 A3 · C4 E4 A4</td><td>The <strong>left hand</strong> plays the low half and the <strong>right hand</strong> takes over at C4: the notes are handed from one hand to the other.</td><td><a href="#hands">3</a></td></tr>
+              <tr><td class="num">3</td><td>B4, then E2 E3 G♯3 · E4 G♯4 B4</td><td>The left hand stretches from E2 to G♯3 (a black key: a long finger); the hands <strong>slide</strong> to the new position.</td><td><a href="#fingers">4</a></td></tr>
+              <tr><td class="num">1–8</td><td>The whole opening phrase</td><td>The yellow column walks through the score in step with the sound; 3/8 time, so 6 sixteenths a bar.</td><td><a href="#score">7</a></td></tr>
+              <tr><td class="num">79–81</td><td>A fast run high up, then a chromatic run down</td><td>The right hand travels to the top of the keyboard (A6–E7) while the left hand holds A minor chords; at 50% speed you can follow every finger.</td><td><a href="#sound">6</a></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
@@ -395,22 +417,6 @@ out.push({t: m[1] === '-' ? null : +m[1], notes, beats: +m[3] || 1, label: m[4] 
         <div class="row g-3 align-items-stretch">
           <div class="col-md-6">
             <div class="mock h-100">
-              <div class="small fw-bold mb-2">A tap on a white key (right hand, thumb)</div>
-              <svg viewBox="0 0 170 150" class="hand-svg" aria-label="Right hand pressing a white key with the thumb">
-                <rect x="0" y="0" width="170" height="150" fill="#1f2937"/>
-                <g stroke="#9aa3af" fill="#fff"><rect x="5" y="5" width="26" height="100"/><rect x="31" y="5" width="26" height="100" fill="#fde68a"/><rect x="57" y="5" width="26" height="100"/><rect x="83" y="5" width="26" height="100"/><rect x="109" y="5" width="26" height="100"/><rect x="135" y="5" width="26" height="100"/></g>
-                <g fill="#111827"><rect x="22" y="5" width="16" height="60"/><rect x="74" y="5" width="16" height="60"/><rect x="100" y="5" width="16" height="60"/><rect x="126" y="5" width="16" height="60"/></g>
-                <g stroke="#c2410c" stroke-width="2"><rect x="36" y="76" width="17" height="50" rx="8" fill="#e8a06e"/><rect x="62" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="88" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="114" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="140" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/>
-                <rect x="25" y="106" width="142" height="40" rx="14" fill="#fdd5aa"/></g>
-                <circle cx="44.5" cy="84" r="6.5" fill="#c2410c"/><text x="44.5" y="87" font-size="8" font-weight="900" fill="#fff" text-anchor="middle">1</text>
-                <text x="96" y="132" font-size="13" font-weight="900" fill="#c2410c" text-anchor="middle">R</text>
-              </svg>
-              <p class="small mb-0 mt-2">Most of the time a finger just <strong>dips a little</strong>: a white key is pressed near the player, so the fingertip only moves from its
-                resting line (y = 124 px) to y = 112 px, and the key turns yellow.</p>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="mock h-100">
               <div class="small fw-bold mb-2">A reach to a black key (left hand, finger 3)</div>
               <svg viewBox="0 0 170 150" class="hand-svg" aria-label="Left hand reaching a black key with finger 3">
                 <rect x="0" y="0" width="170" height="150" fill="#1f2937"/>
@@ -424,6 +430,22 @@ out.push({t: m[1] === '-' ? null : +m[1], notes, beats: +m[3] || 1, label: m[4] 
               </svg>
               <p class="small mb-0 mt-2">When the key is <strong>black</strong>, the finger <strong>extends</strong> much further, to y = 66 px, because black keys sit further
                 from the player and are shorter. A long finger therefore means "this note is a black key" (here B♭2), and the key turns blue for the left hand.</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mock h-100">
+              <div class="small fw-bold mb-2">A tap on a white key (right hand, thumb)</div>
+              <svg viewBox="0 0 170 150" class="hand-svg" aria-label="Right hand pressing a white key with the thumb">
+                <rect x="0" y="0" width="170" height="150" fill="#1f2937"/>
+                <g stroke="#9aa3af" fill="#fff"><rect x="5" y="5" width="26" height="100"/><rect x="31" y="5" width="26" height="100" fill="#fde68a"/><rect x="57" y="5" width="26" height="100"/><rect x="83" y="5" width="26" height="100"/><rect x="109" y="5" width="26" height="100"/><rect x="135" y="5" width="26" height="100"/></g>
+                <g fill="#111827"><rect x="22" y="5" width="16" height="60"/><rect x="74" y="5" width="16" height="60"/><rect x="100" y="5" width="16" height="60"/><rect x="126" y="5" width="16" height="60"/></g>
+                <g stroke="#c2410c" stroke-width="2"><rect x="36" y="76" width="17" height="50" rx="8" fill="#e8a06e"/><rect x="62" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="88" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="114" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="140" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/>
+                <rect x="25" y="106" width="142" height="40" rx="14" fill="#fdd5aa"/></g>
+                <circle cx="44.5" cy="84" r="6.5" fill="#c2410c"/><text x="44.5" y="87" font-size="8" font-weight="900" fill="#fff" text-anchor="middle">1</text>
+                <text x="96" y="132" font-size="13" font-weight="900" fill="#c2410c" text-anchor="middle">R</text>
+              </svg>
+              <p class="small mb-0 mt-2">Most of the time a finger just <strong>dips a little</strong>: a white key is pressed near the player, so the fingertip only moves from its
+                resting line (y = 124 px) to y = 112 px, and the key turns yellow.</p>
             </div>
           </div>
         </div>
@@ -586,11 +608,108 @@ for(; nextLine &lt; lines.length &amp;&amp; lines[nextLine].t &lt; horizon &amp;
     <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
   </section>
 
-  <h2 class="part-heading">Part 2 · From the PDF to the notes file</h2>
+  <!-- 9. PHONE -->
+  <section id="phone" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">9</span>On a Phone: Bigger Keys and Falling Notes</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-red);"></span>The problem</h5>
+        <p class="mb-0">On a phone (about 390 pixels wide) the laptop layout left little room for music: the top bar took two lines and stayed pinned,
+          the controls wrapped onto 3–4 lines, <em>Für Elise</em> needs 6 octaves of keys (42 white keys at 16 px = 672 px, on a 390 px screen) so a hand was
+          often off the edge, and the score showed less than one bar. So the page now changes its layout on screens up to <strong>576 px</strong> wide.
+          On a laptop nothing changes.</p>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>What changes on a phone</h5>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Part of the page</th><th>Laptop</th><th>Phone</th></tr></thead>
+            <tbody>
+              <tr><td>Top bar</td><td>Logo and title, stays at the top</td><td>One slim line with a smaller logo; scrolls away</td></tr>
+              <tr><td>Controls</td><td>▶ Play, ■ Stop, Speed, Finger numbers, sound status, bar range</td><td>One row of icons: ▶ ■ ⏱ and the view switch; the bar range,
+                Finger numbers and sound status sit behind a <strong>⚙️</strong> button</td></tr>
+              <tr><td>Keyboard</td><td>The song's whole range fits the width</td><td><strong>Wider keys that follow the hands</strong> (below)</td></tr>
+              <tr><td>Notes view</td><td>Starts on the staff (score)</td><td>Starts on <strong>falling notes</strong> (below); the staff is one tap away and shows about 2 bars a row</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-2 mb-0 small text-muted">The phone rules are CSS <code>@media (max-width:576px)</code> rules, plus a check of the keyboard's width when a song is loaded.</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">A keyboard that follows the hands</div>
+      <div class="step-body">
+        <ol class="mb-0">
+          <li><strong>Does the whole keyboard fit?</strong> If every white key can be at least 18 px wide, it is drawn whole, as on a laptop.</li>
+          <li><strong>If not, how wide should the keys be?</strong> For every line of the song the page measures how many white keys the two hands cover
+            together, and takes the width that is enough <strong>85% of the time</strong>. The keys are sized so that span fills the screen (18–34 px a key;
+            <em>Für Elise</em> gets 21 px instead of 16).</li>
+          <li><strong>Slide to the hands.</strong> After each change of hand position, the whole keyboard (keys, hands and falling notes together) slides so
+            the middle of the two hands is in the middle of the screen. A CSS transition makes the slide smooth (0.35 s), and tiny moves are ignored so it doesn't wobble.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>The falling-notes view</h5>
+        <div class="row g-3 align-items-center">
+          <div class="col-md-5">
+            <svg viewBox="0 0 200 190" class="w-100" style="max-width:300px;display:block;margin:0 auto;border-radius:.4rem" aria-label="Falling notes: bars dropping onto keys">
+              <rect x="0" y="0" width="200" height="130" fill="#0f172a"/>
+              <rect x="40" y="0" width="1" height="130" fill="rgba(148,163,184,.3)"/><text x="43" y="10" font-size="7" fill="#94a3b8">C4</text>
+              <rect x="42" y="96" width="19" height="34" rx="4" fill="#93c5fd" style="filter:drop-shadow(0 0 5px #60a5fa)"/>
+              <rect x="122" y="104" width="19" height="26" rx="4" fill="#fbbf24" style="filter:drop-shadow(0 0 5px #fbbf24)"/>
+              <rect x="142" y="70" width="19" height="22" rx="4" fill="#f97316"/><text x="151.5" y="88" font-size="7" font-weight="700" fill="#fff" text-anchor="middle">E</text>
+              <rect x="135" y="40" width="13" height="20" rx="3" fill="#c2410c"/>
+              <rect x="142" y="8" width="19" height="24" rx="4" fill="#f97316"/><text x="151.5" y="28" font-size="7" font-weight="700" fill="#fff" text-anchor="middle">E</text>
+              <rect x="62" y="30" width="19" height="40" rx="4" fill="#3b82f6"/><text x="71.5" y="66" font-size="7" font-weight="700" fill="#fff" text-anchor="middle">A</text>
+              <rect x="0" y="128" width="200" height="2" fill="rgba(255,214,10,.9)"/>
+              <g stroke="#9aa3af" fill="#fff"><rect x="0" y="130" width="20" height="58"/><rect x="20" y="130" width="20" height="58"/><rect x="40" y="130" width="20" height="58" fill="#bfdbfe"/><rect x="60" y="130" width="20" height="58"/><rect x="80" y="130" width="20" height="58"/><rect x="100" y="130" width="20" height="58"/><rect x="120" y="130" width="20" height="58" fill="#fde68a"/><rect x="140" y="130" width="20" height="58"/><rect x="160" y="130" width="20" height="58"/><rect x="180" y="130" width="20" height="58"/></g>
+              <g fill="#111827"><rect x="14" y="130" width="12" height="35"/><rect x="54" y="130" width="12" height="35"/><rect x="74" y="130" width="12" height="35"/><rect x="114" y="130" width="12" height="35"/><rect x="134" y="130" width="12" height="35"/><rect x="154" y="130" width="12" height="35"/><rect x="174" y="130" width="12" height="35"/></g>
+            </svg>
+          </div>
+          <div class="col-md-7">
+            <p>Instead of reading a staff, you watch the notes <strong>come down onto the keys</strong>. A switch next to the speed chooses
+              <strong>🎼 Staff</strong> or <strong>⬇ Falling notes</strong>; phones start with falling notes.</p>
+            <ul class="mb-0">
+              <li><strong>Each note is a bar over its own key.</strong> It is drawn on a canvas above the keyboard, at the same horizontal position as the key,
+                so it slides with the keyboard.</li>
+              <li><strong>Height means time.</strong> The view shows the next <strong>3 seconds</strong>. A note <em>t</em> seconds away is
+                <em>t</em> ÷ 3 of the way up, so a bar reaches the yellow line at the keyboard exactly when its key is pressed, and its length is how long it is held.</li>
+              <li><strong>Colours:</strong> orange = right hand, blue = left hand, a darker shade over black keys; a bar <strong>glows</strong> while its key is down,
+                and long bars show the note's letter.</li>
+              <li><strong>Finding your way:</strong> a faint line and label at every C (C3, C4 …).</li>
+              <li>It is redrawn about 60 times a second from the same audio clock as the sound and the hands, so it stays in sync at any speed and with bar ranges.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-yellow);"></span>Things worth knowing</h5>
+        <ul class="mb-0">
+          <li><strong>Try it on your phone:</strong> open the <a href="../piano.html">Piano demo</a>, press ▶ Try it and pick a song. With <em>Für Elise</em>,
+            watch the blue bars of the left-hand arpeggio (A2 E3 A3) land just before the orange right-hand ones (C4 E4 A4).</li>
+          <li><strong>Very wide hand positions:</strong> when the hands are further apart than the screen can show at that key width (for example A1 in the
+            left hand and E6 in the right), the keyboard centres between them and the outer fingers can be just off the edge for that moment.</li>
+          <li><strong>One fix found while testing:</strong> on a phone the bar range showed "Infinity", because the list of bars was only built when the score was
+            drawn, and the score starts hidden there. The bars are now worked out when the song loads, whichever view is showing.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
 
-  <!-- 9. PDF -->
+  <h2 class="part-heading">Part 2 · From sheet music to the notes file</h2>
+  <p class="mb-4">Two songs, two kinds of PDF. Sections 10–14 show <strong>Pehla Nasha</strong>, whose PDF held only screenshots, so part of the work was reading
+    by eye. Section 15 shows <strong>Für Elise</strong>, whose PDF came straight from MuseScore, so a program could read every note by itself.</p>
+
+  <!-- 10. PDF -->
   <section id="pdf" class="mb-5">
-    <h2 class="section-title"><span class="toc-num">9</span>What Was in the PDF</h2>
+    <h2 class="section-title"><span class="toc-num">10</span>Pehla Nasha: What Was in the PDF</h2>
     <div class="card shadow-sm box mb-3">
       <div class="card-body">
         <p>The source was a solo-piano arrangement of <em>Pehla Nasha</em> by Nakul Jogdeo on MuseScore. MuseScore blocks automated fetching, so the owner saved the
@@ -612,9 +731,9 @@ for(; nextLine &lt; lines.length &amp;&amp; lines[nextLine].t &lt; horizon &amp;
     <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
   </section>
 
-  <!-- 10. OMR -->
+  <!-- 11. OMR -->
   <section id="omr" class="mb-5">
-    <h2 class="section-title"><span class="toc-num">10</span>Finding Staves, Bar Lines and Note Heads</h2>
+    <h2 class="section-title"><span class="toc-num">11</span>Finding Staves, Bar Lines and Note Heads</h2>
     <div class="step-box">
       <div class="step-bar">Step 1 · Take the pictures out of the PDF</div>
       <div class="step-body"><p class="mb-0">A short Python script (pypdf) saved the 23 embedded images as PNG files, page by page, in order.</p></div>
@@ -652,9 +771,9 @@ name = letters_from('E', 4)[step]                    <span class="cm"># treble: 
     <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
   </section>
 
-  <!-- 11. READING -->
+  <!-- 12. READING -->
   <section id="reading" class="mb-5">
-    <h2 class="section-title"><span class="toc-num">11</span>Reading Each Bar</h2>
+    <h2 class="section-title"><span class="toc-num">12</span>Reading Each Bar</h2>
     <div class="card shadow-sm box mb-3">
       <div class="card-body">
         <h5><span class="color-key-dot" style="background:var(--biz-purple);"></span>What Claude Code did by looking at the pictures</h5>
@@ -683,9 +802,9 @@ B[100] = B[40]                                                    <span class="c
     <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
   </section>
 
-  <!-- 12. WRITE -->
+  <!-- 13. WRITE -->
   <section id="write" class="mb-5">
-    <h2 class="section-title"><span class="toc-num">12</span>Checking and Writing the File</h2>
+    <h2 class="section-title"><span class="toc-num">13</span>Checking and Writing the File</h2>
     <div class="step-box">
       <div class="step-bar">Step 1 · Check every bar</div>
       <div class="step-body"><p class="mb-0">A checking script confirmed that all <strong>177 bars</strong> are present, every note name is valid, nothing runs past the end of a bar, and
@@ -716,9 +835,9 @@ B[100] = B[40]                                                    <span class="c
     <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
   </section>
 
-  <!-- 13. LIMITS -->
+  <!-- 14. LIMITS -->
   <section id="limits" class="mb-5">
-    <h2 class="section-title"><span class="toc-num">13</span>What Was Automatic, What Was Not</h2>
+    <h2 class="section-title"><span class="toc-num">14</span>What Was Automatic, What Was Not</h2>
     <div class="card shadow-sm box">
       <div class="card-body">
         <div class="table-responsive">
@@ -734,15 +853,109 @@ B[100] = B[40]                                                    <span class="c
         </div>
         <p class="mb-0">So the notes file is <strong>not</strong> the output of a fully automatic reader. The judgement step is what makes screenshots hard for a plain
           program. A reliable automatic route needs better input: a <strong>MusicXML or MIDI</strong> file (every note and length is already there, so a converter is
-          exact), or a PDF <strong>exported by MuseScore</strong> itself (its notes are music-font characters at exact positions, which a program can read).</p>
+          exact), or a PDF <strong>exported by MuseScore</strong> itself (its notes are music-font characters at exact positions, which a program can read).
+          That second route is exactly what happened with <em>Für Elise</em>: see the next section.</p>
       </div>
     </div>
     <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
   </section>
 
-  <!-- 14. FILE MAP -->
+  <!-- 15. FUR ELISE -->
+  <section id="fur-elise" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">15</span>Für Elise: a PDF Code Can Read by Itself</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>Why this PDF was different</h5>
+        <p>The owner downloaded <em>Für Elise</em> (Beethoven, WoO 59, public domain) as <code>S-PAD/fur-elise-beethoven-notes.pdf</code>: 3 pages exported by
+          <strong>MuseScore 3.6</strong>. Inside, nothing is a picture. Every note head, rest, flag, dot, sharp and clef is a <strong>character of a music font</strong>
+          (Leland, which follows the SMuFL standard) placed at exact coordinates, and the staff lines, stems, bar lines and beams are drawn shapes. So instead of
+          guessing from pixels, a program can simply <em>read</em> the score. No step needed reading by eye.</p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>In the PDF</th><th>What it is</th><th>What the program does with it</th></tr></thead>
+            <tbody>
+              <tr><td>Character U+E0A4</td><td>Black note head</td><td>Its height on the staff gives the note (counting lines and spaces from the clef)</td></tr>
+              <tr><td>U+E050 / U+E062</td><td>Treble / bass clef</td><td>Sets how heights become notes; the left hand switches clef several times</td></tr>
+              <tr><td>U+E260 / E261 / E262</td><td>Flat / natural / sharp</td><td>Changes the note, and every later note on that line or space until the bar line</td></tr>
+              <tr><td>U+E240–E243, filled bands</td><td>Flags and beams</td><td>Counted where they touch the stem: 1 = eighth, 2 = sixteenth, 3 = thirty-second</td></tr>
+              <tr><td>U+E1E7</td><td>Dot</td><td>Makes the note half as long again</td></tr>
+              <tr><td>U+E4E3–E4E7</td><td>Rests</td><td>Silence of the matching length (a whole-bar rest fills the bar)</td></tr>
+              <tr><td>Italic "3"</td><td>Triplet</td><td>Three notes in the time of two</td></tr>
+              <tr><td>U+E510 and a dashed line</td><td>8va</td><td>Notes under the line, up to its little hook, sound an octave higher</td></tr>
+              <tr><td>U+E044, thick bar lines, "1." "2."</td><td>Repeats and 1st/2nd endings</td><td>Written out in the order a pianist plays them</td></tr>
+              <tr><td>Short flat curves</td><td>Ties</td><td>The second note is held on, not struck again (also across a line break)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 1 · Staves, bar lines and bars</div>
+      <div class="step-body"><p class="mb-0">Five-line shapes are staves; two make a line of music (18 lines over 3 pages). Upright lines across the treble staff are bar lines;
+        a thick one with dots beside it is a repeat. That gives <strong>106 measures</strong>: a short pickup, 103 numbered bars and two 2nd-ending bars (MuseScore
+        leaves those out of its count, so the file labels them "bar 8 (2nd ending)" and "bar 22 (2nd ending)").</p></div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 2 · Which notes, and how long</div>
+      <div class="step-body">
+        <ul class="mb-0">
+          <li><strong>Pitch:</strong> head height + the clef in force at that point + accidentals earlier in the bar; under the 8va line, one octave up.</li>
+          <li><strong>Length:</strong> each stem is found at the edge of its head; the beams that actually meet that stem are counted. Dots add half. Bar 77's printed
+            "3"s make triplets, and bars 78–81 (9 sixteenths in a 3/8 bar, with the "3" not printed again) are read as triplets too.</li>
+          <li><strong>When:</strong> notes in a column start together; the next column starts when the earliest note still sounding ends. Each hand is timed on its own,
+            and notes beamed across both staves are timed with the hand most of them belong to.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 3 · Check every bar</div>
+      <div class="step-body"><p class="mb-0">In 3/8 time every bar must hold 1.5 beats in <em>both</em> hands. All of them do, except the opening pickup (two sixteenths) and the
+        1st-ending bar (one beat), which together make one full bar when the repeat is played. While building the reader, these checks caught four mistakes, each fixed
+        in the program rather than by hand: a whole-bar rest counted at the wrong time, notes from the next line of music picked up, beams of a neighbouring group
+        counted, and the 8va line ending 2 points too late (F♯6 F6 E6 came out an octave high in the chromatic run of bar 80).</p></div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 4 · Write the file in playing order</div>
+      <div class="step-body">
+        <p>The repeats are written out: 106 printed measures become <strong>127 bars played</strong>. The score says only <em>Poco moto</em> (no metronome mark),
+          so ♩ = 70 is used. The result is <code>REFERENCE-AUDIO-FILES/SONG-6-FUL-ELISE-BEETHOVEN.txt</code>: <strong>778 lines, 2:42</strong>, both hands, in the same
+          format as the Pehla Nasha file:</p>
+        <div class="code-window"><div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">SONG-6-FUL-ELISE-BEETHOVEN.txt</span></div>
+<pre><code>    '   0.50  E5                         0.25  bar 0',
+    '   0.71  D#5                        0.25',
+    '   0.93  E5                         0.25  bar 1',
+    '   2.21  A4+A2                      0.25  bar 2',     <span class="cm">// right hand A4, left hand A2</span>
+    '   2.43  E3                         0.25',
+    '   9.93  A4+A2                      0.25  bar 8 (1st ending)',
+    ' 130.79  Bb6+E4+C4+A3              0.167  bar 80',     <span class="cm">// a triplet sixteenth = 1/6 beat</span></code></pre></div>
+      </div>
+    </div>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-yellow);"></span>The two songs side by side</h5>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th></th><th>Pehla Nasha</th><th>Für Elise</th></tr></thead>
+            <tbody>
+              <tr><td>The PDF</td><td>23 screenshots pasted into pages</td><td>MuseScore's own export (music-font characters)</td></tr>
+              <tr><td>Bars</td><td>177, 4/4, tempo 112 → 146</td><td>103 printed (127 played), 3/8, ♩ = 70</td></tr>
+              <tr><td>Finding the notes</td><td>Template matching on pixels</td><td>Reading characters and shapes</td></tr>
+              <tr><td>Rhythm, accidentals, chords</td><td><span class="who claude">Claude Code</span> by eye, bar by bar</td><td>The program</td></tr>
+              <tr><td>Repeatable?</td><td>Partly</td><td><strong>Fully</strong>: the same PDF always gives the same file</td></tr>
+              <tr><td>Notes file</td><td>996 lines, 5:00</td><td>778 lines, 2:42</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-2 mb-0">The lesson: <strong>where the sheet music comes from matters more than how clever the reader is.</strong> Ask for MusicXML, MIDI or the
+          program's own PDF export, and the notes can be read exactly.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 16. FILE MAP -->
   <section id="file-map" class="mb-5">
-    <h2 class="section-title"><span class="toc-num">14</span>File Map</h2>
+    <h2 class="section-title"><span class="toc-num">16</span>File Map</h2>
     <div class="card shadow-sm box">
       <div class="card-body">
         <div class="table-responsive">
@@ -753,6 +966,9 @@ B[100] = B[40]                                                    <span class="c
               <tr><td><code>NOTES-TESTER/SAMPLES/piano.js</code></td><td>The recorded piano notes (FluidR3 SoundFont, CC BY 3.0).</td></tr>
               <tr><td><code>S-PAD/PEHLA-NASHA-notes.pdf</code></td><td>The owner's PDF of the score: 23 screenshots.</td></tr>
               <tr><td><code>REFERENCE-AUDIO-FILES/SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt</code></td><td>The notes file made from it (Part 2): 996 lines, 177 bars, both hands.</td></tr>
+              <tr><td><code>S-PAD/fur-elise-beethoven-notes.pdf</code></td><td>Für Elise as exported by MuseScore 3.6: 3 pages.</td></tr>
+              <tr><td><code>REFERENCE-AUDIO-FILES/SONG-6-FUL-ELISE-BEETHOVEN.txt</code></td><td>The notes file read from it by code (section 15): 778 lines, 2:42, repeats written out.</td></tr>
+              <tr><td><code>piano.html</code></td><td>The Piano demo: ▶ Try it, then Für Elise or Pehla Nasha.</td></tr>
               <tr><td><code>MUSIC-NOTES/SONG-3-pehla-nasha-notes.html</code></td><td>The sheet-music page with the same notes, right and left hand on two staves.</td></tr>
               <tr><td><code>NOTES-TESTER/index.html</code></td><td>The Notes Tester: plays and checks a notes file ("Notes from: text file").</td></tr>
               <tr><td><code>INFO/HOW-MUSIC-APP-WORKS.html</code></td><td>How the main practice app works.</td></tr>

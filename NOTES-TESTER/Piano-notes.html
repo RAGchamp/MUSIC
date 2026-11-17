@@ -74,6 +74,28 @@
   .score .col-hit{ fill:transparent; cursor:pointer; }
   .score .col-hit:hover{ fill:rgba(13,110,253,.08); }
   .score .col-hit.on{ fill:rgba(255,193,7,.55); }
+
+  /* Falling notes: bars drop onto the keys they belong to */
+  .kbd-pan{ position:relative; transition:transform .35s ease; will-change:transform; }
+  .falling{ display:block; background:#0f172a; border-radius:.4rem .4rem 0 0; }
+  .view-switch .btn{ font-weight:700; }
+  .view-switch .btn.active{ background:var(--nav-blue); color:var(--nav-yellow); border-color:var(--nav-blue); }
+  .gear{ display:none; }
+
+  /* ---------- Phones: more room for the piano and the notes ---------- */
+  @media (max-width:576px){
+    .topnav{ position:relative; flex-direction:row; padding:.4rem .8rem; }
+    .topnav .brand-logo{ height:30px; }
+    .topnav .tagline{ font-size:.72rem; letter-spacing:.06em; word-spacing:.25em; }
+    .step-card .card-body{ padding:.6rem; }
+    .step-title{ margin-bottom:.4rem; font-size:1rem; }
+    .lbl{ display:none; }                                  /* Play / Stop / Speed as icons only */
+    .gear{ display:inline-block; }
+    .extras{ display:none !important; }                    /* range row, finger numbers, sound status: behind ⚙️ */
+    .extras.open{ display:flex !important; }
+    .now-line{ font-size:.85rem; }
+    .kbd-scroll{ overflow:hidden; padding:.3rem .3rem 0; }
+  }
 </style>
 </head>
 <body>
@@ -111,7 +133,7 @@
   <div class="card shadow-sm step-card mb-3" id="player" hidden>
     <div class="card-body">
       <div class="step-title"><span class="step-num">2</span><span id="songTitle">Play</span></div>
-      <div class="range-row d-flex flex-wrap gap-3 align-items-center mb-2">
+      <div class="range-row extras d-flex flex-wrap gap-3 align-items-center mb-2">
         <div class="form-check mb-0">
           <input class="form-check-input" type="checkbox" id="allBox" checked>
           <label class="form-check-label fw-bold" for="allBox">Play all notes</label>
@@ -129,26 +151,33 @@
         </span>
       </div>
       <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
-        <button type="button" class="btn btn-success fw-bold" id="playBtn">▶ Play</button>
-        <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled>■ Stop</button>
-        <span class="d-inline-flex align-items-center gap-1 small"><label class="fw-bold" for="speed">Speed</label>
+        <button type="button" class="btn btn-success fw-bold" id="playBtn" aria-label="Play">▶<span class="lbl"> Play</span></button>
+        <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled aria-label="Stop">■<span class="lbl"> Stop</span></button>
+        <span class="d-inline-flex align-items-center gap-1 small"><label class="fw-bold" for="speed"><span class="lbl">Speed</span><span class="d-sm-none">⏱</span></label>
           <select id="speed" class="form-select form-select-sm" style="width:auto">
             <option value="0.5">50%</option><option value="0.65">65%</option><option value="0.75">75%</option><option value="0.85">85%</option>
             <option value="1" selected>100%</option><option value="1.15">115%</option></select></span>
-        <div class="form-check form-check-inline small mb-0 ms-md-2">
-          <input class="form-check-input" type="checkbox" id="showNums" checked>
-          <label class="form-check-label" for="showNums">Finger numbers</label>
+        <div class="btn-group btn-group-sm view-switch" role="group" aria-label="How the notes are shown">
+          <button type="button" class="btn btn-outline-secondary" id="viewStaff">🎼<span class="lbl"> Staff</span></button>
+          <button type="button" class="btn btn-outline-secondary" id="viewFall">⬇<span class="lbl"> Falling notes</span></button>
         </div>
-        <span class="small text-muted ms-auto" id="sndInfo">⏳ Loading the piano sound…</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary gear" id="gearBtn" aria-label="More options" aria-expanded="false">⚙️</button>
+        <div class="extras d-flex flex-wrap align-items-center gap-2 ms-md-auto">
+          <div class="form-check form-check-inline small mb-0">
+            <input class="form-check-input" type="checkbox" id="showNums" checked>
+            <label class="form-check-label" for="showNums">Finger numbers</label>
+          </div>
+          <span class="small text-muted" id="sndInfo">⏳ Loading the piano sound…</span>
+        </div>
       </div>
       <div class="d-flex align-items-center gap-2 mb-2">
         <span class="small fw-bold" id="timeVal" style="min-width:7.5rem">0:00 / 0:00</span>
         <div class="progress seek flex-grow-1" id="seek" role="progressbar" aria-label="Position (click to jump)"><div class="progress-bar bg-warning" id="seekBar" style="width:0%"></div></div>
       </div>
       <div class="now-line mb-2" id="nowVal">&nbsp;</div>
-      <div class="kbd-scroll mb-2" id="kbdScroll"><div class="kbd" id="kbd"><div class="hands" id="hands"></div></div></div>
+      <div class="kbd-scroll mb-2" id="kbdScroll"><div class="kbd-pan" id="kbdPan"><canvas class="falling" id="fall" hidden></canvas><div class="kbd" id="kbd"><div class="hands" id="hands"></div></div></div></div>
       <div class="score-frame" id="scoreFrame"><div class="score" id="scoreBox"></div></div>
-      <p class="small text-muted mt-2 mb-0">Click a note column in the score to play from there. <kbd>Space</kbd> plays or stops.
+      <p class="small text-muted mt-2 mb-0" id="viewHelp">Click a note column in the score to play from there. <kbd>Space</kbd> plays or stops.
         The right hand is drawn on the top staff in black, the left hand on the bottom staff in blue; notes in one column are played together.</p>
     </div>
   </div>
@@ -254,13 +283,18 @@
   const keyEl = {};
   const whiteIndex = m => { let w = 0; for(let k = LO; k < m; k++) if(!IS_BLACK[k % 12]) w++; return w; };
   const keyU = m => IS_BLACK[m % 12] ? whiteIndex(m) : whiteIndex(m) + 0.5;      // key centre in white-key units
-  function buildKeyboard(lo, hi){
+  // A keyboard that fits the screen is drawn whole. On a narrow screen (a phone) the keys are drawn wider and the
+  // keyboard pans to follow the hands: "need" = how many white keys the two hands usually span (85% of the time).
+  let follow = false, panX = 0;
+  function buildKeyboard(lo, hi, need){
     LO = lo; HI = hi;
     const kbd = $('kbd'), hands = $('hands');
     kbd.querySelectorAll('.wk, .bk').forEach(e => e.remove());
     let whites = 0; for(let m = LO; m <= HI; m++) if(!IS_BLACK[m % 12]) whites++;
-    const avail = $('kbdScroll').clientWidth - 12;
-    WW = Math.max(16, Math.min(38, avail / whites));
+    const avail = $('kbdScroll').clientWidth - 16;
+    follow = avail / whites < 18;
+    WW = follow ? Math.max(18, Math.min(34, avail / Math.max(10, need || 21))) : Math.min(38, avail / whites);
+    panX = 0; $('kbdPan').style.transform = '';
     const BW = WW * 0.62;
     let w = 0;
     for(let m = LO; m <= HI; m++){
@@ -272,6 +306,19 @@
       kbd.insertBefore(d, hands); keyEl[m] = d;
     }
     kbd.style.width = hands.style.width = (w * WW) + 'px';
+    $('kbdPan').style.width = (w * WW) + 'px';
+    sizeFalling();
+  }
+  // pan so both hands are in the middle of the screen (the move is animated by CSS)
+  function panToHands(){
+    if(!follow) return;
+    const xs = ['r', 'l'].flatMap(h => HAND[h].xs || []);
+    if(!xs.length) return;
+    const view = $('kbdScroll').clientWidth - 8, full = parseFloat($('kbd').style.width) || 0;
+    const mid = (Math.min(...xs) + Math.max(...xs)) / 2 * WW;
+    const x = Math.max(0, Math.min(full - view, mid - view / 2));
+    if(Math.abs(x - panX) < 3) return;
+    panX = x; $('kbdPan').style.transform = `translateX(${-x}px)`;
   }
   const tokName = m => ['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'][m % 12] + (Math.floor(m / 12) - 1);
 
@@ -314,6 +361,7 @@
     if(H.key === key) return;
     H.key = key;
     const xs = fingerXs(h, st), fw = Math.max(9, WW * 0.68);
+    H.xs = xs;
     xs.forEach((x, i) => {
       const f = i + 1, el = H.fingers[i], k = st.f.indexOf(f), m = k >= 0 ? st.m[k] : null, pressed = down && m != null;
       const tip = pressed ? (IS_BLACK[m % 12] ? 66 : 112) : (f === 1 ? 140 : 124);
@@ -352,6 +400,16 @@
         L[h] = {id: i, m: mm, u: mu, f: pl.f, p: pl.p};
       });
     });
+    // how many white keys both hands cover at each moment (for the phone keyboard's key width)
+    const spans = [], last = {};
+    lines.forEach(L => {
+      ['r', 'l'].forEach(h => { if(L[h]) last[h] = fingerXs(h, L[h]); });
+      const xs = Object.values(last).flat();
+      if(xs.length) spans.push(Math.max(...xs) - Math.min(...xs) + 3);
+    });
+    spans.sort((a, b) => a - b);
+    const need = spans.length ? spans[Math.floor(spans.length * 0.85)] : 21;
+    buildKeyboard(lo, hi, need); buildHands();
     const songEnd = lines[lines.length - 1].t + Math.max(0.6, lines[lines.length - 1].beats * 0.5) + 0.4;
     ['r', 'l'].forEach(h => {
       lines.forEach((L, i) => {
@@ -362,10 +420,11 @@
       });
     });
     // seconds per beat around each line (from the next line's time and its beats), for the notation
-    song = {title, src, end: songEnd + 0.8};
+    song = {title, src, end: songEnd + 0.8, need, lo, hi};
     $('songTitle').textContent = title;
     $('srcInfo').innerHTML = `📄 ${esc(src)}: <strong>${lines.length}</strong> lines, ${fmtT(song.end)}. Right hand: ${lines.filter(l => l.r).length} lines · left hand: ${lines.filter(l => l.l).length} lines.`;
-    renderScore();
+    buildBars();                                        // bars are needed for ranges even when the score is hidden
+    renderScore(true);
     setupRange();
     showAt(0, true);
   }
@@ -458,10 +517,10 @@
         el('line', {x1:sx, x2:sx, y1: st.up ? bot - 1 : top + 1, y2, stroke:col, 'stroke-width':1.3}, g);
         for(let f = 0; f < flags; f++) el('path', {d: st.up ? `M${sx},${y2 + f * 7} q8,8 6,18` : `M${sx},${y2 - f * 7} q8,-8 6,-18`, fill:'none', stroke:col, 'stroke-width':2}, g);
       }
-      e.heads.forEach((h, k) => el('text', {x:e.x, y:(clef === 'T' ? NAME_Y : LH_NAME_Y) + k * 11, 'font-size':10.5, 'font-weight':700, 'text-anchor':'middle', fill:col}, g, h.name));
+      e.heads.forEach((h, k) => el('text', {x:e.x, y:(clef === 'T' ? NAME_Y : LH_NAME_Y) + k * (small ? 13 : 11), 'font-size':small ? 13 : 10.5, 'font-weight':700, 'text-anchor':'middle', fill:col}, g, h.name));
     });
   }
-  let lastWidth = 0;
+  let lastWidth = 0, small = false;
   function renderScore(force){
     const box = $('scoreBox'), avail = Math.floor(box.clientWidth - 4);
     if(!lines.length || avail < 100 || (!force && avail === lastWidth)) return;
@@ -469,10 +528,12 @@
     buildBars();
     box.innerHTML = '';
     const PRE = 52, rows = []; let cur = [], used = PRE;
-    BARS.forEach(b => { if(cur.length && used + b.w > avail){ rows.push(cur); cur = []; used = PRE; } cur.push(b); used += b.w; });
+    small = avail < 600;
+    const room = small ? avail / 0.62 : avail;              // phones: allow rows up to 1.6x wider, scaled down to fit
+    BARS.forEach(b => { if(cur.length && used + b.w > room){ rows.push(cur); cur = []; used = PRE; } cur.push(b); used += b.w; });
     if(cur.length) rows.push(cur);
     rows.forEach(row => {
-      const natural = PRE + row.reduce((s, b) => s + b.w, 0), width = Math.max(natural, Math.min(avail, natural * 1.5));
+      const natural = PRE + row.reduce((s, b) => s + b.w, 0), width = small ? Math.max(natural, avail) : Math.max(natural, Math.min(avail, natural * 1.5));
       const stack = Math.max(1, ...row.flatMap(b => b.cols.map(c => c.l ? c.l.heads.length : 1)));
       const H = LH_NAME_Y + 11 * (stack - 1) + 8;
       const svg = el('svg', {viewBox:`0 0 ${width} ${H}`, role:'img', 'aria-label':`Bars ${row[0].num} to ${row[row.length - 1].num}`}, box);
@@ -505,7 +566,7 @@
     });
     curCol = -1;
   }
-  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if(lines.length && !playing){ const lo = LO, hi = HI; buildKeyboard(lo, hi); buildHands(); renderScore(); showAt(posNow, true); } }, 200); });
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if(lines.length && !playing){ const lo = LO, hi = HI; buildKeyboard(lo, hi, song.need); buildHands(); renderScore(); showAt(posNow, true); } }, 200); });
 
   /* ================= SOUND: recorded piano samples (SAMPLES/piano.js), soft piano voicing ================= */
   let ctx = null, bus = null;
@@ -696,11 +757,85 @@
         const fr = $('scoreFrame'), top = c.svg.getBoundingClientRect().top - fr.getBoundingClientRect().top + fr.scrollTop;
         if(top < fr.scrollTop + 2 || top + c.svg.getBoundingClientRect().height > fr.scrollTop + fr.clientHeight) fr.scrollTop = Math.max(0, top - 4);
       }
-      // keep the hands in view when the keyboard is wider than the screen
-      const sc = $('kbdScroll'), cxs = ['r', 'l'].map(h => parseFloat(HAND[h].palm.style.left) || 0);
-      if(sc.scrollWidth > sc.clientWidth + 4){ const mid = (Math.min(...cxs) + Math.max(...cxs)) / 2; sc.scrollLeft = Math.max(0, mid - sc.clientWidth / 2); }
     }
+    panToHands();
+    drawFalling(T);
   }
+
+  /* ================= FALLING NOTES ================= */
+  // Each note is a bar falling onto its key: it touches the keyboard when it is played and is as long as it is held.
+  // The view looks LOOK seconds ahead. Right hand orange, left hand blue; the bar glows while its key is down.
+  const LOOK = 3;
+  let viewMode = 'staff';
+  function sizeFalling(){
+    const c = $('fall'), w = parseFloat($('kbd').style.width) || 0, dpr = window.devicePixelRatio || 1;
+    const h = Math.round(Math.min(window.innerWidth <= 576 ? window.innerHeight * 0.4 : 300, 420));
+    c.style.width = w + 'px'; c.style.height = h + 'px';
+    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    c.dataset.h = h;
+  }
+  function roundRect(g, x, y, w, h, r){
+    r = Math.min(r, w / 2, h / 2);
+    g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function drawFalling(T){
+    if(viewMode !== 'fall' || !lines.length) return;
+    const c = $('fall'), g = c.getContext('2d'), dpr = window.devicePixelRatio || 1, H = +c.dataset.h, W = c.width / dpr;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = '#0f172a'; g.fillRect(0, 0, W, H);
+    // a line at every C, labelled, to find your way
+    g.font = '10px Segoe UI, Arial, sans-serif'; g.textAlign = 'left';
+    for(let m = LO; m <= HI; m++) if(m % 12 === 0){
+      const x = whiteIndex(m) * WW;
+      g.fillStyle = 'rgba(148,163,184,.25)'; g.fillRect(x, 0, 1, H);
+      g.fillStyle = 'rgba(148,163,184,.6)'; g.fillText('C' + (m / 12 - 1), x + 3, 12);
+    }
+    const yOf = t => H - (t - T) / LOOK * H;
+    const bw = WW * 0.62;
+    let i = Math.max(0, lineAt(T - 4));
+    for(; i < lines.length && lines[i].t < T + LOOK; i++){
+      const L = lines[i];
+      ['r', 'l'].forEach(h => {
+        const st = L[h]; if(!st || st.end < T - 0.05) return;
+        const y0 = Math.max(-4, yOf(st.end)), y1 = Math.min(H, yOf(L.t)), on = T >= L.t && T < st.end;
+        if(y1 <= 0 || y1 - y0 < 1) return;
+        st.m.forEach(m => {
+          const black = IS_BLACK[m % 12], x = black ? whiteIndex(m) * WW - bw / 2 : whiteIndex(m) * WW + 1.5, w = black ? bw : WW - 3;
+          g.shadowColor = on ? (h === 'r' ? '#fbbf24' : '#60a5fa') : 'transparent'; g.shadowBlur = on ? 14 : 0;
+          g.fillStyle = h === 'r' ? (on ? '#fbbf24' : (black ? '#c2410c' : '#f97316')) : (on ? '#93c5fd' : (black ? '#1d4ed8' : '#3b82f6'));
+          roundRect(g, x, y0, w, y1 - y0, 4); g.fill();
+          g.shadowBlur = 0;
+          if(y1 - y0 > 15 && w > 13){
+            const n = (L.notes.find(q => q.midi === m) || {name: tokName(m)}).name.replace('#', '♯').replace(/^([A-G])b/, '$1♭');
+            g.fillStyle = on ? '#111827' : '#fff'; g.font = `700 ${Math.min(11, w * 0.42)}px Segoe UI, Arial, sans-serif`; g.textAlign = 'center';
+            g.fillText(n.replace(/\d+$/, ''), x + w / 2, y1 - 5);
+          }
+        });
+      });
+    }
+    // the "now" line where the bars meet the keys
+    g.fillStyle = 'rgba(255,214,10,.85)'; g.fillRect(0, H - 2, W, 2);
+  }
+  function setView(mode){
+    viewMode = mode;
+    $('viewStaff').classList.toggle('active', mode === 'staff'); $('viewFall').classList.toggle('active', mode === 'fall');
+    $('fall').hidden = mode !== 'fall';
+    $('scoreFrame').hidden = mode === 'fall';
+    $('viewHelp').innerHTML = mode === 'fall'
+      ? 'Notes fall onto the keys they belong to: a bar touches the keyboard when its key is pressed and is as long as the note is held. Orange = right hand, blue = left hand. <kbd>Space</kbd> plays or stops.'
+      : 'Click a note column in the score to play from there. <kbd>Space</kbd> plays or stops. The right hand is drawn on the top staff in black, the left hand on the bottom staff in blue; notes in one column are played together.';
+    if(mode === 'fall'){ sizeFalling(); if(lines.length) drawFalling(posNow); }
+    else if(lines.length){ renderScore(true); showAt(posNow, true); }
+  }
+  $('viewStaff').addEventListener('click', () => setView('staff'));
+  $('viewFall').addEventListener('click', () => setView('fall'));
+  setView(window.innerWidth <= 576 ? 'fall' : 'staff');      // phones start with falling notes
+  $('gearBtn').addEventListener('click', () => {
+    const open = !document.querySelector('.extras.open');
+    document.querySelectorAll('.extras').forEach(e => e.classList.toggle('open', open));
+    $('gearBtn').setAttribute('aria-expanded', open);
+  });
   $('playBtn').addEventListener('click', () => play());
   $('stopBtn').addEventListener('click', () => stop());
   $('speed').addEventListener('change', () => { if(playing) play(songTime(), until); });
