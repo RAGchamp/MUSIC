@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mini Piano</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --biz-yellow:#ffc107; --nav-blue:#04264d; --nav-yellow:#ffd60a;
+    --tune:#6d28d9; --tag:#a5e4f3; --tag-ink:#0b4f63;
+  }
+  body{ background:#f7f8fa; margin:0; }
+  .topnav{
+    position:sticky; top:0; z-index:1030; background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{ font-weight:600; font-size:1.05rem; color:var(--nav-yellow); letter-spacing:.15em; word-spacing:.6em; font-style:italic; }
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+  main{ max-width:680px; }
+  .page-title{ font-weight:800; color:var(--nav-blue); font-size:1.45rem; margin:0; }
+  .hint{ color:#5b6472; font-size:.88rem; }
+
+  /* mode switch */
+  .mode-btn{ font-weight:700; border:2px solid var(--nav-blue); color:var(--nav-blue); background:#fff; }
+  .btn-check:checked + .mode-btn{ background:var(--nav-blue); color:var(--nav-yellow); border-color:var(--nav-blue); }
+
+  /* tune strip, like the banner in the owner's picture */
+  .strip{ background:#fff; border-radius:.9rem; box-shadow:0 .2rem .7rem rgba(0,0,0,.12); padding:.5rem .8rem .6rem; }
+  .strip-title{ font-family:'Dancing Script', 'Brush Script MT', cursive; font-size:1.7rem; line-height:1.1; color:#b45309; text-align:center; }
+  .strip-notes{ display:flex; flex-wrap:wrap; justify-content:center; gap:.15rem .5rem; max-height:6.2rem; overflow-y:auto;
+    font-weight:800; font-size:1.3rem; color:var(--tune); letter-spacing:.02em; }
+  .strip-notes .n{ padding:0 .2rem; border-radius:.35rem; }
+  .strip-notes .n.now{ background:var(--biz-yellow); color:#2b2b2b; }
+  .strip-notes .n.done{ opacity:.45; }
+  .strip-empty{ color:#9aa3af; font-weight:600; font-size:1rem; }
+
+  /* keyboard */
+  .kbd-frame{ background:linear-gradient(#2b2b2b, #111); border-radius:1rem; padding:.55rem .45rem .5rem; box-shadow:0 .4rem 1rem rgba(0,0,0,.3); }
+  .kbd-frame .felt{ height:6px; background:#8b1d2c; border-radius:3px; margin:0 .1rem .35rem; }
+  .kbd{ position:relative; height:clamp(170px, 56vw, 290px); touch-action:none; user-select:none; -webkit-user-select:none;
+    -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
+  .key{ position:absolute; top:0; box-sizing:border-box; display:flex; align-items:flex-end; justify-content:center;
+    transition:transform .06s; cursor:pointer; }
+  .key.w{ height:100%; background:linear-gradient(#f2f2f2, #fff 70%, #e9e9e9); border:1px solid #9a9a9a;
+    border-radius:0 0 .55rem .55rem; padding-bottom:.6rem; z-index:1; box-shadow:inset 0 -4px 0 #d4d4d4; }
+  .key.b{ height:60%; background:linear-gradient(#3a3a3a, #0c0c0c); border:1px solid #000; border-radius:0 0 .35rem .35rem;
+    padding-bottom:.35rem; z-index:2; box-shadow:0 3px 4px rgba(0,0,0,.45), inset 0 -3px 0 #444; }
+  .key .tag{ pointer-events:none; font-weight:700; }
+  .key.w .tag{ background:var(--tag); color:var(--tag-ink); border-radius:.35rem; font-size:clamp(.62rem, 2.6vw, .85rem); padding:.25rem .3rem; }
+  .key.b .tag{ color:#e5e7eb; font-size:clamp(.5rem, 2vw, .68rem); }
+  .key.down, .key.auto{ background:var(--biz-yellow) none !important; transform:translateY(2px); }
+  .key.b.down .tag, .key.b.auto .tag{ color:#2b2b2b; }
+  .key.w.down, .key.w.auto{ box-shadow:inset 0 -1px 0 #d39e00; }
+  .rotate-hint{ display:none; }
+  @media (orientation:portrait) and (max-width:576px){ .rotate-hint{ display:block; } }
+  @media (orientation:landscape) and (max-height:500px){
+    .kbd{ height:58vh; }
+    main{ max-width:none; }
+    .topnav{ position:relative; padding:.35rem 1rem; }
+    .topnav .brand-logo{ height:28px; }
+    .topnav .tagline{ font-size:.8rem; }
+    #modeHint{ display:none; }
+    .strip{ padding:.25rem .6rem .35rem; }
+    .strip-title{ font-size:1.25rem; }
+    .strip-notes{ font-size:1rem; max-height:3.2rem; }
+  }
+
+  /* automated table */
+  .panel{ border:2px solid #c9d3e3; border-radius:.6rem; background:#fff; }
+  .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.15rem; display:block; }
+  .btn-play{ background:#198754; color:#fff; font-weight:800; border:none; }
+  .btn-play:hover, .btn-play:focus{ background:#157347; color:#fff; }
+  .btn-play:disabled{ background:#198754; color:#fff; opacity:.5; }
+  .btn-nav{ background:var(--nav-blue); color:var(--nav-yellow); font-weight:700; border:none; }
+  .btn-nav:hover, .btn-nav:focus{ background:#0a3a70; color:var(--nav-yellow); }
+  .tbl-wrap{ max-height:46vh; overflow-y:auto; border:1px solid #dee2e6; border-radius:.5rem; }
+  .tbl-wrap table{ margin:0; }
+  .tbl-wrap thead th{ position:sticky; top:0; background:#eef4ff; z-index:1; font-size:.85rem; }
+  .tbl-wrap td{ vertical-align:middle; }
+  .tbl-wrap td.num{ width:2.6rem; text-align:center; font-weight:700; color:#6c757d; cursor:pointer; user-select:none; }
+  .tbl-wrap tr.sel td.num{ background:#cfe2ff; color:var(--nav-blue); }
+  .tbl-wrap tr.now td{ background:#fff3cd; }
+  .tbl-wrap .key-sel{ min-width:5.2rem; font-weight:700; }
+  .tbl-wrap .wait-in{ min-width:5.5rem; }
+  .del-btn{ border:none; background:none; font-size:1.05rem; padding:.2rem .4rem; }
+  .del-btn:disabled{ opacity:.3; }
+  .form-check-input{ border:2px solid var(--nav-blue); }
+  .form-check-input:checked{ background-color:var(--nav-blue); border-color:var(--nav-blue); }
+  #msg{ min-height:1.2rem; }
+
+  @media (max-width:576px){
+    .topnav{ position:relative; padding:.4rem .8rem; }
+    .topnav .brand-logo{ height:30px; }
+    .topnav .tagline{ font-size:.72rem; letter-spacing:.06em; word-spacing:.25em; }
+    main.container{ padding-left:16px; padding-right:16px; }
+    .page-title{ font-size:1.2rem; }
+    .strip-notes{ font-size:1.1rem; }
+    .kbd-frame{ padding:.4rem .3rem .35rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+    <h1 class="page-title">🎹 Mini Piano</h1>
+    <div class="btn-group" role="group" aria-label="Mode">
+      <input type="radio" class="btn-check" name="mode" id="modeManual" value="manual" autocomplete="off">
+      <label class="btn btn-sm mode-btn" for="modeManual">✋ Manual</label>
+      <input type="radio" class="btn-check" name="mode" id="modeAuto" value="auto" autocomplete="off">
+      <label class="btn btn-sm mode-btn" for="modeAuto">🤖 Automated</label>
+    </div>
+  </div>
+  <p class="hint mb-2" id="modeHint"></p>
+
+  <div class="strip mb-3">
+    <div class="strip-title" id="stripTitle">Pehla Nasha</div>
+    <div class="strip-notes" id="stripNotes"></div>
+  </div>
+
+  <div class="kbd-frame">
+    <div class="felt"></div>
+    <div class="kbd" id="kbd" aria-label="Piano keys C5 to C6"></div>
+  </div>
+  <p class="hint text-center mt-1 mb-2 rotate-hint">📱 Turn your phone sideways for bigger keys.</p>
+  <p class="hint text-center small mb-3" id="sndInfo">🎹 Loading the piano sound…</p>
+
+  <!-- Manual mode -->
+  <div id="manualPanel" class="panel p-3 mb-3">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <button class="btn btn-nav" id="copyBtn" disabled>📋 Copy to table</button>
+      <button class="btn btn-outline-secondary" id="clearBtn" disabled>✕ Clear</button>
+      <span class="hint" id="tapInfo">No keys tapped yet.</span>
+    </div>
+    <p class="hint small mt-2 mb-0">Play a tune by hand, then <b>Copy to table</b>: your keys and the time between your taps go into the
+      Automated table so you can replay or edit them. On a laptop, keys <kbd>A</kbd>–<kbd>K</kbd> are the white keys and
+      <kbd>W E T Y U</kbd> the black ones.</p>
+  </div>
+
+  <!-- Automated mode -->
+  <div id="autoPanel" class="panel p-3 mb-3">
+    <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
+      <div>
+        <label class="ctrl-label" for="preset">Tune</label>
+        <select class="form-select form-select-sm" id="preset">
+          <option value="">— choose a tune —</option>
+          <option value="pehla">Pehla Nasha</option>
+          <option value="empty">Empty (5 rows)</option>
+        </select>
+      </div>
+      <button class="btn btn-play px-4" id="playBtn">▶ Play</button>
+      <button class="btn btn-outline-danger fw-bold" id="stopBtn" disabled>■ Stop</button>
+    </div>
+    <div class="d-flex flex-wrap gap-3 align-items-center mb-2">
+      <div style="min-width:11rem">
+        <label class="ctrl-label" for="speed">Speed <span id="speedVal">100%</span></label>
+        <input type="range" class="form-range" id="speed" min="50" max="150" step="5" value="100">
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="loopBox">
+        <label class="form-check-label fw-bold" for="loopBox">🔁 Loop</label>
+      </div>
+    </div>
+    <div id="msg" class="small mb-2"></div>
+    <div class="tbl-wrap" id="tblWrap">
+      <table class="table table-sm align-middle">
+        <thead><tr><th class="text-center">#</th><th>Key to press</th><th>Wait (ms)</th><th></th></tr></thead>
+        <tbody id="rowsBody"></tbody>
+      </table>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+      <button class="btn btn-outline-primary fw-bold" id="addBtn">➕ Add row</button>
+      <span class="hint small">Wait = time from this key to the next one (50–5000 ms). The last row's wait is how long the last note rings.
+        Tap a row's <b>#</b>, then tap piano keys to fill rows one after another.</span>
+    </div>
+  </div>
+  <p class="hint small text-center">No sound on an iPhone? Turn off silent mode (the switch on the side).</p>
+</main>
+
+<footer class="text-white py-4 mt-4">
+  <div class="container text-center small">Music Practice App · for personal practice · <a href="index.html">🎶 Song Practice</a> · <a href="piano.html">🎹 Try our Piano player</a> · <a href="contactus.html">✉️ Contact Us</a>
+    <div class="mt-1 opacity-75"><em>Pehla Nasha</em>: music Jatin–Lalit · Piano samples: FluidR3_GM SoundFont by Frank Wen (CC BY 3.0), via <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a></div></div>
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  /* ================= KEYS: C5 (MIDI 72) to C6 (MIDI 84) ================= */
+  const NAMES = ['C5','C#5','D5','D#5','E5','F5','F#5','G5','G#5','A5','A#5','B5','C6'];
+  const MIDI = Object.fromEntries(NAMES.map((n, i) => [n, 72 + i]));
+  const isBlack = n => n.includes('#');
+  const WHITES = NAMES.filter(n => !isBlack(n));            // 8 white keys
+  // laptop keys (by e.code, so any keyboard layout works)
+  const KEYMAP = {KeyA:'C5', KeyW:'C#5', KeyS:'D5', KeyE:'D#5', KeyD:'E5', KeyF:'F5', KeyT:'F#5', KeyG:'G5', KeyY:'G#5', KeyH:'A5', KeyU:'A#5', KeyJ:'B5', KeyK:'C6'};
+
+  const PRESETS = {
+    pehla: {name: 'Pehla Nasha', rows: 'F5 F5 F5 E5 F5 C6 F5 E5 D5 E5 F5 A5 F5 F5 G5 G5 G5 C5 F5 G5 A5 G5 F5 E5 F5'.split(' ').map(k => ({key: k, wait: 400}))},
+    empty: {name: 'My tune', rows: Array.from({length: 5}, () => ({key: 'C5', wait: 500}))},
+  };
+
+  const keyEl = {};
+  (function buildKeyboard(){
+    const kbd = $('kbd'), W = 100 / WHITES.length;
+    let wi = 0;
+    NAMES.forEach(n => {
+      const d = document.createElement('div');
+      d.className = 'key ' + (isBlack(n) ? 'b' : 'w'); d.dataset.note = n;
+      d.innerHTML = `<span class="tag">${n}</span>`;
+      if(isBlack(n)){ d.style.left = (wi * W - W * 0.3) + '%'; d.style.width = (W * 0.6) + '%'; }
+      else{ d.style.left = (wi * W) + '%'; d.style.width = W + '%'; wi++; }
+      kbd.appendChild(d); keyEl[n] = d;
+    });
+    kbd.addEventListener('contextmenu', e => e.preventDefault());
+  })();
+
+  /* ================= SOUND: copied from piano.html (recorded piano samples, soft voicing) ================= */
+  let ctx = null, bus = null;
+  function ensureCtx(){
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC){ $('sndInfo').textContent = '⚠️ Sorry, this browser has no Web Audio.'; return false; }
+      ctx = new AC();
+      // soft piano: warm low-pass, treble shelf down, a little room echo, then a gentle compressor
+      bus = ctx.createGain(); bus.gain.value = 0.42;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 4200; lp.Q.value = 0.5;
+      const sh = ctx.createBiquadFilter(); sh.type = 'highshelf'; sh.frequency.value = 2200; sh.gain.value = -5;
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
+      bus.connect(lp); lp.connect(sh); sh.connect(comp); comp.connect(ctx.destination);
+      const sr = ctx.sampleRate, len = Math.round(sr * 1.6), ir = ctx.createBuffer(2, len, sr);
+      for(let ch = 0; ch < 2; ch++){ const x = ir.getChannelData(ch); let seed = 12345 + ch * 777, v = 0;
+        for(let i = 0; i < len; i++){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; v += 0.35 * ((seed / 0x7fffffff) * 2 - 1 - v); x[i] = v * Math.exp(-i / (sr * 0.4)); } }
+      const conv = ctx.createConvolver(); conv.buffer = ir; const wet = ctx.createGain(); wet.gain.value = 0.2;
+      sh.connect(conv); conv.connect(wet); wet.connect(comp);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return true;
+  }
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  async function decode(ab){
+    const oc = new OAC(1, 1, 48000);
+    return await new Promise((res, rej) => { const p = oc.decodeAudioData(ab, res, rej); if(p && p.catch) p.catch(rej); });
+  }
+  const sampleBufs = new Map();
+  (function loadSamples(){
+    if(!OAC){ $('sndInfo').textContent = '🎹 Using a simple piano sound.'; return; }
+    const s = document.createElement('script'); s.src = 'NOTES-TESTER/SAMPLES/piano.js';
+    s.onload = async () => {
+      const set = window.NT_SAMPLES && window.NT_SAMPLES.piano;
+      if(!set){ $('sndInfo').textContent = '⚠️ Piano samples missing: using a simple synth.'; return; }
+      const mk = new OAC(1, 1, 48000);
+      for(let m = 72; m <= 84; m++){                       // only the 13 notes this piano has: quick on a phone
+        if(!set[m]) continue;
+        try{
+          const bin = atob(set[m]), ab = new Uint8Array(bin.length);
+          for(let i = 0; i < bin.length; i++) ab[i] = bin.charCodeAt(i);
+          const b = await decode(ab.buffer), x = b.getChannelData(0);
+          let peak = 0; for(let i = 0; i < x.length; i++) if(Math.abs(x[i]) > peak) peak = Math.abs(x[i]);
+          let s0 = 0; while(s0 < x.length && Math.abs(x[s0]) < peak * 0.02) s0++;        // cut the MP3 lead-in
+          s0 = Math.max(0, s0 - Math.round(b.sampleRate * 0.002));
+          const out = mk.createBuffer(1, x.length - s0, b.sampleRate);
+          const y = out.getChannelData(0), gg = peak > 0 ? 0.6 / peak : 1;
+          for(let i = 0; i < y.length; i++) y[i] = x[i + s0] * gg;
+          sampleBufs.set(m, out);
+        }catch(e){}
+      }
+      delete window.NT_SAMPLES.piano;                       // free the base64 text
+      $('sndInfo').textContent = sampleBufs.size ? '🎹 Piano sound ready.' : '⚠️ Could not read the piano samples: using a simple synth.';
+    };
+    s.onerror = () => { $('sndInfo').textContent = '⚠️ Piano samples not found: using a simple synth.'; };
+    document.head.appendChild(s);
+  })();
+
+  let voices = [];
+  // Starts note m at time `when`. With dur it stops by itself; without, it rings until release(v) is called.
+  function note(m, when, dur, lvl = 1){
+    const g = ctx.createGain(); g.connect(bus);
+    const v = lvl * Math.max(0.5, Math.min(1, 1 - (m - 74) * 0.03));    // high notes a little softer
+    g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(v, when + 0.006);
+    const srcs = [], voice = {g, srcs};
+    const buf = sampleBufs.get(m);
+    if(buf){ const s = ctx.createBufferSource(); s.buffer = buf; s.connect(g); s.start(when); srcs.push(s); }
+    else{
+      const f = 440 * Math.pow(2, (m - 69) / 12);
+      if(dur == null) g.gain.setTargetAtTime(v * 0.25, when + 0.05, 0.6);    // synth: decay like a struck string
+      [['triangle', f, 0.5], ['sine', f * 2, 0.12]].forEach(([type, fr, l]) => { const o = ctx.createOscillator(), og = ctx.createGain(); o.type = type; o.frequency.value = fr; og.gain.value = l; o.connect(og); og.connect(g); o.start(when); srcs.push(o); });
+    }
+    if(dur != null) endVoice(voice, when + dur);
+    voices.push(voice); if(voices.length > 300) voices = voices.slice(-200);
+    return voice;
+  }
+  function endVoice(voice, at, tc = 0.3){                 // 0.3 s release, like a sustain pedal
+    if(voice.ended) return; voice.ended = true;
+    voice.g.gain.setTargetAtTime(0, at, tc);
+    voice.srcs.forEach(s => { try{ s.stop(at + tc * 6); }catch(e){} });
+  }
+  function silenceAll(){
+    const now = ctx ? ctx.currentTime : 0;
+    voices.forEach(v => { try{ v.g.gain.cancelScheduledValues(now); v.g.gain.setTargetAtTime(0, now, 0.02); v.srcs.forEach(s => { try{ s.stop(now + 0.15); }catch(e){} }); }catch(e){} v.ended = true; });
+    voices = [];
+  }
+
+  /* ================= STORAGE (per phone; the page works without it) ================= */
+  const store = {
+    get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  };
+
+  /* ================= MODE ================= */
+  let mode = 'manual';
+  function setMode(m){
+    if(playing) stopPlay();
+    mode = m === 'auto' ? 'auto' : 'manual';
+    $('modeManual').checked = mode === 'manual'; $('modeAuto').checked = mode === 'auto';
+    $('manualPanel').style.display = mode === 'manual' ? '' : 'none';
+    $('autoPanel').style.display = mode === 'auto' ? '' : 'none';
+    $('modeHint').innerHTML = mode === 'manual'
+      ? 'Tap the keys to play. Slide a finger across them, or press two at once.'
+      : 'Fill the table (key + wait in milliseconds) and press <b>▶ Play</b>: the piano plays it by itself.';
+    store.set('miniPianoMode', mode);
+    renderStrip();
+  }
+  $('modeManual').addEventListener('change', () => setMode('manual'));
+  $('modeAuto').addEventListener('change', () => setMode('auto'));
+
+  /* ================= TUNE STRIP ================= */
+  let tapped = [];                                       // manual taps: {key, t (ms)}
+  let tuneName = 'Pehla Nasha';
+  function renderStrip(){
+    const box = $('stripNotes');
+    if(mode === 'manual'){
+      $('stripTitle').textContent = 'Your notes';
+      const last = tapped.slice(-12);
+      box.innerHTML = last.length ? last.map(x => `<span class="n">${x.key}</span>`).join('') : '<span class="strip-empty">Tap a key…</span>';
+    }else{
+      $('stripTitle').textContent = tuneName;
+      box.innerHTML = rows.length ? rows.map((r, i) => `<span class="n" data-i="${i}">${r.key}</span>`).join('') : '<span class="strip-empty">The table is empty.</span>';
+    }
+  }
+
+  /* ================= MANUAL PLAYING (pointer events: touch, mouse, pen) ================= */
+  const held = {};                                       // note -> {count, voice}
+  function press(n){
+    if(!MIDI[n] || !ensureCtx()) return;
+    const h = held[n] || (held[n] = {count: 0, voice: null});
+    if(h.voice) endVoice(h.voice, ctx.currentTime, 0.05); // a re-strike cuts the old sound short
+    h.voice = note(MIDI[n], ctx.currentTime + 0.005);
+    h.count++;
+    keyEl[n].classList.add('down');
+    if(mode === 'manual' && !playing){ tapped.push({key: n, t: performance.now()}); if(tapped.length > 500) tapped.shift(); updateTapInfo(); renderStrip(); }
+    if(mode === 'auto' && !playing && selRow >= 0) fillSelected(n);
+  }
+  function release(n){
+    const h = held[n]; if(!h || !h.count) return;
+    if(--h.count === 0){ if(h.voice) endVoice(h.voice, ctx.currentTime); h.voice = null; keyEl[n].classList.remove('down'); }
+  }
+  const pointers = new Map();                            // pointerId -> note under it
+  const keyAt = (x, y) => { const el = document.elementFromPoint(x, y); const k = el && el.closest('.key'); return k ? k.dataset.note : null; };
+  const kbd = $('kbd');
+  kbd.addEventListener('pointerdown', e => {
+    if(playing) return;
+    e.preventDefault();
+    try{ kbd.setPointerCapture(e.pointerId); }catch(err){}
+    const n = keyAt(e.clientX, e.clientY); pointers.set(e.pointerId, n);
+    if(n) press(n);
+  });
+  kbd.addEventListener('pointermove', e => {
+    if(!pointers.has(e.pointerId)) return;
+    const was = pointers.get(e.pointerId), n = keyAt(e.clientX, e.clientY);
+    if(n === was) return;                               // glissando: a new key under the finger plays
+    if(was) release(was);
+    pointers.set(e.pointerId, n);
+    if(n) press(n);
+  });
+  const lift = e => { if(!pointers.has(e.pointerId)) return; const n = pointers.get(e.pointerId); pointers.delete(e.pointerId); if(n) release(n); if(ctx && ctx.state === 'suspended') ctx.resume(); };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => kbd.addEventListener(t, lift));
+
+  const typing = () => { const a = document.activeElement; return a && (a.tagName === 'INPUT' && a.type !== 'checkbox' && a.type !== 'radio' && a.type !== 'range' || a.tagName === 'SELECT' || a.tagName === 'TEXTAREA'); };
+  document.addEventListener('keydown', e => {
+    if(e.ctrlKey || e.metaKey || e.altKey || typing()) return;
+    if(e.code === 'Space' && mode === 'auto'){ e.preventDefault(); playing ? stopPlay() : play(); return; }
+    const n = KEYMAP[e.code]; if(!n || e.repeat || playing) return;
+    e.preventDefault(); press(n);
+  });
+  document.addEventListener('keyup', e => { const n = KEYMAP[e.code]; if(n) release(n); });
+
+  function updateTapInfo(){
+    $('tapInfo').textContent = tapped.length ? `${tapped.length} key${tapped.length > 1 ? 's' : ''} tapped.` : 'No keys tapped yet.';
+    $('copyBtn').disabled = $('clearBtn').disabled = !tapped.length;
+  }
+  $('clearBtn').addEventListener('click', () => { tapped = []; updateTapInfo(); renderStrip(); });
+  $('copyBtn').addEventListener('click', () => {
+    if(!tapped.length) return;
+    if(!confirm(`Replace the Automated table with your ${tapped.length} tapped key${tapped.length > 1 ? 's' : ''}?`)) return;
+    const r = tapped.map((x, i) => {
+      const next = tapped[i + 1];
+      const w = next ? Math.round((next.t - x.t) / 50) * 50 : 500;   // time to the next tap, rounded to 50 ms
+      return {key: x.key, wait: Math.max(50, Math.min(5000, w))};
+    });
+    setRows(r, 'My tune'); $('preset').value = '';
+    tapped = []; updateTapInfo();
+    setMode('auto');
+  });
+
+  /* ================= AUTOMATED: THE TABLE ================= */
+  let rows = [], selRow = -1;
+  const keyOptions = NAMES.map(n => `<option value="${n}">${n}</option>`).join('');
+  function renderRows(){
+    const tb = $('rowsBody');
+    tb.innerHTML = rows.map((r, i) => `<tr data-i="${i}"${i === selRow ? ' class="sel"' : ''}>
+      <td class="num" title="Select this row, then tap piano keys to fill it">${i + 1}</td>
+      <td><select class="form-select form-select-sm key-sel" aria-label="Key for row ${i + 1}">${keyOptions}</select></td>
+      <td><input class="form-control form-control-sm wait-in" type="text" inputmode="numeric" aria-label="Wait in ms for row ${i + 1}" value="${r.wait}"></td>
+      <td class="text-end"><button class="del-btn" title="Delete row" aria-label="Delete row ${i + 1}"${rows.length < 2 ? ' disabled' : ''}>🗑</button></td></tr>`).join('');
+    tb.querySelectorAll('tr').forEach((tr, i) => { tr.querySelector('select').value = rows[i].key; });
+    renderStrip(); validate(); save();
+  }
+  function setRows(list, name){
+    rows = list.map(r => ({key: MIDI[r.key] ? r.key : 'C5', wait: String(r.wait)}));
+    if(!rows.length) rows = [{key: 'C5', wait: '500'}];
+    if(name) tuneName = name;
+    selRow = -1; dirty = false; renderRows();
+  }
+  let dirty = false;
+  $('rowsBody').addEventListener('change', e => {
+    const tr = e.target.closest('tr'); if(!tr) return; const i = +tr.dataset.i;
+    if(e.target.classList.contains('key-sel')){ rows[i].key = e.target.value; dirty = true; renderStrip(); save(); }
+  });
+  $('rowsBody').addEventListener('input', e => {
+    if(!e.target.classList.contains('wait-in')) return;
+    const tr = e.target.closest('tr'), i = +tr.dataset.i;
+    const v = e.target.value.replace(/\D+/g, '').slice(0, 5);    // digits only
+    if(v !== e.target.value) e.target.value = v;
+    rows[i].wait = v; dirty = true; validate(); save();
+  });
+  $('rowsBody').addEventListener('click', e => {
+    const tr = e.target.closest('tr'); if(!tr || playing) return; const i = +tr.dataset.i;
+    if(e.target.closest('.del-btn')){
+      if(rows.length < 2) return;
+      rows.splice(i, 1); dirty = true;
+      if(selRow === i) selRow = -1; else if(selRow > i) selRow--;
+      renderRows();
+    }else if(e.target.closest('td.num')){
+      selRow = selRow === i ? -1 : i; markSel();
+    }
+  });
+  function markSel(){ $('rowsBody').querySelectorAll('tr').forEach((tr, i) => tr.classList.toggle('sel', i === selRow)); }
+  function fillSelected(n){                               // a tapped key fills the selected row, then selects the next
+    rows[selRow].key = n; dirty = true;
+    const tr = $('rowsBody').children[selRow]; if(tr) tr.querySelector('select').value = n;
+    selRow = selRow + 1 < rows.length ? selRow + 1 : -1;
+    markSel(); scrollRow(selRow); renderStrip(); save();
+  }
+  $('addBtn').addEventListener('click', () => {
+    const last = rows[rows.length - 1] || {key: 'C5', wait: '500'};
+    rows.push({key: last.key, wait: /^\d+$/.test(last.wait) ? last.wait : '500'}); dirty = true;
+    renderRows(); scrollRow(rows.length - 1);
+  });
+  $('preset').addEventListener('change', () => {
+    const p = PRESETS[$('preset').value]; if(!p) return;
+    if(dirty && !confirm(`Replace the table with "${p.name === 'My tune' ? 'Empty (5 rows)' : p.name}"? Your changes will be lost.`)){ $('preset').value = ''; return; }
+    if(playing) stopPlay();
+    setRows(p.rows, p.name);
+  });
+  // Every wait must be a whole number from 50 to 5000. Otherwise: red box, a message, and Play disabled.
+  function validate(){
+    let bad = -1;
+    $('rowsBody').querySelectorAll('tr').forEach((tr, i) => {
+      const w = rows[i].wait, ok = /^\d+$/.test(w) && +w >= 50 && +w <= 5000;
+      tr.querySelector('.wait-in').classList.toggle('is-invalid', !ok);
+      if(!ok && bad < 0) bad = i;
+    });
+    if(bad >= 0) $('msg').innerHTML = `<span class="text-danger fw-bold">⚠️ Row ${bad + 1}: the wait must be a whole number from 50 to 5000 ms.</span>`;
+    else $('msg').textContent = `${rows.length} note${rows.length > 1 ? 's' : ''}, ${(rows.reduce((a, r) => a + +r.wait, 0) / 1000 / speed()).toFixed(1)} s at this speed.`;
+    $('playBtn').disabled = playing || bad >= 0;
+    return bad < 0;
+  }
+  function scrollRow(i){
+    const wrap = $('tblWrap'), tr = $('rowsBody').children[i]; if(!tr) return;
+    const top = tr.offsetTop - wrap.querySelector('thead').offsetHeight;
+    if(top < wrap.scrollTop || tr.offsetTop + tr.offsetHeight > wrap.scrollTop + wrap.clientHeight) wrap.scrollTop = Math.max(0, top - wrap.clientHeight / 3);
+  }
+  const speed = () => (+$('speed').value || 100) / 100;
+  $('speed').addEventListener('input', () => { $('speedVal').textContent = $('speed').value + '%'; validate(); save(); });
+  $('loopBox').addEventListener('change', save);
+  function save(){ store.set('miniPianoTable', {name: tuneName, rows, speed: +$('speed').value, loop: $('loopBox').checked, dirty}); }
+
+  /* ================= AUTOMATED: PLAYING (on the audio clock, so the timing stays exact) ================= */
+  let playing = false, ev = [], nextEv = null, endAt = 0, raf = 0, curI = -1, autoKey = null;
+  // One pass of the table from time t: every note is scheduled now; returns the events.
+  function schedule(t){
+    const sp = speed(), out = [];
+    rows.forEach((r, i) => {
+      const gap = +r.wait / 1000 / sp, dur = Math.max(0.1, Math.min(1.5, gap));
+      note(MIDI[r.key], t, dur);
+      out.push({i, key: r.key, t, lit: Math.min(dur, gap * 0.85)});   // a short break before a repeated key, so it is seen twice
+      t += gap;
+    });
+    out.end = t; return out;
+  }
+  function play(){
+    if(playing || !validate() || !rows.length || !ensureCtx()) return;
+    Object.keys(held).forEach(n => { while(held[n] && held[n].count) release(n); });
+    selRow = -1; markSel();
+    playing = true; curI = -1;
+    ev = schedule(ctx.currentTime + 0.15); endAt = ev.end; nextEv = null;
+    lock(true);
+    raf = requestAnimationFrame(tick);
+  }
+  function tick(){
+    if(!playing) return;
+    const now = ctx.currentTime;
+    if($('loopBox').checked && !nextEv && now > endAt - 0.4) nextEv = schedule(endAt);
+    if(now >= endAt){
+      if(nextEv){ ev = nextEv; endAt = ev.end; nextEv = null; }
+      else{ stopPlay(true); return; }
+    }
+    let k = -1; for(let j = 0; j < ev.length && ev[j].t <= now; j++) k = j;
+    const e = ev[k];
+    setAuto(e && now < e.t + e.lit ? e.key : null);
+    if(k !== curI){ curI = k; showCurrent(k); }
+    raf = requestAnimationFrame(tick);
+  }
+  function setAuto(n){ if(n === autoKey) return; if(autoKey) keyEl[autoKey].classList.remove('auto'); autoKey = n; if(n) keyEl[n].classList.add('auto'); }
+  function showCurrent(i){
+    $('rowsBody').querySelectorAll('tr').forEach((tr, j) => tr.classList.toggle('now', j === i));
+    $('stripNotes').querySelectorAll('.n').forEach((s, j) => { s.classList.toggle('now', j === i); s.classList.toggle('done', i >= 0 && j < i); });
+    if(i >= 0){ scrollRow(i); const s = $('stripNotes').children[i]; if(s){ const box = $('stripNotes'); if(s.offsetTop < box.scrollTop || s.offsetTop > box.scrollTop + box.clientHeight - s.offsetHeight) box.scrollTop = s.offsetTop - box.offsetTop - 4; } }
+  }
+  // natural = it reached the end (let the last note ring); otherwise ■ Stop cuts the sound at once
+  function stopPlay(natural){
+    playing = false; cancelAnimationFrame(raf);
+    if(!natural) silenceAll();
+    setAuto(null); showCurrent(-1); curI = -1; nextEv = null;
+    lock(false);
+  }
+  function lock(on){
+    $('autoPanel').querySelectorAll('#rowsBody select, #rowsBody input, #rowsBody button, #addBtn, #preset').forEach(el => { el.disabled = on || (el.classList.contains('del-btn') && rows.length < 2); });
+    $('stopBtn').disabled = !on;
+    validate();
+  }
+  $('playBtn').addEventListener('click', play);
+  $('stopBtn').addEventListener('click', () => stopPlay());
+  document.addEventListener('visibilitychange', () => { if(document.hidden && playing) stopPlay(); });
+
+  /* ================= START ================= */
+  const saved = store.get('miniPianoTable');
+  if(saved && Array.isArray(saved.rows) && saved.rows.length){
+    $('speed').value = saved.speed || 100; $('speedVal').textContent = $('speed').value + '%';
+    $('loopBox').checked = !!saved.loop;
+    setRows(saved.rows, saved.name || 'My tune'); dirty = !!saved.dirty;
+  }else setRows(PRESETS.pehla.rows, PRESETS.pehla.name);
+  setMode(store.get('miniPianoMode') || 'manual');
+  updateTapInfo();
+
+  // for headless tests
+  window.__miniPiano = {
+    press, release, play, stop: () => stopPlay(), setMode,
+    rows: () => rows.map(r => ({key: r.key, wait: +r.wait})),
+    setRows: (list, name) => setRows(list, name),
+    lit: () => NAMES.filter(n => keyEl[n].classList.contains('auto') || keyEl[n].classList.contains('down')),
+    now: () => ctx ? ctx.currentTime : 0, playing: () => playing, events: () => ev, samples: () => sampleBufs.size,
+  };
+})();
+</script>
+</body>
+</html>

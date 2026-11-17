@@ -33,6 +33,8 @@ The owner uses it for personal learning.
 | `NOTES-TESTER/Piano-tester.html` (was Piano.html) | **Piano Capture**: an 88-key piano that writes key strokes as song-library.js lines with times in the WAV, played by hand (laptop keys, optionally along with the WAV) or found in a WAV. See "Piano Capture" below. |
 | `contactus.html` | **Contact Us** (adapted from BLOG/contactus.html): LinkedIn/email buttons, About Me, the owner's three passions (music, software, AI), why AI for learning music, cards linking every page of the app, "Built entirely with Claude Code" (what the owner did vs what Claude Code did), how others can use and build on it, an accuracy note. Linked from the index.html and piano.html footers. |
 | `piano.html` | **Piano demo** (site root; linked from index.html as "🎹 Try our Piano player" under the pink box and in the footer): nav, pink "How does the RAG Champ Piano app work?" box, one **▶ Try it** button that shows two song buttons (🎼 Für Elise, 🎬 Bollywood: Pehla Nasha), then the Piano Notes Player playing the chosen one. Built by a script from `NOTES-TESTER/Piano-notes.html` with `SONG-6-FUL-ELISE-BEETHOVEN.txt` and `SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt` embedded in `<script type="text/plain" id="demoFur">` / `id="demoPehla"` (so it works from disk) and samples from `NOTES-TESTER/SAMPLES/piano.js`; rebuild it after changing the player. |
+| `mini-piano.html` | **Mini Piano** (site root, made for phones): one octave C5–C6 of big keys; Manual (tap) and Automated (table of key + wait ms, ▶ Play) modes. See "Mini Piano" below. Linked from the index.html, piano.html and contactus.html footers and a contactus card. |
+| `INFO/MINI-PIANO-PLAN.md` | The approved plan for the Mini Piano, with the owner's decisions. |
 | `INFO/HOW-PIANO-NOTES-PLAYER-WORKS.html` | Explainer (same look as HOW-MUSIC-APP-WORKS.html): part 1 how Piano-notes.html works (loading, hand split, fingering, taps vs black-key reaches, sound, score sync, bar ranges); part 2 how the Pehla Nasha PDF became the 5-minute notes file. |
 | `NOTES-TESTER/Piano-notes.html` | **Piano Notes Player**: plays a notes file (or a song-list song) on the piano samples with two animated hands pressing the keys (numbered fingers) and the score scrolling in a frame below. See "Piano Notes Player" below. |
 | `MUSIC-NOTES/*.html` | The owner's sheet music pages (staff notation + note names), one per song; the Notes Tester can test them. |
@@ -202,6 +204,26 @@ Made 2026-11-16: the owner wanted to see *how* a song is played. One self-contai
   when pressed and as long as it is held, glowing while down, with C lines and the note letter on long bars.
   `buildBars()` runs on load even when the score is hidden (the bar range needs it).
 - `window.__pianoNotes` = {load(text, name), play(t), stop, showAt, lines(), songTime} for headless tests.
+
+## Mini Piano (mini-piano.html, 2026-11-17)
+
+Made for the owner's picture of a phone piano app showing "Pehla Nasha: F5 F5 F5 E5 F5 C6 F5 E5". One self-contained page.
+- **Keys:** only C5–C6 (owner's choice: no octave buttons), 8 white keys with light-blue name tags, black keys named too.
+  Tune strip above the keys (cursive title, big purple note names; the current one yellow).
+- **Sound:** copied from piano.html (`ensureCtx`, soft piano bus, `NOTES-TESTER/SAMPLES/piano.js`), but only MIDI 72–84 are
+  decoded; the triangle + sine synth plays until they are ready or if they are missing. The context starts on the first tap.
+- **✋ Manual:** pointer events (multi-touch, slide = glissando, `touch-action:none`); a key rings while held, 0.3 s release.
+  Laptop keys A W S E D F T G Y H U J K = C5…C6. **📋 Copy to table** puts the tapped keys into the table with the time
+  between taps (rounded to 50 ms; last row 500 ms) and switches to Automated.
+- **🤖 Automated:** table rows = key drop-down + wait (ms, whole 50–5000, else red box and Play disabled) + 🗑; ➕ Add row
+  copies the last row. A row's wait = time from its key to the next key; the last row's wait is how long the last note rings;
+  each note sounds for its wait (0.1–1.5 s). Starts with the owner's 25-note Pehla Nasha tune (400 ms each); presets
+  Pehla Nasha / Empty (5 rows). Tap a row's # then piano keys to fill rows in turn. ▶ Play schedules every note on
+  `ctx.currentTime`; a rAF loop lights the key, the table row and the strip note. ■ Stop, Speed 50–150 %, 🔁 Loop, Space.
+- Saved in localStorage: `miniPianoTable` (rows, name, speed, loop), `miniPianoMode`.
+- `window.__miniPiano` = {press, release, play, stop, setMode, rows, setRows, lit, now, playing, events, samples}.
+- Checked headless (touch events at 390 px): taps play the right keys; the 25 notes light in order, at most 10–21 ms late.
+- piano.html's footer was edited by hand to add the link; if piano.html is rebuilt from Piano-notes.html, keep that link.
 
 ## Für Elise from a vector PDF (2026-11-16)
 
