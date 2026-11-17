@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piano Notes Player</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd; --biz-blue-dark:#084298; --biz-yellow:#ffc107; --biz-red:#dc3545;
+    --biz-green:#198754; --nav-blue:#04264d; --nav-yellow:#ffd60a;
+    --rh:#c2410c; --lh:#1d4ed8;
+  }
+  body{ background:#f7f8fa; margin:0; }
+  .topnav{
+    position:sticky; top:0; z-index:1030; background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{ font-weight:600; font-size:1.05rem; color:var(--nav-yellow); letter-spacing:.15em; word-spacing:.6em; font-style:italic; }
+  @media (max-width:576px){ .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; } }
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center; width:1.9rem; height:1.9rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.95rem; margin-right:.55rem; flex:none;
+  }
+  .step-title{ display:flex; align-items:center; font-weight:700; font-size:1.1rem; margin-bottom:.75rem; }
+  .step-card{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
+  .about-box{ background:#fde2ec; border:2px solid #f5a3c0; border-radius:.6rem; padding:.9rem 1.1rem; }
+  .about-box h2{ font-size:1.05rem; font-weight:700; color:#8a1f4a; margin-bottom:.4rem; }
+  .about-box p{ font-size:.92rem; color:#3b2a31; }
+  .about-box a{ color:#b0185a; font-weight:700; }
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+
+  /* Player: keyboard with the two hands, then the score in a scrolling frame */
+  .seek{ height:.6rem; cursor:pointer; }
+  .form-check-input{ border:2px solid var(--nav-blue); }
+  .form-check-input:checked{ background-color:var(--nav-blue); border-color:var(--nav-blue); }
+  .form-check-input:focus{ border-color:var(--nav-blue); box-shadow:0 0 0 .2rem rgba(4,38,77,.25); }
+  .note-file{ border:2px solid var(--nav-blue); }
+  .note-file:focus{ border-color:var(--nav-blue); box-shadow:0 0 0 .2rem rgba(4,38,77,.25); }
+  .note-file::file-selector-button{ background:var(--nav-blue); color:var(--nav-yellow); font-weight:700; }
+  .note-file:hover:not(:disabled):not([readonly])::file-selector-button{ background:#0a3a70; color:var(--nav-yellow); }
+  .range-row{ background:#eef4ff; border:1px solid #c9d3e3; border-radius:.5rem; padding:.45rem .7rem; }
+  .range-row .bar-in{ width:5.2rem; }
+  .now-line{ font-size:.95rem; min-height:1.6rem; }
+  .now-line .rh{ color:var(--rh); font-weight:800; }
+  .now-line .lh{ color:var(--lh); font-weight:800; }
+  .kbd-scroll{ overflow-x:auto; overflow-y:hidden; background:#1f2937; border-radius:.5rem; padding:.45rem .45rem 0; }
+  .kbd{ position:relative; height:212px; user-select:none; -webkit-user-select:none; }
+  .wk, .bk{ position:absolute; top:0; border-radius:0 0 4px 4px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
+  .wk{ height:150px; background:#fff; border:1px solid #9aa3af; z-index:1; }
+  .bk{ height:92px; background:#111827; border:1px solid #000; z-index:2; }
+  .wk .nm{ font-size:.6rem; font-weight:700; color:#6b7280; margin-bottom:3px; }
+  .wk.on-r{ background:#fde68a; } .bk.on-r{ background:#f59e0b; }
+  .wk.on-l{ background:#bfdbfe; } .bk.on-l{ background:#3b82f6; }
+  .hands{ position:absolute; left:0; top:0; height:212px; pointer-events:none; z-index:5; }
+  .palm, .finger{ position:absolute; background:rgba(253, 213, 170, .82); border:2px solid; box-shadow:0 2px 6px rgba(0,0,0,.35); }
+  .palm{ top:152px; height:54px; border-radius:16px 16px 26px 26px; transition:left .16s ease, width .16s ease; display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:1rem; }
+  .finger{ transition:left .13s ease, top .07s ease, height .07s ease, background .07s; display:flex; justify-content:center; align-items:flex-start; }
+  .finger .fn{ font-size:.62rem; font-weight:900; color:#fff; border-radius:50%; width:1.05rem; height:1.05rem; line-height:1.05rem; text-align:center; margin-top:2px; opacity:0; }
+  .finger.down .fn{ opacity:1; }
+  .hand-r .palm, .hand-r .finger{ border-color:var(--rh); } .hand-r .palm{ color:var(--rh); } .hand-r .fn{ background:var(--rh); }
+  .hand-l .palm, .hand-l .finger{ border-color:var(--lh); } .hand-l .palm{ color:var(--lh); } .hand-l .fn{ background:var(--lh); }
+  .finger.down{ background:rgba(232, 160, 110, .95); box-shadow:0 1px 2px rgba(0,0,0,.4); }
+  .hands.no-nums .fn{ display:none; }
+  .score-frame{ height:max(270px, calc(100vh - 470px)); overflow-y:auto; background:#fff; border:2px solid #c9d3e3; border-radius:.6rem; padding:.4rem .4rem 0; scroll-behavior:smooth; }
+  .score svg{ display:block; width:100%; height:auto; margin-bottom:.4rem; }
+  .score svg text{ font-family:'Segoe UI',Roboto,Arial,sans-serif; }
+  .score .col-hit{ fill:transparent; cursor:pointer; }
+  .score .col-hit:hover{ fill:rgba(13,110,253,.08); }
+  .score .col-hit.on{ fill:rgba(255,193,7,.55); }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+
+  <div class="about-box mb-4">
+    <h2>What does the Piano Notes Player do?</h2>
+    <p class="mb-1">It plays a song's <strong>notes</strong> (a notes file from <code>REFERENCE-AUDIO-FILES</code>) on a piano
+      sound and shows <strong>two hands</strong> playing them on the keyboard: the right hand (orange) and the left hand (blue) move along the keys and
+      press them with numbered fingers (1 = thumb … 5 = little finger). Under the keyboard the notes scroll by in <strong>staff notation</strong>, so you
+      can see what is played and how. The hands, the left/right split and the fingering are worked out from the notes by the page (a sensible guess, not
+      the arranger's fingering). No AI runs in this page.</p>
+    <a href="index.html">← Back to the Notes Tester</a>
+  </div>
+
+  <h1 class="h3 fw-bold mb-1">🎹 Piano Notes Player</h1>
+  <p class="text-muted mb-4">Choose the notes, press Play, and watch the hands and the score.</p>
+
+  <!-- STEP 1 -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title flex-wrap"><span class="step-num">1</span>Choose the notes<em class="fw-normal ms-2 small text-muted">Notes File, the .txt file from Reference-Audio-Files</em></div>
+      <input type="file" class="form-control note-file" id="noteFile" accept=".txt,.js,text/plain" aria-label="Notes file: the .txt file from REFERENCE-AUDIO-FILES">
+      <div class="small mt-2" id="srcInfo" aria-live="polite">Lines are <code>time  notes  beats  label</code> as in song-library.js (e.g. <code>SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt</code>).</div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card shadow-sm step-card mb-3" id="player" hidden>
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">2</span><span id="songTitle">Play</span></div>
+      <div class="range-row d-flex flex-wrap gap-3 align-items-center mb-2">
+        <div class="form-check mb-0">
+          <input class="form-check-input" type="checkbox" id="allBox" checked>
+          <label class="form-check-label fw-bold" for="allBox">Play all notes</label>
+        </div>
+        <div class="form-check mb-0">
+          <input class="form-check-input" type="checkbox" id="rangeBox">
+          <label class="form-check-label fw-bold" for="rangeBox">Play a range of bars</label>
+        </div>
+        <span class="d-inline-flex flex-wrap align-items-center gap-1 small">
+          <label for="barStart">Start bar</label>
+          <input type="text" inputmode="numeric" class="form-control form-control-sm bar-in" id="barStart" disabled aria-describedby="rangeInfo">
+          <label for="barEnd" class="ms-1">End bar</label>
+          <input type="text" inputmode="numeric" class="form-control form-control-sm bar-in" id="barEnd" disabled aria-describedby="rangeInfo">
+          <span class="ms-1 text-muted" id="rangeInfo"></span>
+        </span>
+      </div>
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+        <button type="button" class="btn btn-success fw-bold" id="playBtn">▶ Play</button>
+        <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled>■ Stop</button>
+        <span class="d-inline-flex align-items-center gap-1 small"><label class="fw-bold" for="speed">Speed</label>
+          <select id="speed" class="form-select form-select-sm" style="width:auto">
+            <option value="0.5">50%</option><option value="0.65">65%</option><option value="0.75">75%</option><option value="0.85">85%</option>
+            <option value="1" selected>100%</option><option value="1.15">115%</option></select></span>
+        <div class="form-check form-check-inline small mb-0 ms-md-2">
+          <input class="form-check-input" type="checkbox" id="showNums" checked>
+          <label class="form-check-label" for="showNums">Finger numbers</label>
+        </div>
+        <span class="small text-muted ms-auto" id="sndInfo">⏳ Loading the piano sound…</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="small fw-bold" id="timeVal" style="min-width:7.5rem">0:00 / 0:00</span>
+        <div class="progress seek flex-grow-1" id="seek" role="progressbar" aria-label="Position (click to jump)"><div class="progress-bar bg-warning" id="seekBar" style="width:0%"></div></div>
+      </div>
+      <div class="now-line mb-2" id="nowVal">&nbsp;</div>
+      <div class="kbd-scroll mb-2" id="kbdScroll"><div class="kbd" id="kbd"><div class="hands" id="hands"></div></div></div>
+      <div class="score-frame" id="scoreFrame"><div class="score" id="scoreBox"></div></div>
+      <p class="small text-muted mt-2 mb-0">Click a note column in the score to play from there. <kbd>Space</kbd> plays or stops.
+        The right hand is drawn on the top staff in black, the left hand on the bottom staff in blue; notes in one column are played together.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">Music Practice App · for personal practice · <a href="../index.html">🎶 Song Practice</a> · <a href="index.html">🧪 Notes Tester</a> · <a href="Piano-tester.html">🎹 Piano Capture</a> · <a href="WAV-VISUALIZER.html">🔬 WAV Visualizer</a>
+    <div class="mt-1 opacity-75">Piano samples: FluidR3_GM SoundFont by Frank Wen (CC BY 3.0), via <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a></div></div>
+</footer>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const IS_BLACK = [0,1,0,1,0,0,1,0,1,0,1,0];
+  const PC = {C:0, D:2, E:4, F:5, G:7, A:9, B:11}, LETTER = {C:0, D:1, E:2, F:3, G:4, A:5, B:6};
+  const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+
+  /* ================= READING THE NOTES ================= */
+  // One note token: C4, F#4, Bb3 (♯/♭ too), with ~ ^ prefixes and @string suffixes ignored
+  function tok(t){
+    const m = String(t).replace(/^[~^]/, '').split('@')[0].match(/^([A-Ga-g])([#b♯♭]?)(-?\d)$/);
+    if(!m) return null;
+    const L = m[1].toUpperCase(), acc = m[2] === '#' || m[2] === '♯' ? '♯' : m[2] ? '♭' : '', oct = +m[3];
+    return {L, acc, oct, midi: (oct + 1) * 12 + PC[L] + (acc === '♯' ? 1 : acc === '♭' ? -1 : 0), name: L + acc + oct};
+  }
+  // song-library.js note lines; quotes, trailing commas and // comments ignored; "tempo: N" / "start: S" read from anywhere
+  function readLines(rawLines, text, tempo){
+    const num = re => { const m = (text || '').match(re); return m ? parseFloat(m[1]) : null; };
+    tempo = num(/\btempo\s*[:=]\s*(\d+(?:\.\d+)?)/i) || tempo || 100;
+    const start = num(/\bstart\s*[:=]\s*(\d+(?:\.\d+)?)/i) || 0;
+    const out = [];
+    rawLines.forEach(raw => {
+      let s = String(raw).replace(/\/\/.*$/, '').trim().replace(/,\s*$/, '').trim().replace(/^['"`]/, '').replace(/['"`]$/, '').trim();
+      const m = s.match(/^(-|\d+(?:\.\d+)?)\s+(\S+)(?:\s+(\d+(?:\.\d+)?))?(?:\s+(.*))?$/);
+      if(!m) return;
+      const notes = m[2].split('+').map(tok);
+      if(!notes.length || notes.some(n => !n)) return;
+      out.push({t: m[1] === '-' ? null : +m[1], notes, beats: m[3] ? +m[3] : 1, label: (m[4] || '').trim()});
+    });
+    if(out.length && out.every(l => l.t == null)){ let acc = start; out.forEach(l => { l.t = acc; acc += l.beats * 60 / tempo; }); }
+    else out.forEach((l, i) => { if(l.t == null) l.t = i ? out[i - 1].t + out[i - 1].beats * 60 / tempo : start; });
+    out.sort((a, b) => a.t - b.t);
+    return {lines: out, tempo};
+  }
+
+  $('noteFile').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const text = await f.text();
+    load(readLines(text.split(/\r?\n/), text), f.name.replace(/\.[^.]+$/, ''), f.name);
+  });
+
+  /* ================= HANDS: which hand plays what, and with which finger ================= */
+  // Each line's notes are split into a right-hand and a left-hand group (the split that keeps each hand near where it
+  // was, within an octave, and the first-written note in the right hand), then each group gets fingers.
+  function splitHands(lines){
+    let rC = 69, lC = 50;
+    lines.forEach(L => {
+      const ms = [...new Set(L.notes.map(n => n.midi))].sort((a, b) => b - a), main = L.notes[0].midi;
+      let best = null;
+      for(let k = ms.length; k >= 0; k--){
+        const R = ms.slice(0, k), H = ms.slice(k);
+        if(R.length > 5 || H.length > 5) continue;
+        const span = a => a.length ? a[0] - a[a.length - 1] : 0;
+        let c = Math.max(0, span(R) - 12) * 8 + Math.max(0, span(H) - 12) * 8;
+        if(R.length) c += Math.abs(mean(R) - rC);
+        if(H.length) c += Math.abs(mean(H) - lC);
+        if(H.includes(main) && ms.length > 1) c += 4;
+        R.forEach(m => { if(m < 62) c += 6; }); H.forEach(m => { if(m >= 65) c += 4; });   // the right hand rarely goes below D4
+        if(!best || c < best.c - 1e-9) best = {c, R, H};
+      }
+      L.rhM = best.R.slice().reverse(); L.lhM = best.H.slice().reverse();      // low to high
+      if(L.rhM.length) rC = 0.7 * rC + 0.3 * mean(L.rhM);
+      if(L.lhM.length) lC = 0.7 * lC + 0.3 * mean(L.lhM);
+      if(rC - lC < 8){ const mid = (rC + lC) / 2; rC = mid + 4; lC = mid - 4; }
+    });
+  }
+  // Fingers for one hand. us = key positions in white-key units (low to high, mirrored for the left hand so finger 1
+  // is always the thumb at the low end). p = where the thumb rests; finger f rests at p + f - 1.
+  function place(us, prevP){
+    const n = us.length, fits = us.every(u => u >= prevP - 0.3 && u <= prevP + 4.3);
+    let p = prevP, f;
+    if(n === 1){
+      const u = us[0];
+      if(!fits) p = u < prevP ? u - 2 : u;              // going down: finger 3 crosses over; going up: thumb passes under
+      f = [Math.min(5, Math.max(1, Math.round(u - p) + 1))];
+      if(!fits) p = u - (f[0] - 1);
+    } else {
+      const span = us[n - 1] - us[0];
+      if(span <= 4.3){
+        if(!fits) p = Math.min(Math.max(prevP, us[n - 1] - 4), us[0]);
+        f = us.map(u => Math.min(5, Math.max(1, Math.round(u - p) + 1)));
+      } else { p = us[0]; f = us.map(u => 1 + Math.round((u - us[0]) / span * 4)); }   // a stretch: thumb and little finger on the outside notes
+      for(let i = 1; i < n; i++) if(f[i] <= f[i - 1]) f[i] = f[i - 1] + 1;
+      for(let i = n - 1; i >= 0; i--){ const mx = 5 - (n - 1 - i); if(f[i] > mx) f[i] = mx; }
+    }
+    return {p, f};
+  }
+
+  /* ================= THE KEYBOARD ================= */
+  let LO = 48, HI = 84, WW = 24;
+  const keyEl = {};
+  const whiteIndex = m => { let w = 0; for(let k = LO; k < m; k++) if(!IS_BLACK[k % 12]) w++; return w; };
+  const keyU = m => IS_BLACK[m % 12] ? whiteIndex(m) : whiteIndex(m) + 0.5;      // key centre in white-key units
+  function buildKeyboard(lo, hi){
+    LO = lo; HI = hi;
+    const kbd = $('kbd'), hands = $('hands');
+    kbd.querySelectorAll('.wk, .bk').forEach(e => e.remove());
+    let whites = 0; for(let m = LO; m <= HI; m++) if(!IS_BLACK[m % 12]) whites++;
+    const avail = $('kbdScroll').clientWidth - 12;
+    WW = Math.max(16, Math.min(38, avail / whites));
+    const BW = WW * 0.62;
+    let w = 0;
+    for(let m = LO; m <= HI; m++){
+      const d = document.createElement('div');
+      if(IS_BLACK[m % 12]){ d.className = 'bk'; d.style.left = (w * WW - BW / 2) + 'px'; d.style.width = BW + 'px'; }
+      else{ d.className = 'wk'; d.style.left = (w * WW) + 'px'; d.style.width = WW + 'px'; w++;
+        if(m % 12 === 0) d.innerHTML = `<span class="nm">C${m / 12 - 1}</span>`; }
+      d.title = tokName(m);
+      kbd.insertBefore(d, hands); keyEl[m] = d;
+    }
+    kbd.style.width = hands.style.width = (w * WW) + 'px';
+  }
+  const tokName = m => ['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'][m % 12] + (Math.floor(m / 12) - 1);
+
+  // The hands are divs: a palm and five fingers each, moved with CSS transitions
+  const HAND = {};
+  function buildHands(){
+    $('hands').innerHTML = '';
+    ['r', 'l'].forEach(h => {
+      const g = document.createElement('div'); g.className = 'hand-' + h;
+      const palm = document.createElement('div'); palm.className = 'palm'; palm.textContent = h === 'r' ? 'R' : 'L';
+      g.appendChild(palm);
+      const fingers = [1, 2, 3, 4, 5].map(f => { const d = document.createElement('div'); d.className = 'finger'; d.innerHTML = `<span class="fn">${f}</span>`; g.appendChild(d); return d; });
+      $('hands').appendChild(g);
+      HAND[h] = {palm, fingers, key: ''};
+    });
+  }
+  // Positions (white-key units) of the five fingers: pressed ones on their keys, the others in between / beside them
+  function fingerXs(h, st){
+    const known = {};
+    st.f.forEach((f, i) => known[f] = st.u[i]);
+    const ks = Object.keys(known).map(Number).sort((a, b) => a - b);
+    const xs = [];
+    for(let f = 1; f <= 5; f++){
+      let x;
+      if(known[f] != null) x = known[f];
+      else if(!ks.length) x = st.p + f - 1;
+      else{
+        const lo = ks.filter(k => k < f).pop(), hi = ks.find(k => k > f);
+        if(lo != null && hi != null) x = known[lo] + (known[hi] - known[lo]) * (f - lo) / (hi - lo);
+        else if(lo != null) x = known[lo] + (f - lo);
+        else x = known[hi] - (hi - f);
+      }
+      xs.push(h === 'l' ? -x : x);                       // the left hand was placed mirrored
+    }
+    return xs;
+  }
+  function drawHand(h, st, down){
+    const H = HAND[h]; if(!st) return;
+    const key = st.id + '|' + down;
+    if(H.key === key) return;
+    H.key = key;
+    const xs = fingerXs(h, st), fw = Math.max(9, WW * 0.68);
+    xs.forEach((x, i) => {
+      const f = i + 1, el = H.fingers[i], k = st.f.indexOf(f), m = k >= 0 ? st.m[k] : null, pressed = down && m != null;
+      const tip = pressed ? (IS_BLACK[m % 12] ? 66 : 112) : (f === 1 ? 140 : 124);
+      el.style.left = (x * WW - fw / 2) + 'px'; el.style.width = fw + 'px';
+      el.style.top = tip + 'px'; el.style.height = (166 - tip) + 'px';
+      el.style.borderRadius = (fw / 2) + 'px ' + (fw / 2) + 'px 6px 6px';
+      el.classList.toggle('down', pressed);
+    });
+    const left = Math.min(...xs) * WW - fw * 0.8, right = Math.max(...xs) * WW + fw * 0.8;
+    H.palm.style.left = left + 'px'; H.palm.style.width = (right - left) + 'px';
+  }
+  $('showNums').addEventListener('change', () => $('hands').classList.toggle('no-nums', !$('showNums').checked));
+
+  /* ================= THE SONG ================= */
+  let lines = [], song = null;
+  function load(r, title, src){
+    stop();
+    lines = r.lines;
+    if(!lines.length){ $('srcInfo').innerHTML = '⚠️ No note lines found (<code>time  notes  beats</code>).'; $('player').hidden = true; return; }
+    splitHands(lines);
+    // per hand: the key positions and fingers of each line, and how long its notes are held (until that hand plays again)
+    const all = lines.flatMap(l => l.notes.map(n => n.midi));
+    let lo = Math.min(...all) - 2, hi = Math.max(...all) + 2;
+    while(lo % 12 !== 0) lo--; while(hi % 12 !== 11) hi++;
+    if(hi - lo < 47){ const extra = 48 - (hi - lo + 1); lo -= Math.ceil(extra / 24) * 12; hi += Math.floor(extra / 24) * 12; }
+    lo = Math.max(21, lo); hi = Math.min(108, hi);
+    $('player').hidden = false;
+    buildKeyboard(lo, hi); buildHands();
+    const prevP = {r: keyU(60), l: -keyU(55)};          // thumbs start on C4 (right) and G3 (left)
+    lines.forEach((L, i) => {
+      ['r', 'l'].forEach(h => {
+        const ms = h === 'r' ? L.rhM : L.lhM;
+        if(!ms.length){ L[h] = null; return; }
+        const us = ms.map(keyU), mu = h === 'r' ? us : us.map(u => -u).reverse(), mm = h === 'r' ? ms : ms.slice().reverse();
+        const pl = place(mu, prevP[h]); prevP[h] = pl.p;
+        L[h] = {id: i, m: mm, u: mu, f: pl.f, p: pl.p};
+      });
+    });
+    const songEnd = lines[lines.length - 1].t + Math.max(0.6, lines[lines.length - 1].beats * 0.5) + 0.4;
+    ['r', 'l'].forEach(h => {
+      lines.forEach((L, i) => {
+        if(!L[h]) return;
+        let j = i + 1; while(j < lines.length && !lines[j][h]) j++;
+        const next = j < lines.length ? lines[j].t : songEnd;
+        L[h].end = Math.min(next, L.t + 4);
+      });
+    });
+    // seconds per beat around each line (from the next line's time and its beats), for the notation
+    song = {title, src, end: songEnd + 0.8};
+    $('songTitle').textContent = title;
+    $('srcInfo').innerHTML = `📄 ${esc(src)}: <strong>${lines.length}</strong> lines, ${fmtT(song.end)}. Right hand: ${lines.filter(l => l.r).length} lines · left hand: ${lines.filter(l => l.l).length} lines.`;
+    renderScore();
+    setupRange();
+    showAt(0, true);
+  }
+  const fmtT = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+
+  /* ================= THE SCORE (staff notation in a scrolling frame) ================= */
+  const STAFF_TOP = 70, STAFF_BOT = 110, NAME_Y = 134, BASS_TOP = 204, BASS_BOT = 244, LH_NAME_Y = 276, INK = '#212529', LH_INK = '#084298';
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, parent, text){
+    const n = document.createElementNS(SVGNS, tag);
+    for(const k in attrs) n.setAttribute(k, attrs[k]);
+    if(text != null) n.textContent = text;
+    if(parent) parent.appendChild(n);
+    return n;
+  }
+  function headOf(n, clef){
+    const step = LETTER[n.L] + 7 * n.oct - (clef === 'B' ? LETTER.G + 14 : LETTER.E + 28);
+    return {y: (clef === 'B' ? BASS_BOT : STAFF_BOT) - step * 5, acc: n.acc, name: n.name};
+  }
+  function accidental(g, x, y, type, col){
+    if(type === '♭') el('path', {d:`M${x - 2},${y - 11} L${x - 2},${y + 4} C${x + 5},${y + 1} ${x + 5},${y - 5} ${x - 2},${y - 2}`, fill:'none', stroke:col, 'stroke-width':1.5}, g);
+    else el('path', {d:`M${x - 2.5},${y - 8} L${x - 2.5},${y + 8} M${x + 2},${y - 9} L${x + 2},${y + 7} M${x - 5},${y - 1} L${x + 5},${y - 4} M${x - 5},${y + 4} L${x + 5},${y + 1}`, fill:'none', stroke:col, 'stroke-width':1.4}, g);
+  }
+  const near = (a, b) => Math.abs(a - b) < 1e-3;
+  let BARS = [], COLS = [];
+  function buildBars(){
+    // beat position of every line: from bar labels ("bar N") when the file has them, else 4-beat bars
+    let pos = 0;
+    const B = lines.map((L, i) => { const p = pos; pos += L.beats; return p; });
+    const labelled = lines.some(L => /\bbar\s*\d+/i.test(L.label));
+    BARS = [];
+    let bar = null;
+    lines.forEach((L, i) => {
+      const lab = (L.label.match(/\bbar\s*(\d+)/i) || [])[1];
+      const newBar = labelled ? (lab != null || !bar) : (!bar || B[i] - bar.b0 >= 4 - 1e-6);
+      if(newBar){ bar = {num: lab != null ? +lab : BARS.length + 1, b0: labelled ? B[i] : (bar ? bar.b0 + 4 * Math.floor((B[i] - bar.b0) / 4) : 0), cols: [], t: L.t}; BARS.push(bar); }
+      const col = {i, p: B[i] - bar.b0, bar};
+      ['r', 'l'].forEach(h => {
+        if(!L[h]) return;
+        let j = i + 1; while(j < lines.length && !lines[j][h]) j++;
+        const endB = Math.min(j < lines.length ? B[j] : pos, bar.b0 + Math.max(4, col.p + L.beats));
+        const qv = Math.max(0.25, Math.round((endB - B[i]) * 12) / 12);
+        const toks = L.notes.filter(n => L[h].m.includes(n.midi));
+        const uniq = []; toks.forEach(n => { if(!uniq.some(u => u.midi === n.midi)) uniq.push(n); });
+        uniq.sort((a, b) => b.midi - a.midi);
+        col[h] = {qv: Math.min(4, qv), heads: uniq.map(n => headOf(n, h === 'r' ? 'T' : 'B'))};
+      });
+      bar.cols.push(col);
+    });
+    BARS.forEach(b => {
+      b.cols.forEach(c => { const q = Math.min(...['r', 'l'].filter(h => c[h]).map(h => c[h].qv)); c.w = 16 + 22 * Math.min(q, 2) + (['r', 'l'].some(h => c[h] && c[h].heads.some(x => x.acc)) ? 8 : 0); });
+      b.w = 14 + b.cols.reduce((s, c) => s + c.w, 0);
+    });
+    COLS = BARS.flatMap(b => b.cols);
+  }
+  function drawStaff(g, evs, clef){
+    const top0 = clef === 'T' ? STAFF_TOP : BASS_TOP, bot0 = clef === 'T' ? STAFF_BOT : BASS_BOT, mid = (top0 + bot0) / 2, col = clef === 'T' ? INK : LH_INK;
+    const groups = []; let last = null;
+    evs.forEach(e => { e.stem = null; e.beamed = false; });
+    evs.filter(e => e.qv <= .5 + 1e-6).forEach(e => {
+      const beat = Math.floor(e.p + 1e-6);
+      if(Math.floor(e.p + e.qv - 1e-6) !== beat){ last = null; return; }
+      if(last && last.beat === beat && last.bar === e.bar) last.ev.push(e); else groups.push(last = {beat, bar: e.bar, ev: [e]});
+    });
+    groups.filter(gr => gr.ev.length > 1).forEach(gr => {
+      const ys = gr.ev.flatMap(e => e.heads.map(h => h.y)), up = mean(ys) >= mid;
+      const by = up ? Math.min(...ys) - 30 : Math.max(...ys) + 30, sx = e => up ? e.x + 5 : e.x - 5, dir = up ? 1 : -1;
+      gr.ev.forEach(e => { e.stem = {up, y: by}; e.beamed = true; });
+      el('line', {x1:sx(gr.ev[0]), x2:sx(gr.ev[gr.ev.length - 1]), y1:by, y2:by, stroke:col, 'stroke-width':4}, g);
+      gr.ev.forEach((e, k) => {
+        if(!near(e.qv, .25)) return;
+        const nx = gr.ev[k + 1], pv = gr.ev[k - 1], y2 = by + 7 * dir;
+        if(nx && near(nx.qv, .25)) el('line', {x1:sx(e), x2:sx(nx), y1:y2, y2, stroke:col, 'stroke-width':4}, g);
+        else if(!(pv && near(pv.qv, .25))) el('line', {x1:sx(e), x2:sx(e) + (nx ? 8 : -8), y1:y2, y2, stroke:col, 'stroke-width':4}, g);
+      });
+    });
+    evs.forEach(e => {
+      const ys = e.heads.map(h => h.y), top = Math.min(...ys), bot = Math.max(...ys);
+      for(let y = top0 - 10; y >= top - 1; y -= 10) el('line', {x1:e.x - 9, x2:e.x + 9, y1:y, y2:y, stroke:INK, 'stroke-width':1}, g);
+      for(let y = bot0 + 10; y <= bot + 1; y += 10) el('line', {x1:e.x - 9, x2:e.x + 9, y1:y, y2:y, stroke:INK, 'stroke-width':1}, g);
+      const hollow = e.qv >= 2 - 1e-6;
+      e.heads.forEach(h => {
+        el('ellipse', {cx:e.x, cy:h.y, rx:5.6, ry:4, transform:`rotate(-20 ${e.x} ${h.y})`, fill: hollow ? '#fff' : col, stroke:col, 'stroke-width': hollow ? 1.6 : 1}, g);
+        if(h.acc) accidental(g, e.x - 15, h.y, h.acc, col);
+        if([.75, 1.5, 3].some(v => near(v, e.qv))) el('circle', {cx:e.x + 10, cy:h.y - (Math.abs(h.y) % 10 === 0 ? 3 : 0), r:1.8, fill:col}, g);
+      });
+      if(e.qv < 4 - 1e-6){
+        const st = e.stem || {up: (top + bot) / 2 >= mid}, flags = e.beamed ? 0 : (near(e.qv, .25) ? 2 : e.qv <= .5 + 1e-6 ? 1 : 0);
+        const y2 = st.y != null ? st.y : (st.up ? top - 30 : bot + 30), sx = st.up ? e.x + 5 : e.x - 5;
+        el('line', {x1:sx, x2:sx, y1: st.up ? bot - 1 : top + 1, y2, stroke:col, 'stroke-width':1.3}, g);
+        for(let f = 0; f < flags; f++) el('path', {d: st.up ? `M${sx},${y2 + f * 7} q8,8 6,18` : `M${sx},${y2 - f * 7} q8,-8 6,-18`, fill:'none', stroke:col, 'stroke-width':2}, g);
+      }
+      e.heads.forEach((h, k) => el('text', {x:e.x, y:(clef === 'T' ? NAME_Y : LH_NAME_Y) + k * 11, 'font-size':10.5, 'font-weight':700, 'text-anchor':'middle', fill:col}, g, h.name));
+    });
+  }
+  let lastWidth = 0;
+  function renderScore(force){
+    const box = $('scoreBox'), avail = Math.floor(box.clientWidth - 4);
+    if(!lines.length || avail < 100 || (!force && avail === lastWidth)) return;
+    lastWidth = avail;
+    buildBars();
+    box.innerHTML = '';
+    const PRE = 52, rows = []; let cur = [], used = PRE;
+    BARS.forEach(b => { if(cur.length && used + b.w > avail){ rows.push(cur); cur = []; used = PRE; } cur.push(b); used += b.w; });
+    if(cur.length) rows.push(cur);
+    rows.forEach(row => {
+      const natural = PRE + row.reduce((s, b) => s + b.w, 0), width = Math.max(natural, Math.min(avail, natural * 1.5));
+      const stack = Math.max(1, ...row.flatMap(b => b.cols.map(c => c.l ? c.l.heads.length : 1)));
+      const H = LH_NAME_Y + 11 * (stack - 1) + 8;
+      const svg = el('svg', {viewBox:`0 0 ${width} ${H}`, role:'img', 'aria-label':`Bars ${row[0].num} to ${row[row.length - 1].num}`}, box);
+      if(width < avail) svg.style.width = (width / avail * 100) + '%';
+      const scale = (width - PRE) / (natural - PRE), g = el('g', {}, svg);
+      [STAFF_TOP, BASS_TOP].forEach(top => { for(let i = 0; i < 5; i++) el('line', {x1:6, x2:width - 1, y1:top + i * 10, y2:top + i * 10, stroke:'#6c757d', 'stroke-width':1}, g); });
+      el('line', {x1:6, x2:6, y1:STAFF_TOP, y2:BASS_BOT, stroke:INK, 'stroke-width':1.2}, g);
+      el('text', {x:9, y:STAFF_BOT + 6, 'font-size':52, fill:INK, style:"font-family:'Segoe UI Symbol','Noto Music',serif"}, g, '𝄞');
+      el('text', {x:10, y:BASS_TOP + 30, 'font-size':36, fill:INK, style:"font-family:'Segoe UI Symbol','Noto Music',serif"}, g, '𝄢');
+      let x = PRE;
+      row.forEach(b => {
+        const W = b.w * scale;
+        el('text', {x:x + 3, y:STAFF_TOP - 22, 'font-size':10, fill:'#6c757d'}, g, `${b.num} · ${fmtT(b.t)}`);
+        let cx = x + 14 * scale;
+        const evT = [], evB = [];
+        b.cols.forEach(c => {
+          c.x = cx + (['r', 'l'].some(h => c[h] && c[h].heads.some(z => z.acc)) ? 8 : 0) + 8;
+          c.hit = el('rect', {class:'col-hit', x:c.x - 11, y:STAFF_TOP - 40, width:22, height:H - STAFF_TOP + 38, rx:4}, g);
+          c.hit.addEventListener('click', () => { const r = span(lines[c.i].t); play(r.a, r.b); });
+          el('title', {}, c.hit, 'Play from here');
+          c.svg = svg;
+          if(c.r) evT.push(Object.assign(c.r, {x:c.x, p:c.p, bar:b}));
+          if(c.l) evB.push(Object.assign(c.l, {x:c.x, p:c.p, bar:b}));
+          cx += c.w * scale;
+        });
+        drawStaff(g, evT, 'T'); drawStaff(g, evB, 'B');
+        el('line', {x1:x + W - .5, x2:x + W - .5, y1:STAFF_TOP, y2:BASS_BOT, stroke:INK, 'stroke-width':1.2}, g);
+        x += W;
+      });
+    });
+    curCol = -1;
+  }
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if(lines.length && !playing){ const lo = LO, hi = HI; buildKeyboard(lo, hi); buildHands(); renderScore(); showAt(posNow, true); } }, 200); });
+
+  /* ================= SOUND: recorded piano samples (SAMPLES/piano.js), soft piano voicing ================= */
+  let ctx = null, bus = null;
+  function ensureCtx(){
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC){ alert('Sorry, your browser does not support Web Audio.'); return false; }
+      ctx = new AC();
+      // soft piano: warm low-pass, treble shelf down, a little room echo, then a gentle compressor
+      bus = ctx.createGain(); bus.gain.value = 0.42;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 4200; lp.Q.value = 0.5;
+      const sh = ctx.createBiquadFilter(); sh.type = 'highshelf'; sh.frequency.value = 2200; sh.gain.value = -5;
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
+      bus.connect(lp); lp.connect(sh); sh.connect(comp); comp.connect(ctx.destination);
+      const sr = ctx.sampleRate, len = Math.round(sr * 1.6), ir = ctx.createBuffer(2, len, sr);
+      for(let ch = 0; ch < 2; ch++){ const x = ir.getChannelData(ch); let seed = 12345 + ch * 777, v = 0;
+        for(let i = 0; i < len; i++){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; v += 0.35 * ((seed / 0x7fffffff) * 2 - 1 - v); x[i] = v * Math.exp(-i / (sr * 0.4)); } }
+      const conv = ctx.createConvolver(); conv.buffer = ir; const wet = ctx.createGain(); wet.gain.value = 0.2;
+      sh.connect(conv); conv.connect(wet); wet.connect(comp);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return true;
+  }
+  async function decode(ab){
+    const oc = new OfflineAudioContext(1, 1, 48000);
+    return await new Promise((res, rej) => { const p = oc.decodeAudioData(ab, res, rej); if(p && p.catch) p.catch(rej); });
+  }
+  const sampleBufs = new Map();
+  (function loadSamples(){
+    const s = document.createElement('script'); s.src = 'SAMPLES/piano.js';
+    s.onload = async () => {
+      const set = window.NT_SAMPLES && window.NT_SAMPLES.piano;
+      if(!set){ $('sndInfo').textContent = '⚠️ Piano samples missing: using a simple synth.'; return; }
+      for(const m of Object.keys(set).map(Number)){
+        try{
+          const bin = atob(set[m]), ab = new Uint8Array(bin.length);
+          for(let i = 0; i < bin.length; i++) ab[i] = bin.charCodeAt(i);
+          const b = await decode(ab.buffer), x = b.getChannelData(0);
+          let peak = 0; for(let i = 0; i < x.length; i++) if(Math.abs(x[i]) > peak) peak = Math.abs(x[i]);
+          let s0 = 0; while(s0 < x.length && Math.abs(x[s0]) < peak * 0.02) s0++;
+          s0 = Math.max(0, s0 - Math.round(b.sampleRate * 0.002));
+          const out = new AudioBuffer({numberOfChannels: 1, length: x.length - s0, sampleRate: b.sampleRate});
+          const y = out.getChannelData(0), gg = peak > 0 ? 0.6 / peak : 1;
+          for(let i = 0; i < y.length; i++) y[i] = x[i + s0] * gg;
+          sampleBufs.set(m, out);
+        }catch(e){}
+      }
+      $('sndInfo').textContent = `🎹 Piano sound ready (${sampleBufs.size} recorded notes).`;
+    };
+    s.onerror = () => { $('sndInfo').textContent = '⚠️ SAMPLES/piano.js not found: using a simple synth.'; };
+    document.head.appendChild(s);
+  })();
+  let voices = [];
+  function note(m, when, dur, lvl){
+    const g = ctx.createGain(); g.connect(bus);
+    const v = lvl * Math.max(0.5, Math.min(1, 1 - (m - 74) * 0.03));    // high notes a little softer
+    g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(v, when + 0.006);
+    g.gain.setTargetAtTime(0, when + dur, 0.3);
+    const buf = sampleBufs.get(m), stopAt = when + dur + 1.6;
+    if(buf){ const s = ctx.createBufferSource(); s.buffer = buf; s.connect(g); s.start(when); s.stop(Math.min(when + buf.duration, stopAt)); voices.push(s); }
+    else{
+      const f = 440 * Math.pow(2, (m - 69) / 12);
+      [['triangle', f, 0.5], ['sine', f * 2, 0.12]].forEach(([type, fr, l]) => { const o = ctx.createOscillator(), og = ctx.createGain(); o.type = type; o.frequency.value = fr; og.gain.value = l; o.connect(og); og.connect(g); o.start(when); o.stop(stopAt); voices.push(o); });
+    }
+  }
+
+  /* ================= PLAY ALL, OR A RANGE OF BARS ================= */
+  // The two boxes work like a switch: exactly one is ticked. Bar numbers must be bars of the chosen song.
+  let barMin = 1, barMax = 1;
+  function setupRange(){
+    const nums = BARS.map(b => b.num);
+    barMin = Math.min(...nums); barMax = Math.max(...nums);
+    $('barStart').value = barMin; $('barEnd').value = barMax;
+    ['barStart', 'barEnd'].forEach(id => { $(id).placeholder = barMin + '–' + barMax; });
+    checkRange();
+  }
+  function setMode(range){
+    $('allBox').checked = !range; $('rangeBox').checked = range;
+    $('barStart').disabled = $('barEnd').disabled = !range;
+    const r = checkRange();
+    if(playing) stop(true);
+    if(lines.length) showAt(r ? r.a : 0, true);          // "Play all" starts from the beginning, a range from its first bar
+  }
+  $('allBox').addEventListener('change', () => setMode(!$('allBox').checked));
+  $('rangeBox').addEventListener('change', () => setMode($('rangeBox').checked));
+  const barIdx = n => BARS.findIndex(b => b.num === n);
+  // {a, b} in seconds for the bars typed, or null (and says why, and disables Play) when they are not valid
+  function checkRange(){
+    const s0 = $('barStart'), e0 = $('barEnd');
+    s0.classList.remove('is-invalid'); e0.classList.remove('is-invalid');
+    if(!$('rangeBox').checked){ $('rangeInfo').textContent = `(bars ${barMin}–${barMax})`; $('playBtn').disabled = playing; return null; }
+    const sv = s0.value.trim(), ev = e0.value.trim(), st = +sv, en = +ev;
+    let why = '';
+    if(!/^\d+$/.test(sv) || barIdx(st) < 0){ why = `Start bar must be a whole number from ${barMin} to ${barMax}.`; s0.classList.add('is-invalid'); }
+    else if(!/^\d+$/.test(ev) || barIdx(en) < 0){ why = `End bar must be a whole number from ${barMin} to ${barMax}.`; e0.classList.add('is-invalid'); }
+    else if(en < st){ why = 'The end bar must not be before the start bar.'; e0.classList.add('is-invalid'); }
+    if(why){ $('rangeInfo').innerHTML = `<span class="text-danger fw-bold">⚠️ ${why}</span>`; $('playBtn').disabled = true; return null; }
+    const i = barIdx(st), j = barIdx(en), last = lines[lines.length - 1];
+    const a = BARS[i].t, b = j + 1 < BARS.length ? BARS[j + 1].t : last.t + Math.max(0.6, last.beats * 0.5);
+    $('rangeInfo').textContent = `bars ${st}–${en}: ${fmtT(a)} to ${fmtT(b)}`;
+    $('playBtn').disabled = playing;
+    return {a, b};
+  }
+  ['barStart', 'barEnd'].forEach(id => $(id).addEventListener('input', () => {
+    const v = $(id).value.replace(/\D+/g, '').slice(0, String(barMax).length);   // digits only
+    if(v !== $(id).value) $(id).value = v;
+    checkRange();
+  }));
+  // What a Play covers: the range (when "Play a range" is ticked), else from where it stopped to the end.
+  // A click at time T in the score or on the time bar plays from T, to the range end when T is inside the range.
+  function span(T){
+    const r = $('rangeBox').checked ? checkRange() : null;
+    if(T == null) return r || {a: posNow >= song.end - 0.5 ? 0 : posNow, b: song.end};
+    if(r && T >= r.a - 1e-3 && T < r.b) return {a: T, b: r.b};
+    return {a: T, b: song.end};
+  }
+
+  /* ================= PLAYING ================= */
+  let playing = false, t0 = 0, from = 0, until = 0, sp = 1, raf = 0, timer = 0, nextLine = 0, posNow = 0, curCol = -1;
+  const songTime = () => playing ? from + (ctx.currentTime - t0) * sp : posNow;
+  function lineAt(T){ let lo = 0, hi = lines.length - 1, r = -1; while(lo <= hi){ const m = (lo + hi) >> 1; if(lines[m].t <= T + 1e-6){ r = m; lo = m + 1; } else hi = m - 1; } return r; }
+  function play(at, end){
+    if(!lines.length || !ensureCtx()) return;
+    if(at == null){
+      if($('rangeBox').checked && !checkRange()) return;
+      const r = span(); at = r.a; end = r.b;
+    }
+    stop(true);
+    sp = +$('speed').value || 1;
+    from = Math.max(0, at); until = end != null ? end : song.end;
+    t0 = ctx.currentTime + 0.12; playing = true;
+    nextLine = lines.findIndex(L => L.t >= from - 1e-3); if(nextLine < 0) nextLine = lines.length;
+    pump(); timer = setInterval(pump, 250);
+    $('playBtn').disabled = true; $('stopBtn').disabled = false;
+    raf = requestAnimationFrame(loop);
+  }
+  function pump(){
+    const horizon = from + (ctx.currentTime - t0 + 1.2) * sp;
+    for(; nextLine < lines.length && lines[nextLine].t < horizon && lines[nextLine].t < until - 1e-3; nextLine++){
+      const L = lines[nextLine], when = t0 + (L.t - from) / sp;
+      if(when < ctx.currentTime - 0.05) continue;
+      const main = L.notes[0].midi, n = new Set(L.notes.map(x => x.midi)).size;
+      ['r', 'l'].forEach(h => { if(L[h]) L[h].m.forEach(m => note(m, when, Math.max(0.08, (Math.min(L[h].end, until) - L.t) / sp), m === main ? 1 : 0.55 / Math.sqrt(Math.max(1, n - 1)))); });
+    }
+    voices = voices.slice(-400);
+  }
+  function stop(keepPos){
+    if(playing) posNow = songTime();
+    playing = false; clearInterval(timer); cancelAnimationFrame(raf);
+    if(ctx){ const t = ctx.currentTime; voices.forEach(v => { try{ v.stop(t + 0.05); }catch(e){} }); }
+    voices = [];
+    $('stopBtn').disabled = true; $('playBtn').disabled = false; if(lines.length) checkRange();
+    if(!keepPos && lines.length) showAt(posNow, true);
+  }
+  function loop(){
+    const T = songTime();
+    if(T > until + 0.35){ const back = until >= song.end - 1e-3 ? 0 : from; stop(true); showAt(back, true); return; }   // a range goes back to its start
+    showAt(T);
+    raf = requestAnimationFrame(loop);
+  }
+  // Everything that depends on the position: keys, hands, the now line, the score highlight and scroll, the time bar
+  function showAt(T, force){
+    posNow = T;
+    const i = lineAt(T);
+    Object.values(keyEl).forEach(k => k.classList.remove('on-r', 'on-l'));
+    const now = [];
+    ['r', 'l'].forEach(h => {
+      let j = i; while(j >= 0 && !lines[j][h]) j--;
+      if(j < 0){ let k = 0; while(k < lines.length && !lines[k][h]) k++; if(k < lines.length) drawHand(h, lines[k][h], false); return; }
+      const st = lines[j][h], down = T >= lines[j].t && T < st.end - 0.05;
+      if(force) HAND[h].key = '';
+      drawHand(h, st, down);
+      if(down){
+        st.m.forEach(m => keyEl[m] && keyEl[m].classList.add('on-' + h));
+        now.push(`<span class="${h}h">${h === 'r' ? 'Right' : 'Left'}:</span> ` + st.m.map((m, k) => `${(lines[j].notes.find(n => n.midi === m) || {name: tokName(m)}).name.replace('#', '♯').replace(/^([A-G])b/, '$1♭')} <small class="text-muted">(${st.f[k]})</small>`).join(' + '));
+      }
+    });
+    $('nowVal').innerHTML = now.length ? now.join(' &nbsp;·&nbsp; ') : '&nbsp;';
+    $('timeVal').textContent = fmtT(T) + ' / ' + fmtT(song.end);
+    $('seekBar').style.width = Math.min(100, T / song.end * 100) + '%';
+    const ci = COLS.findIndex(c => c.i === i);
+    if(ci !== curCol){
+      if(curCol >= 0 && COLS[curCol] && COLS[curCol].hit) COLS[curCol].hit.classList.remove('on');
+      curCol = ci;
+      const c = COLS[ci];
+      if(c && c.hit){
+        c.hit.classList.add('on');
+        const fr = $('scoreFrame'), top = c.svg.getBoundingClientRect().top - fr.getBoundingClientRect().top + fr.scrollTop;
+        if(top < fr.scrollTop + 2 || top + c.svg.getBoundingClientRect().height > fr.scrollTop + fr.clientHeight) fr.scrollTop = Math.max(0, top - 4);
+      }
+      // keep the hands in view when the keyboard is wider than the screen
+      const sc = $('kbdScroll'), cxs = ['r', 'l'].map(h => parseFloat(HAND[h].palm.style.left) || 0);
+      if(sc.scrollWidth > sc.clientWidth + 4){ const mid = (Math.min(...cxs) + Math.max(...cxs)) / 2; sc.scrollLeft = Math.max(0, mid - sc.clientWidth / 2); }
+    }
+  }
+  $('playBtn').addEventListener('click', () => play());
+  $('stopBtn').addEventListener('click', () => stop());
+  $('speed').addEventListener('change', () => { if(playing) play(songTime(), until); });
+  $('seek').addEventListener('click', e => {
+    if(!song) return;
+    const r = $('seek').getBoundingClientRect(), T = (e.clientX - r.left) / r.width * song.end;
+    if(playing){ const s = span(T); play(s.a, s.b); } else showAt(T, true);
+  });
+  document.addEventListener('keydown', e => {
+    if(e.code !== 'Space' || /INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName) || !lines.length) return;
+    e.preventDefault(); playing ? stop() : play();
+  });
+
+  window.__pianoNotes = {load: (text, name) => load(readLines(text.split(/\r?\n/), text), name || 'test', name || 'test'), play, stop, showAt, lines: () => lines, songTime};
+})();
+</script>
+</body>
+</html>

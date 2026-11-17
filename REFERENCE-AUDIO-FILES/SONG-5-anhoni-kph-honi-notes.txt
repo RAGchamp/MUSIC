@@ -8,7 +8,16 @@ overtone readings (A#5, C6, D#6) were dropped.
 13 s to 15.4 s is the repeated Bb3 hit. From about 27 s the band gets busier and many readings drop
 below C4 (F#3, A3, B3): they probably follow the accompaniment more than the tune, so that part is less reliable.
 Octaves are not always certain. Check it against the recording.
-141 notes.
+151 notes (141 measured, plus the 2026-11-15 updates below).
+Update 2026-11-15 (from the Notes Tester report): the tester measures the tuning as -44 cents (check_library.py agrees).
+B3 is not in Bb minor: 9 lines written B3 were heard as A#3 (one as G#4), and several F#3/A3 lines in the busy part
+from 27 s were heard as F3, A#3, F#4 or G#4, so they were changed to the strongest note heard. Lines at 3.88, 12.90,
+20.10 and 25.29 s were moved to their note starts (3.79, 12.79, 20.25, 25.43 s); 36.66 s is now G#4 and the D#4
+after it is at 36.80 s (it swells in with no sharp start, so the tester still flags it TIME?). 10 short notes were
+added: 6.54 F4, 9.00 D#5, 14.04 F3 (on the 0.33 s pulse), 23.27 C5, 26.26 A#4, 28.41 C#5, 32.35 C#5, 32.71 C5,
+33.22 C#5, 36.03 G#4. Not added: 7.69 C5 (an early double attack of the C5 at 7.81), 9.07 D#5 and 36.10 G#4 (repeats
+70 ms apart), 11.30/11.49 s (F-A-C chord tones), 22.77 D#3, 28.32 F3 and 34.12 F3 (bass / accompaniment).
+
 
   time   beats  note
   ------ -----  ----
@@ -18,19 +27,22 @@ Octaves are not always certain. Check it against the recording.
    1.90s     1  C#4
    2.63s     1  C#4
    3.30s     1  F4
-   3.88s   0.5  F4
+   3.79s   0.5  F4
    4.18s     1  F4
    4.84s   0.5  F4
    5.06s   0.5  F4
    5.38s     1  F4
    6.04s   0.5  F4
    6.36s     1  C5
+   6.54s   0.5  F4
+   6.69s   0.5  C4
    7.01s   0.5  A3
    7.45s   0.5  A4
    7.81s   0.5  C5
    8.03s   0.5  D#5
    8.34s   0.5  F#5
    8.81s   0.5  F5
+   9.00s   0.5  D#5
    9.22s   0.5  D#5
    9.31s   0.5  C#5
    9.48s   0.5  C#5
@@ -47,15 +59,16 @@ Octaves are not always certain. Check it against the recording.
   12.34s   0.5  F4
   12.44s   0.5  A4
   12.69s   0.5  F4
-  12.90s   0.5  F4
+  12.79s   0.5  F4
   13.06s   0.5  A#3
   13.41s   0.5  A#3
   13.71s     1  A#3
+  14.04s   0.5  F3
   14.36s   0.5  A#3
   14.70s   0.5  A#3
   15.01s   0.5  A#3
   15.35s   0.5  A#3
-  15.68s     1  B3
+  15.68s     1  A#3
   16.33s   0.5  A3
   16.66s   0.5  A#3
   16.97s   0.5  A3
@@ -68,7 +81,7 @@ Octaves are not always certain. Check it against the recording.
   19.26s   0.5  F5
   19.60s   0.5  A#4
   19.80s   0.5  A#4
-  20.10s   0.5  A#4
+  20.25s   0.5  A#4
   20.56s   0.5  C#5
   20.68s   0.5  C5
   20.90s   0.5  C5
@@ -83,6 +96,7 @@ Octaves are not always certain. Check it against the recording.
   22.86s   0.5  C#5
   22.99s   0.5  C5
   23.17s   0.5  A#4
+  23.27s   0.5  C5
   23.48s   0.5  C5
   23.67s   0.5  C#5
   23.98s   0.5  C#5
@@ -92,21 +106,23 @@ Octaves are not always certain. Check it against the recording.
   24.76s   0.5  G#4
   24.97s   0.5  F#4
   25.13s   0.5  F#4
-  25.29s   0.5  F#4
+  25.43s   0.5  F#4
   25.59s   0.5  D#4
   25.74s   0.5  G#4
   26.10s   0.5  G#4
+  26.26s   0.5  A#4
   26.39s   0.5  G#4
   26.72s   0.5  A#3
   26.95s   0.5  F4
   27.06s   0.5  A#3
   27.23s   0.5  F4
   27.37s   0.5  F#4
-  27.54s   0.5  A3
-  27.69s   0.5  B3
+  27.54s   0.5  F#4
+  27.69s   0.5  G#4
   27.85s   0.5  A#3
   28.02s   0.5  A#4
   28.18s   0.5  F#3
+  28.41s   0.5  C#5
   28.63s   0.5  C#5
   28.84s   0.5  F4
   29.29s   0.5  C#5
@@ -116,40 +132,47 @@ Octaves are not always certain. Check it against the recording.
   30.12s   0.5  A#4
   30.57s   0.5  A#4
   30.75s   0.5  A#3
-  30.90s   0.5  F#3
+  30.90s   0.5  F3
   31.03s   0.5  C#5
   31.21s   0.5  C5
   31.41s   0.5  A#4
-  31.56s   0.5  F#3
+  31.56s   0.5  F3
   31.70s   0.5  G#4
-  31.87s   0.5  B3
+  31.87s   0.5  A#3
   32.04s   0.5  A#3
   32.25s   0.5  D#5
-  32.50s   0.5  B3
+  32.35s   0.5  C#5
+  32.50s   0.5  G#4
+  32.71s   0.5  C5
   32.85s   0.5  F3
-  33.14s   0.5  B3
-  33.32s   0.5  B3
-  33.46s   0.5  F#3
+  33.14s   0.5  A#3
+  33.22s   0.5  C#5
+  33.32s   0.5  A#3
+  33.46s   0.5  A#3
   33.55s   0.5  A#4
   33.78s   0.5  F#5
   33.98s   0.5  F#3
-  34.30s   0.5  F#3
-  34.43s   0.5  A3
-  34.61s   0.5  A3
+  34.30s   0.5  F3
+  34.43s   0.5  A#3
+  34.61s   0.5  A#3
   34.75s   0.5  F3
   34.90s   0.5  A#4
-  35.06s   0.5  B3
+  35.06s   0.5  G#4
   35.25s   0.5  F#4
   35.40s   0.5  F#3
-  35.73s   0.5  A3
+  35.73s   0.5  F#4
   35.88s   0.5  D#4
+  36.03s   0.5  G#4
   36.33s   0.5  G#4
   36.52s   0.5  A#4
-  36.66s   0.5  F#3
-  36.87s   0.5  D#4
-  36.96s   0.5  B3
+  36.66s   0.5  G#4+D#4
+  36.96s   0.5  A#3
   37.06s   0.5  A#3
-  37.15s   0.5  B3
+  37.15s   0.5  A#3
   37.31s   0.5  F3
   37.59s   0.5  A#3
   37.70s   0.5  F4
+
+Second update 2026-11-15: the tester places the D#4's start at 36.66 s, together with the G#4, so the two are now one
+line (36.66 G#4+D#4) and the 36.80 line is gone. Added 6.69 C4 (the run C5 6.36, F4 6.54, C4 6.69, A3 7.01); the
+6.83 C4 is a repeat of it. Still 151 notes.

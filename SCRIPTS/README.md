@@ -17,6 +17,7 @@ pip install numpy scipy        # once
 | `analyze_notes.py` | The whole pipeline. Prints a report like `*-notes.txt` and the lines for `song-library.js`. |
 | `inspect_time.py` | The strongest notes at a few given seconds, with overtone hints, to check a doubtful reading. |
 | `check_library.py` | Checks every timed line in `song-library.js` against its recording and lists the doubtful ones. |
+| `track_melody.py` | Follows ONE lead line (e.g. a flute) through the recording as a smooth path (Viterbi over salience, overtones of lower notes discounted) instead of the strongest note at each onset. Use it when a band is louder than the tune. `--check <song> --trust a-b` scores it against lines known to be right. |
 
 ## Typical session for a new song
 

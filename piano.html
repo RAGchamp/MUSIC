@@ -1,0 +1,2561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Champ Piano</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd; --biz-blue-dark:#084298; --biz-yellow:#ffc107; --biz-red:#dc3545;
+    --biz-green:#198754; --nav-blue:#04264d; --nav-yellow:#ffd60a;
+    --rh:#c2410c; --lh:#1d4ed8;
+  }
+  body{ background:#f7f8fa; margin:0; }
+  .topnav{
+    position:sticky; top:0; z-index:1030; background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{ font-weight:600; font-size:1.05rem; color:var(--nav-yellow); letter-spacing:.15em; word-spacing:.6em; font-style:italic; }
+  @media (max-width:576px){ .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; } }
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center; width:1.9rem; height:1.9rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.95rem; margin-right:.55rem; flex:none;
+  }
+  .step-title{ display:flex; align-items:center; font-weight:700; font-size:1.1rem; margin-bottom:.75rem; }
+  .step-card{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
+  .about-box{ background:#fde2ec; border:2px solid #f5a3c0; border-radius:.6rem; padding:.9rem 1.1rem; }
+  .about-box h2{ font-size:1.05rem; font-weight:700; color:#8a1f4a; margin-bottom:.4rem; }
+  .about-box p{ font-size:.92rem; color:#3b2a31; }
+  .about-box a{ color:#b0185a; font-weight:700; }
+  .try-wrap{ text-align:center; margin:1.6rem 0 1.8rem; }
+  .try-btn{ font-size:1.35rem; font-weight:800; padding:.75rem 2.6rem; border-radius:2rem; background:var(--nav-blue); color:var(--nav-yellow); border:3px solid var(--nav-yellow);
+    box-shadow:0 .3rem .9rem rgba(4,38,77,.35); }
+  .try-btn:hover, .try-btn:focus{ background:#0a3a70; color:var(--nav-yellow); }
+  .try-btn:disabled{ opacity:.85; background:var(--nav-blue); color:var(--nav-yellow); }
+  .song-pick{ display:flex; flex-wrap:wrap; justify-content:center; gap:.8rem; margin-top:1rem; }
+  .song-btn{ min-width:15rem; font-weight:800; font-size:1.05rem; padding:.7rem 1.2rem; border-radius:.8rem; background:#fff; color:var(--nav-blue); border:3px solid var(--nav-blue); }
+  .song-btn small{ display:block; font-weight:600; font-size:.8rem; color:#5a6475; }
+  .song-btn:hover, .song-btn.on{ background:var(--nav-yellow); color:var(--nav-blue); border-color:var(--nav-blue); }
+  .song-btn:disabled{ opacity:.7; }
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+
+  /* Player: keyboard with the two hands, then the score in a scrolling frame */
+  .seek{ height:.6rem; cursor:pointer; }
+  .form-check-input{ border:2px solid var(--nav-blue); }
+  .form-check-input:checked{ background-color:var(--nav-blue); border-color:var(--nav-blue); }
+  .form-check-input:focus{ border-color:var(--nav-blue); box-shadow:0 0 0 .2rem rgba(4,38,77,.25); }
+  .note-file{ border:2px solid var(--nav-blue); }
+  .note-file:focus{ border-color:var(--nav-blue); box-shadow:0 0 0 .2rem rgba(4,38,77,.25); }
+  .note-file::file-selector-button{ background:var(--nav-blue); color:var(--nav-yellow); font-weight:700; }
+  .note-file:hover:not(:disabled):not([readonly])::file-selector-button{ background:#0a3a70; color:var(--nav-yellow); }
+  .range-row{ background:#eef4ff; border:1px solid #c9d3e3; border-radius:.5rem; padding:.45rem .7rem; }
+  .range-row .bar-in{ width:5.2rem; }
+  .now-line{ font-size:.95rem; min-height:1.6rem; }
+  .now-line .rh{ color:var(--rh); font-weight:800; }
+  .now-line .lh{ color:var(--lh); font-weight:800; }
+  .kbd-scroll{ overflow-x:auto; overflow-y:hidden; background:#1f2937; border-radius:.5rem; padding:.45rem .45rem 0; }
+  .kbd{ position:relative; height:212px; user-select:none; -webkit-user-select:none; }
+  .wk, .bk{ position:absolute; top:0; border-radius:0 0 4px 4px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
+  .wk{ height:150px; background:#fff; border:1px solid #9aa3af; z-index:1; }
+  .bk{ height:92px; background:#111827; border:1px solid #000; z-index:2; }
+  .wk .nm{ font-size:.6rem; font-weight:700; color:#6b7280; margin-bottom:3px; }
+  .wk.on-r{ background:#fde68a; } .bk.on-r{ background:#f59e0b; }
+  .wk.on-l{ background:#bfdbfe; } .bk.on-l{ background:#3b82f6; }
+  .hands{ position:absolute; left:0; top:0; height:212px; pointer-events:none; z-index:5; }
+  .palm, .finger{ position:absolute; background:rgba(253, 213, 170, .82); border:2px solid; box-shadow:0 2px 6px rgba(0,0,0,.35); }
+  .palm{ top:152px; height:54px; border-radius:16px 16px 26px 26px; transition:left .16s ease, width .16s ease; display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:1rem; }
+  .finger{ transition:left .13s ease, top .07s ease, height .07s ease, background .07s; display:flex; justify-content:center; align-items:flex-start; }
+  .finger .fn{ font-size:.62rem; font-weight:900; color:#fff; border-radius:50%; width:1.05rem; height:1.05rem; line-height:1.05rem; text-align:center; margin-top:2px; opacity:0; }
+  .finger.down .fn{ opacity:1; }
+  .hand-r .palm, .hand-r .finger{ border-color:var(--rh); } .hand-r .palm{ color:var(--rh); } .hand-r .fn{ background:var(--rh); }
+  .hand-l .palm, .hand-l .finger{ border-color:var(--lh); } .hand-l .palm{ color:var(--lh); } .hand-l .fn{ background:var(--lh); }
+  .finger.down{ background:rgba(232, 160, 110, .95); box-shadow:0 1px 2px rgba(0,0,0,.4); }
+  .hands.no-nums .fn{ display:none; }
+  .score-frame{ height:max(270px, calc(100vh - 470px)); overflow-y:auto; background:#fff; border:2px solid #c9d3e3; border-radius:.6rem; padding:.4rem .4rem 0; scroll-behavior:smooth; }
+  .score svg{ display:block; width:100%; height:auto; margin-bottom:.4rem; }
+  .score svg text{ font-family:'Segoe UI',Roboto,Arial,sans-serif; }
+  .score .col-hit{ fill:transparent; cursor:pointer; }
+  .score .col-hit:hover{ fill:rgba(13,110,253,.08); }
+  .score .col-hit.on{ fill:rgba(255,193,7,.55); }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+
+  <div class="about-box mb-2">
+    <h2>How does the RAG Champ Piano app work?</h2>
+    <p class="mb-0">It plays a song's notes on a real piano sound and shows <strong>two hands</strong> playing them: the right hand (orange) and the left hand
+      (blue) slide along the keys and press them with numbered fingers (1 = thumb … 5 = little finger). Below, the <strong>score</strong> scrolls in step,
+      with the notes being played in yellow. Slow it down or loop a few bars to learn any piece. Try it with <em>Für Elise</em> or the Bollywood song <em>Pehla Nasha</em>.</p>
+  </div>
+
+  <div class="try-wrap">
+    <button type="button" class="btn try-btn" id="tryBtn">▶ Try it</button>
+    <div class="song-pick" id="songPick" hidden>
+      <button type="button" class="btn song-btn" data-song="fur">🎼 Für Elise<small>Beethoven · classical · 2:42</small></button>
+      <button type="button" class="btn song-btn" data-song="pehla">🎬 Bollywood: Pehla Nasha<small>Jo Jeeta Wohi Sikandar · 5:00</small></button>
+    </div>
+    <div class="small text-muted mt-2" id="srcInfo" aria-live="polite"></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card shadow-sm step-card mb-3" id="player" hidden>
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">🎹</span><span id="songTitle">Play</span></div>
+      <div class="range-row d-flex flex-wrap gap-3 align-items-center mb-2">
+        <div class="form-check mb-0">
+          <input class="form-check-input" type="checkbox" id="allBox" checked>
+          <label class="form-check-label fw-bold" for="allBox">Play all notes</label>
+        </div>
+        <div class="form-check mb-0">
+          <input class="form-check-input" type="checkbox" id="rangeBox">
+          <label class="form-check-label fw-bold" for="rangeBox">Play a range of bars</label>
+        </div>
+        <span class="d-inline-flex flex-wrap align-items-center gap-1 small">
+          <label for="barStart">Start bar</label>
+          <input type="text" inputmode="numeric" class="form-control form-control-sm bar-in" id="barStart" disabled aria-describedby="rangeInfo">
+          <label for="barEnd" class="ms-1">End bar</label>
+          <input type="text" inputmode="numeric" class="form-control form-control-sm bar-in" id="barEnd" disabled aria-describedby="rangeInfo">
+          <span class="ms-1 text-muted" id="rangeInfo"></span>
+        </span>
+      </div>
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+        <button type="button" class="btn btn-success fw-bold" id="playBtn">▶ Play</button>
+        <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled>■ Stop</button>
+        <span class="d-inline-flex align-items-center gap-1 small"><label class="fw-bold" for="speed">Speed</label>
+          <select id="speed" class="form-select form-select-sm" style="width:auto">
+            <option value="0.5">50%</option><option value="0.65">65%</option><option value="0.75">75%</option><option value="0.85">85%</option>
+            <option value="1" selected>100%</option><option value="1.15">115%</option></select></span>
+        <div class="form-check form-check-inline small mb-0 ms-md-2">
+          <input class="form-check-input" type="checkbox" id="showNums" checked>
+          <label class="form-check-label" for="showNums">Finger numbers</label>
+        </div>
+        <span class="small text-muted ms-auto" id="sndInfo">⏳ Loading the piano sound…</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="small fw-bold" id="timeVal" style="min-width:7.5rem">0:00 / 0:00</span>
+        <div class="progress seek flex-grow-1" id="seek" role="progressbar" aria-label="Position (click to jump)"><div class="progress-bar bg-warning" id="seekBar" style="width:0%"></div></div>
+      </div>
+      <div class="now-line mb-2" id="nowVal">&nbsp;</div>
+      <div class="kbd-scroll mb-2" id="kbdScroll"><div class="kbd" id="kbd"><div class="hands" id="hands"></div></div></div>
+      <div class="score-frame" id="scoreFrame"><div class="score" id="scoreBox"></div></div>
+      <p class="small text-muted mt-2 mb-0">Click a note column in the score to play from there. <kbd>Space</kbd> plays or stops.
+        The right hand is drawn on the top staff in black, the left hand on the bottom staff in blue; notes in one column are played together.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">RAG Champ Music Practice App · for personal practice · <a href="index.html">🎶 Song Practice</a> · <a href="NOTES-TESTER/Piano-notes.html">🙌 Piano Notes Player (your own notes)</a> · <a href="INFO/HOW-PIANO-NOTES-PLAYER-WORKS.html">How it works</a> · <a href="contactus.html">✉️ Contact Us</a>
+    <div class="mt-1 opacity-75"><em>Für Elise</em>, WoO 59, Ludwig van Beethoven (public domain) · <em>Pehla Nasha</em>: music Jatin–Lalit, piano arrangement by Nakul Jogdeo (MuseScore) · Piano samples: FluidR3_GM SoundFont by Frank Wen (CC BY 3.0), via <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a></div></div>
+</footer>
+
+<!-- The demo's notes, built in so the page also works opened from disk:
+     REFERENCE-AUDIO-FILES/SONG-6-FUL-ELISE-BEETHOVEN.txt and SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt -->
+<script type="text/plain" id="demoFur">
+// Für Elise in A minor, WoO 59 (Ludwig van Beethoven, 1810): solo piano, public domain.
+// Read automatically from S-PAD/fur-elise-beethoven-notes.pdf (a MuseScore 3.6 vector PDF, 3 pages, 103 bars):
+// the notes are music-font characters (SMuFL / Leland) at exact positions, so pitches, rhythm, accidentals, ties,
+// triplets, the 8va passage, clef changes, repeats and 1st/2nd endings were read by code, with no reading by eye.
+// 3/8 time. The score says only 'Poco moto' (no metronome mark), so quarter = 70 (eighth = 140) is used;
+// times start at 0.50 s. Repeats are written out in playing order (127 bars played), about 2:41.
+//
+// Format: song-library.js note lines   'time  notes  beats  label',
+//   notes = right hand (highest first, so the melody is the main note), then the left hand, struck together
+//   beats = quarter-note beats until the next line;  label = bar number (as printed) on each bar's first line
+// Left out: grace notes, pedal marks, dynamics. Held notes are written only where they start.
+//
+// tempo: 70
+
+    '   0.50  E5                         0.25  bar 0',
+    '   0.71  D#5                        0.25',
+    '   0.93  E5                         0.25  bar 1',
+    '   1.14  D#5                        0.25',
+    '   1.36  E5                         0.25',
+    '   1.57  B4                         0.25',
+    '   1.79  D5                         0.25',
+    '   2.00  C5                         0.25',
+    '   2.21  A4+A2                      0.25  bar 2',
+    '   2.43  E3                         0.25',
+    '   2.64  A3                         0.25',
+    '   2.86  C4                         0.25',
+    '   3.07  E4                         0.25',
+    '   3.29  A4                         0.25',
+    '   3.50  B4+E2                      0.25  bar 3',
+    '   3.71  E3                         0.25',
+    '   3.93  G#3                        0.25',
+    '   4.14  E4                         0.25',
+    '   4.36  G#4                        0.25',
+    '   4.57  B4                         0.25',
+    '   4.79  C5+A2                      0.25  bar 4',
+    '   5.00  E3                         0.25',
+    '   5.21  A3                         0.25',
+    '   5.43  E4                         0.25',
+    '   5.64  E5                         0.25',
+    '   5.86  D#5                        0.25',
+    '   6.07  E5                         0.25  bar 5',
+    '   6.29  D#5                        0.25',
+    '   6.50  E5                         0.25',
+    '   6.71  B4                         0.25',
+    '   6.93  D5                         0.25',
+    '   7.14  C5                         0.25',
+    '   7.36  A4+A2                      0.25  bar 6',
+    '   7.57  E3                         0.25',
+    '   7.79  A3                         0.25',
+    '   8.00  C4                         0.25',
+    '   8.21  E4                         0.25',
+    '   8.43  A4                         0.25',
+    '   8.64  B4+E2                      0.25  bar 7',
+    '   8.86  E3                         0.25',
+    '   9.07  G#3                        0.25',
+    '   9.29  D4                         0.25',
+    '   9.50  C5                         0.25',
+    '   9.71  B4                         0.25',
+    '   9.93  A4+A2                      0.25  bar 8 (1st ending)',
+    '  10.14  E3                         0.25',
+    '  10.36  A3                          0.5',
+    '  10.79  E5                         0.25  bar 0 repeat',
+    '  11.00  D#5                        0.25',
+    '  11.21  E5                         0.25  bar 1 repeat',
+    '  11.43  D#5                        0.25',
+    '  11.64  E5                         0.25',
+    '  11.86  B4                         0.25',
+    '  12.07  D5                         0.25',
+    '  12.29  C5                         0.25',
+    '  12.50  A4+A2                      0.25  bar 2 repeat',
+    '  12.71  E3                         0.25',
+    '  12.93  A3                         0.25',
+    '  13.14  C4                         0.25',
+    '  13.36  E4                         0.25',
+    '  13.57  A4                         0.25',
+    '  13.79  B4+E2                      0.25  bar 3 repeat',
+    '  14.00  E3                         0.25',
+    '  14.21  G#3                        0.25',
+    '  14.43  E4                         0.25',
+    '  14.64  G#4                        0.25',
+    '  14.86  B4                         0.25',
+    '  15.07  C5+A2                      0.25  bar 4 repeat',
+    '  15.29  E3                         0.25',
+    '  15.50  A3                         0.25',
+    '  15.71  E4                         0.25',
+    '  15.93  E5                         0.25',
+    '  16.14  D#5                        0.25',
+    '  16.36  E5                         0.25  bar 5 repeat',
+    '  16.57  D#5                        0.25',
+    '  16.79  E5                         0.25',
+    '  17.00  B4                         0.25',
+    '  17.21  D5                         0.25',
+    '  17.43  C5                         0.25',
+    '  17.64  A4+A2                      0.25  bar 6 repeat',
+    '  17.86  E3                         0.25',
+    '  18.07  A3                         0.25',
+    '  18.29  C4                         0.25',
+    '  18.50  E4                         0.25',
+    '  18.71  A4                         0.25',
+    '  18.93  B4+E2                      0.25  bar 7 repeat',
+    '  19.14  E3                         0.25',
+    '  19.36  G#3                        0.25',
+    '  19.57  D4                         0.25',
+    '  19.79  C5                         0.25',
+    '  20.00  B4                         0.25',
+    '  20.21  A4+A2                      0.25  bar 8 (2nd ending)',
+    '  20.43  E3                         0.25',
+    '  20.64  A3                         0.25',
+    '  20.86  B4                         0.25',
+    '  21.07  C5                         0.25',
+    '  21.29  D5                         0.25',
+    '  21.50  E5+C3                      0.25  bar 9',
+    '  21.71  G3                         0.25',
+    '  21.93  C4                         0.25',
+    '  22.14  G4                         0.25',
+    '  22.36  F5                         0.25',
+    '  22.57  E5                         0.25',
+    '  22.79  D5+G2                      0.25  bar 10',
+    '  23.00  G3                         0.25',
+    '  23.21  B3                         0.25',
+    '  23.43  F4                         0.25',
+    '  23.64  E5                         0.25',
+    '  23.86  D5                         0.25',
+    '  24.07  C5+A2                      0.25  bar 11',
+    '  24.29  E3                         0.25',
+    '  24.50  A3                         0.25',
+    '  24.71  E4                         0.25',
+    '  24.93  D5                         0.25',
+    '  25.14  C5                         0.25',
+    '  25.36  B4+E2                      0.25  bar 12',
+    '  25.57  E3                         0.25',
+    '  25.79  E4                         0.25',
+    '  26.00  E4                         0.25',
+    '  26.21  E5                         0.25',
+    '  26.43  E4                         0.25',
+    '  26.64  E5                         0.25  bar 13',
+    '  26.86  E5                         0.25',
+    '  27.07  E6                         0.25',
+    '  27.29  D#5                        0.25',
+    '  27.50  E5                         0.25',
+    '  27.71  D#5                        0.25',
+    '  27.93  E5                         0.25  bar 14',
+    '  28.14  D#5                        0.25',
+    '  28.36  E5                         0.25',
+    '  28.57  D#5                        0.25',
+    '  28.79  E5                         0.25',
+    '  29.00  D#5                        0.25',
+    '  29.21  E5                         0.25  bar 15',
+    '  29.43  D#5                        0.25',
+    '  29.64  E5                         0.25',
+    '  29.86  B4                         0.25',
+    '  30.07  D5                         0.25',
+    '  30.29  C5                         0.25',
+    '  30.50  A4+A2                      0.25  bar 16',
+    '  30.71  E3                         0.25',
+    '  30.93  A3                         0.25',
+    '  31.14  C4                         0.25',
+    '  31.36  E4                         0.25',
+    '  31.57  A4                         0.25',
+    '  31.79  B4+E2                      0.25  bar 17',
+    '  32.00  E3                         0.25',
+    '  32.21  G#3                        0.25',
+    '  32.43  E4                         0.25',
+    '  32.64  G#4                        0.25',
+    '  32.86  B4                         0.25',
+    '  33.07  C5+A2                      0.25  bar 18',
+    '  33.29  E3                         0.25',
+    '  33.50  A3                         0.25',
+    '  33.71  E4                         0.25',
+    '  33.93  E5                         0.25',
+    '  34.14  D#5                        0.25',
+    '  34.36  E5                         0.25  bar 19',
+    '  34.57  D#5                        0.25',
+    '  34.79  E5                         0.25',
+    '  35.00  B4                         0.25',
+    '  35.21  D5                         0.25',
+    '  35.43  C5                         0.25',
+    '  35.64  A4+A2                      0.25  bar 20',
+    '  35.86  E3                         0.25',
+    '  36.07  A3                         0.25',
+    '  36.29  C4                         0.25',
+    '  36.50  E4                         0.25',
+    '  36.71  A4                         0.25',
+    '  36.93  B4+E2                      0.25  bar 21',
+    '  37.14  E3                         0.25',
+    '  37.36  G#3                        0.25',
+    '  37.57  D4                         0.25',
+    '  37.79  C5                         0.25',
+    '  38.00  B4                         0.25',
+    '  38.21  A4+A2                      0.25  bar 22 (1st ending)',
+    '  38.43  E3                         0.25',
+    '  38.64  A3                         0.25',
+    '  38.86  B4                         0.25',
+    '  39.07  C5                         0.25',
+    '  39.29  D5                         0.25',
+    '  39.50  E5+C3                      0.25  bar 9 repeat',
+    '  39.71  G3                         0.25',
+    '  39.93  C4                         0.25',
+    '  40.14  G4                         0.25',
+    '  40.36  F5                         0.25',
+    '  40.57  E5                         0.25',
+    '  40.79  D5+G2                      0.25  bar 10 repeat',
+    '  41.00  G3                         0.25',
+    '  41.21  B3                         0.25',
+    '  41.43  F4                         0.25',
+    '  41.64  E5                         0.25',
+    '  41.86  D5                         0.25',
+    '  42.07  C5+A2                      0.25  bar 11 repeat',
+    '  42.29  E3                         0.25',
+    '  42.50  A3                         0.25',
+    '  42.71  E4                         0.25',
+    '  42.93  D5                         0.25',
+    '  43.14  C5                         0.25',
+    '  43.36  B4+E2                      0.25  bar 12 repeat',
+    '  43.57  E3                         0.25',
+    '  43.79  E4                         0.25',
+    '  44.00  E4                         0.25',
+    '  44.21  E5                         0.25',
+    '  44.43  E4                         0.25',
+    '  44.64  E5                         0.25  bar 13 repeat',
+    '  44.86  E5                         0.25',
+    '  45.07  E6                         0.25',
+    '  45.29  D#5                        0.25',
+    '  45.50  E5                         0.25',
+    '  45.71  D#5                        0.25',
+    '  45.93  E5                         0.25  bar 14 repeat',
+    '  46.14  D#5                        0.25',
+    '  46.36  E5                         0.25',
+    '  46.57  D#5                        0.25',
+    '  46.79  E5                         0.25',
+    '  47.00  D#5                        0.25',
+    '  47.21  E5                         0.25  bar 15 repeat',
+    '  47.43  D#5                        0.25',
+    '  47.64  E5                         0.25',
+    '  47.86  B4                         0.25',
+    '  48.07  D5                         0.25',
+    '  48.29  C5                         0.25',
+    '  48.50  A4+A2                      0.25  bar 16 repeat',
+    '  48.71  E3                         0.25',
+    '  48.93  A3                         0.25',
+    '  49.14  C4                         0.25',
+    '  49.36  E4                         0.25',
+    '  49.57  A4                         0.25',
+    '  49.79  B4+E2                      0.25  bar 17 repeat',
+    '  50.00  E3                         0.25',
+    '  50.21  G#3                        0.25',
+    '  50.43  E4                         0.25',
+    '  50.64  G#4                        0.25',
+    '  50.86  B4                         0.25',
+    '  51.07  C5+A2                      0.25  bar 18 repeat',
+    '  51.29  E3                         0.25',
+    '  51.50  A3                         0.25',
+    '  51.71  E4                         0.25',
+    '  51.93  E5                         0.25',
+    '  52.14  D#5                        0.25',
+    '  52.36  E5                         0.25  bar 19 repeat',
+    '  52.57  D#5                        0.25',
+    '  52.79  E5                         0.25',
+    '  53.00  B4                         0.25',
+    '  53.21  D5                         0.25',
+    '  53.43  C5                         0.25',
+    '  53.64  A4+A2                      0.25  bar 20 repeat',
+    '  53.86  E3                         0.25',
+    '  54.07  A3                         0.25',
+    '  54.29  C4                         0.25',
+    '  54.50  E4                         0.25',
+    '  54.71  A4                         0.25',
+    '  54.93  B4+E2                      0.25  bar 21 repeat',
+    '  55.14  E3                         0.25',
+    '  55.36  G#3                        0.25',
+    '  55.57  D4                         0.25',
+    '  55.79  C5                         0.25',
+    '  56.00  B4                         0.25',
+    '  56.21  A4+A2                      0.25  bar 22 (2nd ending)',
+    '  56.43  E3                         0.25',
+    '  56.64  A3                         0.25',
+    '  56.86  C5+E4+C4+Bb3               0.25',
+    '  57.07  C5+F4+C4+A3                0.25',
+    '  57.29  C5+G4+E4+C4+Bb3+G3         0.25',
+    '  57.50  C5+F3                      0.25  bar 23',
+    '  57.71  A3                         0.25',
+    '  57.93  C4                         0.25',
+    '  58.14  A3                         0.25',
+    '  58.36  F5+C4                      0.25',
+    '  58.57  A3                        0.125',
+    '  58.68  E5                        0.125',
+    '  58.79  E5+F3                      0.25  bar 24',
+    '  59.00  Bb3                        0.25',
+    '  59.21  D5+D4                      0.25',
+    '  59.43  Bb3                        0.25',
+    '  59.64  Bb5+D4                     0.25',
+    '  59.86  Bb3                       0.125',
+    '  59.96  A5                        0.125',
+    '  60.07  A5+F3                      0.25  bar 25',
+    '  60.29  G5+E4                      0.25',
+    '  60.50  F5+Bb3+G3+F3               0.25',
+    '  60.71  E5+E4                      0.25',
+    '  60.93  D5+Bb3+G3+F3               0.25',
+    '  61.14  C5+E4                      0.25',
+    '  61.36  Bb4+F3                     0.25  bar 26',
+    '  61.57  A3                         0.25',
+    '  61.79  A4+C4                      0.25',
+    '  62.00  A3                         0.25',
+    '  62.21  A4+C4                     0.125',
+    '  62.32  G4                        0.125',
+    '  62.43  A4+A3                     0.125',
+    '  62.54  Bb4                       0.125',
+    '  62.64  C5+F3                      0.25  bar 27',
+    '  62.86  A3                         0.25',
+    '  63.07  C4                         0.25',
+    '  63.29  A3                         0.25',
+    '  63.50  D5+C4                      0.25',
+    '  63.71  D#5+A3                     0.25',
+    '  63.93  E5+E3                      0.25  bar 28',
+    '  64.14  A3                         0.25',
+    '  64.36  C4                         0.25',
+    '  64.57  E5+A3                      0.25',
+    '  64.79  F5+D4+D3                   0.25',
+    '  65.00  A4+F3                      0.25',
+    '  65.21  C5+G3                      0.25  bar 29',
+    '  65.43  E4                         0.25',
+    '  65.64  G3                         0.25',
+    '  65.86  F4                         0.25',
+    '  66.07  D5+G3                      0.25',
+    '  66.29  F4                        0.125',
+    '  66.39  B4                        0.125',
+    '  66.50  C5+E4+C4                  0.125  bar 30',
+    '  66.61  G5                        0.125',
+    '  66.71  G4                        0.125',
+    '  66.82  G5                        0.125',
+    '  66.93  A4                        0.125',
+    '  67.04  G5                        0.125',
+    '  67.14  B4+G4+F4                  0.125',
+    '  67.25  G5                        0.125',
+    '  67.36  C5+G4+E4                  0.125',
+    '  67.46  G5                        0.125',
+    '  67.57  D5+G4+F4+D4               0.125',
+    '  67.68  G5                        0.125',
+    '  67.79  E5+G4+E4+C4               0.125  bar 31',
+    '  67.89  G5                        0.125',
+    '  68.00  C6                        0.125',
+    '  68.11  B5                        0.125',
+    '  68.21  A5+A3+F3                  0.125',
+    '  68.32  G5                        0.125',
+    '  68.43  F5                        0.125',
+    '  68.54  E5                        0.125',
+    '  68.64  D5+B3+G3                  0.125',
+    '  68.75  G5                        0.125',
+    '  68.86  F5                        0.125',
+    '  68.96  D5                        0.125',
+    '  69.07  C5+C4                     0.125  bar 32',
+    '  69.18  G5                        0.125',
+    '  69.29  G4                        0.125',
+    '  69.39  G5                        0.125',
+    '  69.50  A4                        0.125',
+    '  69.61  G5                        0.125',
+    '  69.71  B4+G4+F4                  0.125',
+    '  69.82  G5                        0.125',
+    '  69.93  C5+G4+E4                  0.125',
+    '  70.04  G5                        0.125',
+    '  70.14  D5+G4+F4+D4               0.125',
+    '  70.25  G5                        0.125',
+    '  70.36  E5+E4+C4                  0.125  bar 33',
+    '  70.46  G5                        0.125',
+    '  70.57  C6                        0.125',
+    '  70.68  B5                        0.125',
+    '  70.79  A5+A3+F3                  0.125',
+    '  70.89  G5                        0.125',
+    '  71.00  F5                        0.125',
+    '  71.11  E5                        0.125',
+    '  71.21  D5+B3+G3                  0.125',
+    '  71.32  G5                        0.125',
+    '  71.43  F5                        0.125',
+    '  71.54  D5                        0.125',
+    '  71.64  E5+B3+G#3                 0.125  bar 34',
+    '  71.75  F5                        0.125',
+    '  71.86  E5                        0.125',
+    '  71.96  D#5                       0.125',
+    '  72.07  E5                        0.125',
+    '  72.18  B4                        0.125',
+    '  72.29  E5                        0.125',
+    '  72.39  D#5                       0.125',
+    '  72.50  E5                        0.125',
+    '  72.61  B4                        0.125',
+    '  72.71  E5                        0.125',
+    '  72.82  D#5                       0.125',
+    '  72.93  E5                         0.75  bar 35',
+    '  73.57  B4                         0.25',
+    '  73.79  E5                         0.25',
+    '  74.00  D#5                        0.25',
+    '  74.21  E5                         0.75  bar 36',
+    '  74.86  B4                         0.25',
+    '  75.07  E5                         0.25',
+    '  75.29  D#5                        0.25',
+    '  75.50  E5                         0.25  bar 37',
+    '  75.71  D#5                        0.25',
+    '  75.93  E5                         1.25',
+    '  77.00  D#5                        0.25  bar 38',
+    '  77.21  E5                         0.25',
+    '  77.43  B4                         0.25',
+    '  77.64  D5                         0.25',
+    '  77.86  C5                         0.25',
+    '  78.07  A4+A2                      0.25  bar 39',
+    '  78.29  E3                         0.25',
+    '  78.50  A3                         0.25',
+    '  78.71  C4                         0.25',
+    '  78.93  E4                         0.25',
+    '  79.14  A4                         0.25',
+    '  79.36  B4+E2                      0.25  bar 40',
+    '  79.57  E3                         0.25',
+    '  79.79  G#3                        0.25',
+    '  80.00  E4                         0.25',
+    '  80.21  G#4                        0.25',
+    '  80.43  B4                         0.25',
+    '  80.64  C5+A2                      0.25  bar 41',
+    '  80.86  E3                         0.25',
+    '  81.07  A3                         0.25',
+    '  81.29  E4                         0.25',
+    '  81.50  E5                         0.25',
+    '  81.71  D#5                        0.25',
+    '  81.93  E5                         0.25  bar 42',
+    '  82.14  D#5                        0.25',
+    '  82.36  E5                         0.25',
+    '  82.57  B4                         0.25',
+    '  82.79  D5                         0.25',
+    '  83.00  C5                         0.25',
+    '  83.21  A4+A2                      0.25  bar 43',
+    '  83.43  E3                         0.25',
+    '  83.64  A3                         0.25',
+    '  83.86  C4                         0.25',
+    '  84.07  E4                         0.25',
+    '  84.29  A4                         0.25',
+    '  84.50  B4+E2                      0.25  bar 44',
+    '  84.71  E3                         0.25',
+    '  84.93  G#3                        0.25',
+    '  85.14  D4                         0.25',
+    '  85.36  C5                         0.25',
+    '  85.57  B4                         0.25',
+    '  85.79  A4+A2                      0.25  bar 45',
+    '  86.00  E3                         0.25',
+    '  86.21  A3                         0.25',
+    '  86.43  B4                         0.25',
+    '  86.64  C5                         0.25',
+    '  86.86  D5                         0.25',
+    '  87.07  E5+C3                      0.25  bar 46',
+    '  87.29  G3                         0.25',
+    '  87.50  C4                         0.25',
+    '  87.71  G4                         0.25',
+    '  87.93  F5                         0.25',
+    '  88.14  E5                         0.25',
+    '  88.36  D5+G2                      0.25  bar 47',
+    '  88.57  G3                         0.25',
+    '  88.79  B3                         0.25',
+    '  89.00  F4                         0.25',
+    '  89.21  E5                         0.25',
+    '  89.43  D5                         0.25',
+    '  89.64  C5+A2                      0.25  bar 48',
+    '  89.86  E3                         0.25',
+    '  90.07  A3                         0.25',
+    '  90.29  E4                         0.25',
+    '  90.50  D5                         0.25',
+    '  90.71  C5                         0.25',
+    '  90.93  B4+E2                      0.25  bar 49',
+    '  91.14  E3                         0.25',
+    '  91.36  A3                         0.25',
+    '  91.57  E4                         0.25',
+    '  91.79  E5                         0.25',
+    '  92.00  E4                         0.25',
+    '  92.21  E5                         0.25  bar 50',
+    '  92.43  E5                         0.25',
+    '  92.64  E6                         0.25',
+    '  92.86  D#5                        0.25',
+    '  93.07  E5                         0.25',
+    '  93.29  D#5                        0.25',
+    '  93.50  E5                         0.25  bar 51',
+    '  93.71  D#5                        0.25',
+    '  93.93  E5                         0.25',
+    '  94.14  D#5                        0.25',
+    '  94.36  E5                         0.25',
+    '  94.57  D#5                        0.25',
+    '  94.79  E5                         0.25  bar 52',
+    '  95.00  D#5                        0.25',
+    '  95.21  E5                         0.25',
+    '  95.43  B4                         0.25',
+    '  95.64  D5                         0.25',
+    '  95.86  C5                         0.25',
+    '  96.07  A4+A2                      0.25  bar 53',
+    '  96.29  E3                         0.25',
+    '  96.50  A3                         0.25',
+    '  96.71  C4                         0.25',
+    '  96.93  E4                         0.25',
+    '  97.14  A4                         0.25',
+    '  97.36  B4+E2                      0.25  bar 54',
+    '  97.57  E3                         0.25',
+    '  97.79  G#3                        0.25',
+    '  98.00  E4                         0.25',
+    '  98.21  G#4                        0.25',
+    '  98.43  B4                         0.25',
+    '  98.64  C5+A2                      0.25  bar 55',
+    '  98.86  E3                         0.25',
+    '  99.07  A3                         0.25',
+    '  99.29  E4                         0.25',
+    '  99.50  E5                         0.25',
+    '  99.71  D#5                        0.25',
+    '  99.93  E5                         0.25  bar 56',
+    ' 100.14  D#5                        0.25',
+    ' 100.36  E5                         0.25',
+    ' 100.57  B4                         0.25',
+    ' 100.79  D5                         0.25',
+    ' 101.00  C5                         0.25',
+    ' 101.21  A4+A2                      0.25  bar 57',
+    ' 101.43  E3                         0.25',
+    ' 101.64  A3                         0.25',
+    ' 101.86  C4                         0.25',
+    ' 102.07  E4                         0.25',
+    ' 102.29  A4                         0.25',
+    ' 102.50  B4+E2                      0.25  bar 58',
+    ' 102.71  E3                         0.25',
+    ' 102.93  G#3                        0.25',
+    ' 103.14  D4                         0.25',
+    ' 103.36  C5                         0.25',
+    ' 103.57  B4                         0.25',
+    ' 103.79  A4+A2                      0.25  bar 59',
+    ' 104.00  A2                         0.25',
+    ' 104.21  A2                         0.25',
+    ' 104.43  A2                         0.25',
+    ' 104.64  A2                         0.25',
+    ' 104.86  A2                         0.25',
+    ' 105.07  C#5+Bb4+G4+E4+A2           0.25  bar 60',
+    ' 105.29  A2                         0.25',
+    ' 105.50  A2                         0.25',
+    ' 105.71  A2                         0.25',
+    ' 105.93  A2                         0.25',
+    ' 106.14  A2                         0.25',
+    ' 106.36  D5+A4+F4+A2                0.25  bar 61',
+    ' 106.57  A2                         0.25',
+    ' 106.79  A2                         0.25',
+    ' 107.00  A2                         0.25',
+    ' 107.21  E5+C#5+A2                  0.25',
+    ' 107.43  F5+D5+A2                   0.25',
+    ' 107.64  F5+D5+G#4+A2               0.25  bar 62',
+    ' 107.86  A2                         0.25',
+    ' 108.07  A2                         0.25',
+    ' 108.29  A2                         0.25',
+    ' 108.50  F5+D5+G#4+A2               0.25',
+    ' 108.71  A2                         0.25',
+    ' 108.93  E5+C5+A4+A2                0.25  bar 63',
+    ' 109.14  A2                         0.25',
+    ' 109.36  A2                         0.25',
+    ' 109.57  A2                         0.25',
+    ' 109.79  A2                         0.25',
+    ' 110.00  A2                         0.25',
+    ' 110.21  D5+F4+A2+D2                0.25  bar 64',
+    ' 110.43  A2+D2                      0.25',
+    ' 110.64  A2+D2                      0.25',
+    ' 110.86  A2+D2                      0.25',
+    ' 111.07  C5+E4+A2+D2                0.25',
+    ' 111.29  B4+D4+A2+D2                0.25',
+    ' 111.50  A4+F#4+C4+A2+D#2           0.25  bar 65',
+    ' 111.71  A2+D#2                     0.25',
+    ' 111.93  A2+D#2                     0.25',
+    ' 112.14  A2+D#2                     0.25',
+    ' 112.36  A4+C4+A2+D#2               0.25',
+    ' 112.57  A2+D#2                     0.25',
+    ' 112.79  A4+C4+A2+E2                0.25  bar 66',
+    ' 113.00  A2+E2                      0.25',
+    ' 113.21  C5+E4+A2+E2                0.25',
+    ' 113.43  A2+E2                      0.25',
+    ' 113.64  B4+D4+G#2+E2               0.25',
+    ' 113.86  G#2+E2                     0.25',
+    ' 114.07  A4+C4+A2+A1                0.25  bar 67',
+    ' 114.29  A2                         0.25',
+    ' 114.50  A2                         0.25',
+    ' 114.71  A2                         0.25',
+    ' 114.93  A2                         0.25',
+    ' 115.14  A2                         0.25',
+    ' 115.36  C#5+Bb4+G4+E4+A2           0.25  bar 68',
+    ' 115.57  A2                         0.25',
+    ' 115.79  A2                         0.25',
+    ' 116.00  A2                         0.25',
+    ' 116.21  A2                         0.25',
+    ' 116.43  A2                         0.25',
+    ' 116.64  D5+A4+F4+A2                0.25  bar 69',
+    ' 116.86  A2                         0.25',
+    ' 117.07  A2                         0.25',
+    ' 117.29  A2                         0.25',
+    ' 117.50  E5+C#5+A2                  0.25',
+    ' 117.71  F5+D5+A2                   0.25',
+    ' 117.93  F5+D5+A2                   0.25  bar 70',
+    ' 118.14  A2                         0.25',
+    ' 118.36  A2                         0.25',
+    ' 118.57  A2                         0.25',
+    ' 118.79  F5+D5+A2                   0.25',
+    ' 119.00  A2                         0.25',
+    ' 119.21  F5+D5+Bb2                  0.25  bar 71',
+    ' 119.43  Bb2                        0.25',
+    ' 119.64  Bb2                        0.25',
+    ' 119.86  Bb2                        0.25',
+    ' 120.07  Bb2                        0.25',
+    ' 120.29  Bb2                        0.25',
+    ' 120.50  Eb5+G4+Bb2                 0.25  bar 72',
+    ' 120.71  Bb2                        0.25',
+    ' 120.93  Bb2                        0.25',
+    ' 121.14  Bb2                        0.25',
+    ' 121.36  D5+F4+Bb2                  0.25',
+    ' 121.57  C5+Eb4+Bb2                 0.25',
+    ' 121.79  Bb4+F4+D4+Bb2              0.25  bar 73',
+    ' 122.00  Bb2                        0.25',
+    ' 122.21  Bb2                        0.25',
+    ' 122.43  Bb2                        0.25',
+    ' 122.64  A4+F4+D4+Bb2               0.25',
+    ' 122.86  Bb2                        0.25',
+    ' 123.07  G#4+F4+D4+B2               0.25  bar 74',
+    ' 123.29  B2                         0.25',
+    ' 123.50  B2                         0.25',
+    ' 123.71  B2                         0.25',
+    ' 123.93  G#4+F4+D4+B2               0.25',
+    ' 124.14  B2                         0.25',
+    ' 124.36  A4+E4+C4+C3                 1.5  bar 75',
+    ' 125.64  B4+E4+G#3+E3                1.5  bar 76',
+    ' 126.93  A3+A1                     0.167  bar 77',
+    ' 127.07  C4                        0.167',
+    ' 127.21  E4                        0.167',
+    ' 127.36  A4                        0.167',
+    ' 127.50  C5                        0.167',
+    ' 127.64  E5                        0.167',
+    ' 127.79  D5+E4+C4+A3               0.167',
+    ' 127.93  C5                        0.167',
+    ' 128.07  B4                        0.167',
+    ' 128.21  A4+E4+C4+A3               0.167  bar 78',
+    ' 128.36  C5                        0.167',
+    ' 128.50  E5                        0.167',
+    ' 128.64  A5                        0.167',
+    ' 128.79  C6                        0.167',
+    ' 128.93  E6                        0.167',
+    ' 129.07  D6+E4+C4+A3               0.167',
+    ' 129.21  C6                        0.167',
+    ' 129.36  B5                        0.167',
+    ' 129.50  A5+E4+C4+A3               0.167  bar 79',
+    ' 129.64  C6                        0.167',
+    ' 129.79  E6                        0.167',
+    ' 129.93  A6                        0.167',
+    ' 130.07  C7                        0.167',
+    ' 130.21  E7                        0.167',
+    ' 130.36  D7+E4+C4+A3               0.167',
+    ' 130.50  C7                        0.167',
+    ' 130.64  B6                        0.167',
+    ' 130.79  Bb6+E4+C4+A3              0.167  bar 80',
+    ' 130.93  A6                        0.167',
+    ' 131.07  G#6                       0.167',
+    ' 131.21  G6                        0.167',
+    ' 131.36  F#6                       0.167',
+    ' 131.50  F6                        0.167',
+    ' 131.64  E6                        0.167',
+    ' 131.79  D#6                       0.167',
+    ' 131.93  D6                        0.167',
+    ' 132.07  C#6                       0.167  bar 81',
+    ' 132.21  C6                        0.167',
+    ' 132.36  B5                        0.167',
+    ' 132.50  Bb5                       0.167',
+    ' 132.64  A5                        0.167',
+    ' 132.79  G#5                       0.167',
+    ' 132.93  G5                        0.167',
+    ' 133.07  F#5                       0.167',
+    ' 133.21  F5                        0.167',
+    ' 133.36  E5                         0.25  bar 82',
+    ' 133.57  D#5                        0.25',
+    ' 133.79  E5                         0.25',
+    ' 134.00  B4                         0.25',
+    ' 134.21  D5                         0.25',
+    ' 134.43  C5                         0.25',
+    ' 134.64  A4+A2                      0.25  bar 83',
+    ' 134.86  E3                         0.25',
+    ' 135.07  A3                         0.25',
+    ' 135.29  C4                         0.25',
+    ' 135.50  E4                         0.25',
+    ' 135.71  A4                         0.25',
+    ' 135.93  B4+E2                      0.25  bar 84',
+    ' 136.14  E3                         0.25',
+    ' 136.36  G#3                        0.25',
+    ' 136.57  E4                         0.25',
+    ' 136.79  G#4                        0.25',
+    ' 137.00  B4                         0.25',
+    ' 137.21  C5+A2                      0.25  bar 85',
+    ' 137.43  E3                         0.25',
+    ' 137.64  A3                         0.25',
+    ' 137.86  E4                         0.25',
+    ' 138.07  E5                         0.25',
+    ' 138.29  D#5                        0.25',
+    ' 138.50  E5                         0.25  bar 86',
+    ' 138.71  D#5                        0.25',
+    ' 138.93  E5                         0.25',
+    ' 139.14  B4                         0.25',
+    ' 139.36  D5                         0.25',
+    ' 139.57  C5                         0.25',
+    ' 139.79  A4+A2                      0.25  bar 87',
+    ' 140.00  E3                         0.25',
+    ' 140.21  A3                         0.25',
+    ' 140.43  C4                         0.25',
+    ' 140.64  E4                         0.25',
+    ' 140.86  A4                         0.25',
+    ' 141.07  B4+E2                      0.25  bar 88',
+    ' 141.29  E3                         0.25',
+    ' 141.50  G#3                        0.25',
+    ' 141.71  D4                         0.25',
+    ' 141.93  C5                         0.25',
+    ' 142.14  B4                         0.25',
+    ' 142.36  A4+A2                      0.25  bar 89',
+    ' 142.57  E3                         0.25',
+    ' 142.79  A3                         0.25',
+    ' 143.00  B4                         0.25',
+    ' 143.21  C5                         0.25',
+    ' 143.43  D5                         0.25',
+    ' 143.64  E5+C3                      0.25  bar 90',
+    ' 143.86  G3                         0.25',
+    ' 144.07  C4                         0.25',
+    ' 144.29  G4                         0.25',
+    ' 144.50  F5                         0.25',
+    ' 144.71  E5                         0.25',
+    ' 144.93  D5+G2                      0.25  bar 91',
+    ' 145.14  G3                         0.25',
+    ' 145.36  B3                         0.25',
+    ' 145.57  F4                         0.25',
+    ' 145.79  E5                         0.25',
+    ' 146.00  D5                         0.25',
+    ' 146.21  C5+A2                      0.25  bar 92',
+    ' 146.43  E3                         0.25',
+    ' 146.64  A3                         0.25',
+    ' 146.86  E4                         0.25',
+    ' 147.07  D5                         0.25',
+    ' 147.29  C5                         0.25',
+    ' 147.50  B4+E2                      0.25  bar 93',
+    ' 147.71  E3                         0.25',
+    ' 147.93  E4                         0.25',
+    ' 148.14  E4                         0.25',
+    ' 148.36  E5                         0.25',
+    ' 148.57  E4                         0.25',
+    ' 148.79  E5                         0.25  bar 94',
+    ' 149.00  E5                         0.25',
+    ' 149.21  E6                         0.25',
+    ' 149.43  D#5                        0.25',
+    ' 149.64  E5                         0.25',
+    ' 149.86  D#5                        0.25',
+    ' 150.07  E5                         0.25  bar 95',
+    ' 150.29  D#5                        0.25',
+    ' 150.50  E5                         0.25',
+    ' 150.71  D#5                        0.25',
+    ' 150.93  E5                         0.25',
+    ' 151.14  D#5                        0.25',
+    ' 151.36  E5                         0.25  bar 96',
+    ' 151.57  D#5                        0.25',
+    ' 151.79  E5                         0.25',
+    ' 152.00  B4                         0.25',
+    ' 152.21  D5                         0.25',
+    ' 152.43  C5                         0.25',
+    ' 152.64  A4+A2                      0.25  bar 97',
+    ' 152.86  E3                         0.25',
+    ' 153.07  A3                         0.25',
+    ' 153.29  C4                         0.25',
+    ' 153.50  E4                         0.25',
+    ' 153.71  A4                         0.25',
+    ' 153.93  B4+E2                      0.25  bar 98',
+    ' 154.14  E3                         0.25',
+    ' 154.36  G#3                        0.25',
+    ' 154.57  E4                         0.25',
+    ' 154.79  G#4                        0.25',
+    ' 155.00  B4                         0.25',
+    ' 155.21  C5+A2                      0.25  bar 99',
+    ' 155.43  E3                         0.25',
+    ' 155.64  A3                         0.25',
+    ' 155.86  E4                         0.25',
+    ' 156.07  E5                         0.25',
+    ' 156.29  D#5                        0.25',
+    ' 156.50  E5                         0.25  bar 100',
+    ' 156.71  D#5                        0.25',
+    ' 156.93  E5                         0.25',
+    ' 157.14  B4                         0.25',
+    ' 157.36  D5                         0.25',
+    ' 157.57  C5                         0.25',
+    ' 157.79  A4+A2                      0.25  bar 101',
+    ' 158.00  E3                         0.25',
+    ' 158.21  A3                         0.25',
+    ' 158.43  C4                         0.25',
+    ' 158.64  E4                         0.25',
+    ' 158.86  A4                         0.25',
+    ' 159.07  B4+E2                      0.25  bar 102',
+    ' 159.29  E3                         0.25',
+    ' 159.50  G#3                        0.25',
+    ' 159.71  D4                         0.25',
+    ' 159.93  C5                         0.25',
+    ' 160.14  B4                         0.25',
+    ' 160.36  A4+A2+A1                    1.5  bar 103',
+</script>
+<script type="text/plain" id="demoPehla">
+// Pehla Nasha (Jo Jeeta Wohi Sikandar, 1992): solo piano arrangement by Nakul Jogdeo (MuseScore, about 5 min).
+// Read bar by bar from the owner's PDF of the score (S-PAD/PEHLA-NASHA-notes.pdf), 177 bars, both hands.
+// Key F major (every B is Bb unless written), 4/4. Tempo: bar 1 'Dreamily' quarter = 112, bar 11 = 121,
+// bar 19 = 133, bar 23 = 146 (to the end). Total about 4:59.
+//
+// Format: song-library.js note lines   'time  notes  beats  label',
+//   time  = seconds, worked out from the score's tempo marks, with bar 1 starting at 0.41 s (as in
+//           SONG-3-pehla-nasha-start.wav, whose first 4 notes match bar 1). Only bar 1 is known to line up
+//           with that 73 s film clip: the film version is not this arrangement.
+//   notes = right hand (highest first, so the melody is the main note), then the left hand, struck together
+//   beats = quarter-note beats until the next line;  label = bar number on each bar's first line
+// Left out: grace notes (small notes), trills/mordents, arpeggio rolls. A note held under later notes is
+// written only where it starts (the Notes Tester stops each line when the next one starts).
+//
+// tempo: 146
+
+    '  0.41  A5                       0.5  bar 1',
+    '  0.68  A5                       0.5',
+    '  0.95  C6                       0.5',
+    '  1.21  C6                       2.5',
+    '  2.55  G5                       0.5  bar 2',
+    '  2.82  G5                       0.5',
+    '  3.09  C6                       0.5',
+    '  3.36  C6                       2.5',
+    '  4.70  A4+D4+F3+Bb2               1  bar 3',
+    '  5.23  F5                       0.5',
+    '  5.50  F5                       0.5',
+    '  5.77  G5                       0.5',
+    '  6.04  A5                       1.5',
+    '  6.84  D5                         2  bar 4',
+    '  7.91  F5                         1',
+    '  8.45  C5                         1',
+    '  8.98  D5+A3+F3+D3              0.5  bar 5',
+    '  9.25  D5                       0.5',
+    '  9.52  F5                       0.5',
+    '  9.79  D5                       2.5',
+    ' 11.12  C5+G3+E3+C3              0.5  bar 6',
+    ' 11.39  C5                       0.5',
+    ' 11.66  C5                       0.5',
+    ' 11.93  A4                         1',
+    ' 12.46  G4                       1.5',
+    ' 13.27  Bb3+G3+E3+C3               1  bar 7',
+    ' 13.80  G4                       0.5',
+    ' 14.07  G4                       0.5',
+    ' 14.34  A4                       0.5',
+    ' 14.61  Bb4                      0.5',
+    ' 14.87  A4                       0.5',
+    ' 15.14  G4                       0.5',
+    ' 15.41  C5                       0.5  bar 8',
+    ' 15.68  G4                       0.5',
+    ' 15.95  A4                       0.5',
+    ' 16.21  G4                       0.5',
+    ' 16.48  G4                         1',
+    ' 17.02  A4                       0.5',
+    ' 17.28  G4                      0.25',
+    ' 17.42  F4                      0.25',
+    ' 17.55  F4+C4+A3+F3              1.5  bar 9',
+    ' 18.36  C5                       0.5',
+    ' 18.62  A5                       0.5',
+    ' 18.89  G5                       0.5',
+    ' 19.16  F5                       0.5',
+    ' 19.43  C5                       0.5',
+    ' 19.70  Bb5                      0.5  bar 10',
+    ' 19.96  A5                       0.5',
+    ' 20.23  G5                       0.5',
+    ' 20.50  F5                       0.5',
+    ' 20.77  G5                       0.5',
+    ' 21.04  A5                       0.5',
+    ' 21.30  G5                       0.5',
+    ' 21.57  F5                       0.5',
+    ' 21.84  F5+C4+A3+F3                1  bar 11 (quarter = 121)',
+    ' 22.33  A4                       0.5',
+    ' 22.58  G4                       0.5',
+    ' 22.83  G4                       0.5',
+    ' 23.08  F4                       0.5',
+    ' 23.33  F4                       0.5',
+    ' 23.57  E4                       0.5',
+    ' 23.82  F4+D4+F3+Bb2               1  bar 12',
+    ' 24.32  G4                       0.5',
+    ' 24.57  D4                       2.5',
+    ' 25.81  C4+A3+F3                   1  bar 13',
+    ' 26.30  A4                       0.5',
+    ' 26.55  Bb4                      0.5',
+    ' 26.80  A4                       0.5',
+    ' 27.05  G4                       0.5',
+    ' 27.29  F4                       0.5',
+    ' 27.54  F4                       0.5',
+    ' 27.79  F3                         2  bar 14',
+    ' 28.78  E5+G4+C4+C3                2',
+    ' 29.77  F5+A4+C4+A3+F3             1  bar 15',
+    ' 30.27  A4                         1',
+    ' 30.76  A4                       0.5',
+    ' 31.01  G4                       0.5',
+    ' 31.26  F4                         1',
+    ' 31.76  C5+C4+G3+E3                1  bar 16',
+    ' 32.25  C5                       0.5',
+    ' 32.50  G4                       0.5',
+    ' 32.75  G4                         2',
+    ' 33.74  D4+A3+D3                   1  bar 17',
+    ' 34.24  A4                       0.5',
+    ' 34.48  Bb4                      0.5',
+    ' 34.73  A4                       0.5',
+    ' 34.98  G4                       0.5',
+    ' 35.23  F4                       0.5',
+    ' 35.47  F4                       0.5',
+    ' 35.72  D4+Bb3+F3+D3               2  bar 18',
+    ' 36.71  F4                       0.5',
+    ' 36.96  G4                       0.5',
+    ' 37.21  A4                       0.5',
+    ' 37.46  A4                       0.5',
+    ' 37.71  G4+C3                    0.5  bar 19 (quarter = 133)',
+    ' 37.93  F3                       0.5',
+    ' 38.16  G3                       0.5',
+    ' 38.38  F3                       0.5',
+    ' 38.61  C4                       0.5',
+    ' 38.83  G3                       0.5',
+    ' 39.06  F3                       0.5',
+    ' 39.29  G3                       0.5',
+    ' 39.51  C3                       0.5  bar 20',
+    ' 39.74  F3                       0.5',
+    ' 39.96  G4+G3                    0.5',
+    ' 40.19  A4+F3                    0.5',
+    ' 40.41  F4+C4                    0.5',
+    ' 40.64  G4+G3                    0.5',
+    ' 40.86  A4+F3                    0.5',
+    ' 41.09  A4+G3                    0.5',
+    ' 41.32  G4+C3                    0.5  bar 21',
+    ' 41.54  E3                       0.5',
+    ' 41.77  G3                       0.5',
+    ' 41.99  E3                       0.5',
+    ' 42.22  C4                       0.5',
+    ' 42.44  G3                       0.5',
+    ' 42.67  E3                       0.5',
+    ' 42.89  C3                       0.5',
+    ' 43.12  C4+G3+E3                   1  bar 22',
+    ' 43.57  G4                         1',
+    ' 44.02  Bb4+C4                  0.67',
+    ' 44.32  C5+G3                   0.67',
+    ' 44.62  E5+C3                   0.67',
+    ' 44.92  F5+F3                    1.5  bar 23 (quarter = 146)',
+    ' 45.54  F5                       0.5',
+    ' 45.75  F5+C4+A3                 1.5',
+    ' 46.36  C3                       0.5',
+    ' 46.57  F3                       0.5  bar 24',
+    ' 46.77  E5                       0.5',
+    ' 46.98  F5                       0.5',
+    ' 47.18  C6                       0.5',
+    ' 47.39  C4+A3                    0.5',
+    ' 47.60  F5                       0.5',
+    ' 47.80  E3                       0.5',
+    ' 48.01  E5                       0.5',
+    ' 48.21  F5+D3                    1.5  bar 25',
+    ' 48.83  F5                       0.5',
+    ' 49.03  F5+A3+F3                 1.5',
+    ' 49.65  A2                       0.5',
+    ' 49.86  D3                       0.5  bar 26',
+    ' 50.06  E5                       0.5',
+    ' 50.27  F5                       0.5',
+    ' 50.47  C6                       0.5',
+    ' 50.68  A3+F3                    0.5',
+    ' 50.88  F5                       0.5',
+    ' 51.09  C3                       0.5',
+    ' 51.29  E5                       0.5',
+    ' 51.50  D5+Bb2                   1.5  bar 27',
+    ' 52.12  D5                       0.5',
+    ' 52.32  D5+F3+D3                 1.5',
+    ' 52.94  F2                       0.5',
+    ' 53.14  Bb2                      1.5  bar 28',
+    ' 53.76  D5                       0.5',
+    ' 53.97  E5+F3+D3                 0.5',
+    ' 54.17  F5                       0.5',
+    ' 54.38  A5+G2                    0.5',
+    ' 54.58  F5                       0.5',
+    ' 54.79  F5+C3                    0.5  bar 29',
+    ' 54.99  G5                         1',
+    ' 55.40  G5                       0.5',
+    ' 55.61  G5+G3+E3                 1.5',
+    ' 56.23  G2                       0.5',
+    ' 56.43  C3                       0.5  bar 30',
+    ' 56.64  C5                       0.5',
+    ' 56.84  F5                       0.5',
+    ' 57.05  G5                       0.5',
+    ' 57.25  A5+G3+E3                 0.5',
+    ' 57.46  G5                       0.5',
+    ' 57.66  F5+C3                    0.5',
+    ' 57.87  E5                       0.5',
+    ' 58.08  F5+F3                      1  bar 31',
+    ' 58.49  A4+F4+C3                 0.5',
+    ' 58.69  A4+F4+F3                 0.5',
+    ' 58.90  A4+F4+A3                 0.5',
+    ' 59.10  Bb4+G4+C3                0.5',
+    ' 59.31  F3                       0.5',
+    ' 59.51  A4+F4                    0.5',
+    ' 59.72  F2                       0.5  bar 32',
+    ' 59.92  E5                       0.5',
+    ' 60.13  F5                       0.5',
+    ' 60.34  C6                       0.5',
+    ' 60.54  F3+A2                    0.5',
+    ' 60.75  F5                       0.5',
+    ' 60.95  E3                       0.5',
+    ' 61.16  E5                       0.5',
+    ' 61.36  F5+D3                      1  bar 33',
+    ' 61.77  A4+F4+A2                 0.5',
+    ' 61.98  A4+F4+D3                 0.5',
+    ' 62.18  A4+F4+F3                 0.5',
+    ' 62.39  Bb4+G4+A2                0.5',
+    ' 62.60  D3                       0.5',
+    ' 62.80  A4+F4                    0.5',
+    ' 63.01  D2                       0.5  bar 34',
+    ' 63.21  E5                       0.5',
+    ' 63.42  F5                       0.5',
+    ' 63.62  C6                       0.5',
+    ' 63.83  D3+F2                    0.5',
+    ' 64.03  F5                       0.5',
+    ' 64.24  C3                       0.5',
+    ' 64.44  E5                       0.5',
+    ' 64.65  D5+Bb2                     1  bar 35',
+    ' 65.06  Bb4+G4+F2                0.5',
+    ' 65.27  Bb4+G4+Bb2               0.5',
+    ' 65.47  Bb4+G4+D3                0.5',
+    ' 65.68  C5+A4+F2                 0.5',
+    ' 65.88  Bb2                      0.5',
+    ' 66.09  Bb4+G4                   0.5',
+    ' 66.29  F2                       0.5  bar 36',
+    ' 66.50  Bb2                      0.5',
+    ' 66.71  D3                       0.5',
+    ' 66.91  D5                       0.5',
+    ' 67.12  E5+F3+Bb2                0.5',
+    ' 67.32  F5                       0.5',
+    ' 67.53  A5+G2                    0.5',
+    ' 67.73  F5                       0.5',
+    ' 67.94  F5+C3                    0.5  bar 37',
+    ' 68.14  G5                       0.5',
+    ' 68.35  C5+G2                    0.5',
+    ' 68.55  G5+C5+C3                 0.5',
+    ' 68.76  G5+C5+E3                 0.5',
+    ' 68.97  D5+G2                    0.5',
+    ' 69.17  C3                       0.5',
+    ' 69.38  C5+E3                    0.5',
+    ' 69.58  C3                       0.5  bar 38',
+    ' 69.79  E3                       0.5',
+    ' 69.99  G5+E5+C5+G3              0.5',
+    ' 70.20  E3                       0.5',
+    ' 70.40  F5+C4                      1',
+    ' 70.81  E5+C3                      1',
+    ' 71.23  F5+F3                      1  bar 39',
+    ' 71.64  A4                       0.5',
+    ' 71.84  A4                       0.5',
+    ' 72.05  C5+C4+A3                   1',
+    ' 72.46  C5                       0.5',
+    ' 72.66  C5+E3                    0.5',
+    ' 72.87  D3                         2  bar 40',
+    ' 73.69  A3+F3                      1',
+    ' 74.10  C5+C3                    0.5',
+    ' 74.31  F4                       0.5',
+    ' 74.51  G4+E3                      1  bar 41',
+    ' 74.92  C5                       0.5',
+    ' 75.13  C5                       0.5',
+    ' 75.34  C4+G3                    1.5',
+    ' 75.95  G3                       0.5',
+    ' 76.16  C3                       0.5  bar 42',
+    ' 76.36  E5                       0.5',
+    ' 76.57  F5                       0.5',
+    ' 76.77  C6                       0.5',
+    ' 76.98  G3+E3                    0.5',
+    ' 77.18  F5                       0.5',
+    ' 77.39  C3                       0.5',
+    ' 77.60  E5                       0.5',
+    ' 77.80  F5+F3                      1  bar 43',
+    ' 78.21  A4                       0.5',
+    ' 78.42  A4                       0.5',
+    ' 78.62  C5+C4+A3                   1',
+    ' 79.03  C5                       0.5',
+    ' 79.24  C5+E3                    0.5',
+    ' 79.44  D3                         2  bar 44',
+    ' 80.27  C5+A3+F3                   1',
+    ' 80.68  Bb4+C3                   0.5',
+    ' 80.88  A4                       0.5',
+    ' 81.09  G4+E3                      1  bar 45',
+    ' 81.50  G4                       0.5',
+    ' 81.71  G4                       0.5',
+    ' 81.91  C4+G3                    1.5',
+    ' 82.53  G3                       0.5',
+    ' 82.73  C4+C3                      1  bar 46',
+    ' 83.14  D4                         1',
+    ' 83.55  E4+G3+E3                   1',
+    ' 83.97  F4+C3                    0.5',
+    ' 84.17  E4                       0.5',
+    ' 84.38  D4+Bb2                     1  bar 47',
+    ' 84.79  E4                       0.5',
+    ' 84.99  F4                       0.5',
+    ' 85.20  F3+D3                    0.5',
+    ' 85.40  Bb4                        1',
+    ' 85.81  A4+C3                    0.5',
+    ' 86.02  A4+C4+F2                   2  bar 48',
+    ' 86.84  F4+A3+C3                   1',
+    ' 87.25  F3                         1',
+    ' 87.66  D4+Bb2                     1  bar 49',
+    ' 88.08  E4                       0.5',
+    ' 88.28  F4                       0.5',
+    ' 88.49  F3+D3                    0.5',
+    ' 88.69  A4                         1',
+    ' 89.10  G4+G3                    0.5',
+    ' 89.31  G4+E4+C3                   2  bar 50',
+    ' 90.13  G3+E3                    0.5',
+    ' 90.34  G4                       0.5',
+    ' 90.54  F4+C3                    0.5',
+    ' 90.75  E4                       0.5',
+    ' 90.95  D4+Bb2                     1  bar 51',
+    ' 91.36  E4                       0.5',
+    ' 91.57  F4                       0.5',
+    ' 91.77  F3+D3                    0.5',
+    ' 91.98  Bb4                        1',
+    ' 92.39  A4+C3                    0.5',
+    ' 92.60  A4+C4+F2                   2  bar 52',
+    ' 93.42  F4+A3+C3                 0.5',
+    ' 93.62  G4                       0.5',
+    ' 93.83  A4+F3                    0.5',
+    ' 94.03  F4                       0.5',
+    ' 94.24  G4+E4+C4+C3                2  bar 53',
+    ' 95.06  F4+D4+Bb3+G3             1.5',
+    ' 95.68  G3                       0.5',
+    ' 95.88  G4+E4+C3                   1  bar 54',
+    ' 96.29  Bb3+G3                     1',
+    ' 96.71  C5                       0.5',
+    ' 96.91  Bb3+G3                   1.5',
+    ' 97.53  C4+A3+F3                   1  bar 55',
+    ' 97.94  A4                       0.5',
+    ' 98.14  A4                       0.5',
+    ' 98.35  C5+F3                      1',
+    ' 98.76  C5                       0.5',
+    ' 98.97  C5+E3                   0.25',
+    ' 99.07  D5                      0.25',
+    ' 99.17  D3                         2  bar 56',
+    ' 99.99  C4+A3+F3                   1',
+    '100.40  C5+C3                    0.5',
+    '100.61  F4                       0.5',
+    '100.81  G4+E3                      1  bar 57',
+    '101.23  D5                       0.5',
+    '101.43  C5                       0.5',
+    '101.64  G3+E3                    1.5',
+    '102.25  G3                       0.5',
+    '102.46  C3                         1  bar 58',
+    '102.87  E5+C5                    0.5',
+    '103.08  E5+C5                    0.5',
+    '103.28  G3+E3                    0.5',
+    '103.49  G5+E5+C5                 0.5',
+    '103.69  G5+E5+C5                 0.5',
+    '103.90  G3                       0.5',
+    '104.10  A5+F5+D5+Bb3+Bb2           1  bar 59',
+    '104.51  D6                       0.5',
+    '104.72  A5                       0.5',
+    '104.92  F3+D3                    0.5',
+    '105.13  G5                       0.5',
+    '105.34  A5                       0.5',
+    '105.54  F3                       0.5',
+    '105.75  Bb2                      1.5  bar 60',
+    '106.36  A5                       0.5',
+    '106.57  A5+Bb3+F3+D3             0.5',
+    '106.77  Bb5                      0.5',
+    '106.98  C6+C3                    0.5',
+    '107.18  Bb5                      0.5',
+    '107.39  C6+F3                      1  bar 61',
+    '107.80  C6                      0.25',
+    '107.90  D6                      0.25',
+    '108.01  C6                       0.5',
+    '108.21  A3+C3                    1.5',
+    '108.83  C3                       0.5',
+    '109.03  F3                       1.5  bar 62',
+    '109.65  F4                       0.5',
+    '109.86  A4+C4+A3                 0.5',
+    '110.06  Bb4                      0.5',
+    '110.27  D5+F3                    0.5',
+    '110.47  F5                       0.5',
+    '110.68  A5+F5+D5+Bb3+Bb2           1  bar 63',
+    '111.09  D6                       0.5',
+    '111.29  A5                       0.5',
+    '111.50  F3+D3                    0.5',
+    '111.71  G5                       0.5',
+    '111.91  A5                       0.5',
+    '112.12  F3                       0.5',
+    '112.32  Bb2                      1.5  bar 64',
+    '112.94  A5                       0.5',
+    '113.14  A5+Bb3+F3+D3             0.5',
+    '113.35  Bb5                      0.5',
+    '113.55  C6+C4                    0.5',
+    '113.76  Bb5                      0.5',
+    '113.97  C6+C3                      1  bar 65',
+    '114.38  C6                       0.5',
+    '114.58  G5                       0.5',
+    '114.79  C4+G3+E3                 1.5',
+    '115.40  G3                       0.5',
+    '115.61  C4+C3                    0.5  bar 66',
+    '115.81  Bb3                        1',
+    '116.23  G3                       0.5',
+    '116.43  C5+G4+E4                 0.5',
+    '116.64  E3                       0.5',
+    '116.84  C3                         1',
+    '117.25  A5+F5+D5+D3                1  bar 67',
+    '117.66  Bb5                      0.5',
+    '117.87  A5                       0.5',
+    '118.08  A3+F3                    1.5',
+    '118.69  D3                       0.5',
+    '118.90  G5+E5+C5+E3                1  bar 68',
+    '119.31  A5                       0.5',
+    '119.51  G5                       0.5',
+    '119.72  C4+G3                      1',
+    '120.13  F5+C3                    0.5',
+    '120.34  E5                       0.5',
+    '120.54  F5+Bb2                  0.33  bar 69',
+    '120.68  E5                      0.33',
+    '120.81  D5                      0.33',
+    '120.95  E5                      0.33',
+    '121.09  D5                      0.33',
+    '121.23  C5                      0.33',
+    '121.36  D5+Bb3+F3+D3             1.5',
+    '121.98  F3                       0.5',
+    '122.18  Bb2                      1.5  bar 70',
+    '122.80  D5                       0.5',
+    '123.01  D5+Bb3+F3+D3             0.5',
+    '123.21  E5                       0.5',
+    '123.42  F5+C3                    0.5',
+    '123.62  E5                       0.5',
+    '123.83  F5+F3                      1  bar 71',
+    '124.24  F5                      0.25',
+    '124.34  G5                      0.25',
+    '124.44  F5                       0.5',
+    '124.65  C4+A3                      2',
+    '125.47  Bb5+F5+D5+Bb3+Bb2          2  bar 72',
+    '126.29  A5+F5+C5+F3                2',
+    '127.12  F5+C3                    0.5  bar 73',
+    '127.32  E5+F3                    0.5',
+    '127.53  F5+A3                    0.5',
+    '127.73  C5                       0.5',
+    '127.94  C4                       0.5',
+    '128.14  D5                         1',
+    '128.55  Eb5+F3                   0.5',
+    '128.76  D5+Bb2                     1  bar 74',
+    '129.17  F3                         1',
+    '129.58  Bb3                      0.5',
+    '129.79  D5                         1',
+    '130.20  C5                       0.5',
+    '130.40  Bb4+Bb2                  0.5  bar 75',
+    '130.61  G4+D3                    0.5',
+    '130.81  G4+G3                      1',
+    '131.23  Bb3                      0.5',
+    '131.43  D5                         1',
+    '131.84  C5+C3                    0.5',
+    '132.05  C5+F2                      1  bar 76',
+    '132.46  C3                       0.5',
+    '132.66  C6+A5                    0.5',
+    '132.87  C6+A5+F3                 0.5',
+    '133.08  D6+Bb5                   0.5',
+    '133.28  C6+A5+C3                   1',
+    '133.69  F5+C3                    0.5  bar 77',
+    '133.90  E5+F3                    0.5',
+    '134.10  F5+A3                    0.5',
+    '134.31  C5                       0.5',
+    '134.51  C4                       0.5',
+    '134.72  D5                         1',
+    '135.13  Eb5+F3                   0.5',
+    '135.34  D5+Bb2                     1  bar 78',
+    '135.75  D5+F3                      1',
+    '136.16  Bb3                      0.5',
+    '136.36  D5                         1',
+    '136.77  C5                       0.5',
+    '136.98  Bb4+Bb2                  0.5  bar 79',
+    '137.18  G4+D3                    0.5',
+    '137.39  G4+G3                      1',
+    '137.80  Bb3                      0.5',
+    '138.01  D5                         1',
+    '138.42  C5+C3                    0.5',
+    '138.62  C5+F2                      1  bar 80',
+    '139.03  C3                         1',
+    '139.44  F3                         1',
+    '139.86  C6+F2                    0.5',
+    '140.06  D6                       0.5',
+    '140.27  Eb6+Ab2                    1  bar 81',
+    '140.68  D6                         1',
+    '141.09  Eb6+Eb3+C3               0.5',
+    '141.29  F6                       0.5',
+    '141.50  Eb6                      0.5',
+    '141.71  D6+C3                    0.5',
+    '141.91  C6+F2                    0.5  bar 82',
+    '142.12  C3                       0.5',
+    '142.32  F6                         1',
+    '142.73  F3+A2                      1',
+    '143.14  C3                         1',
+    '143.55  F5+C3                    0.5  bar 83',
+    '143.76  E5+F3                    0.5',
+    '143.97  F5+A3                    0.5',
+    '144.17  C5                       0.5',
+    '144.38  C4                       0.5',
+    '144.58  D5                         1',
+    '144.99  Eb5+F3                   0.5',
+    '145.20  D5+Bb2                     1  bar 84',
+    '145.61  F3                         1',
+    '146.02  Bb3                      0.5',
+    '146.23  D5                         1',
+    '146.64  C5                       0.5',
+    '146.84  Bb4+Bb2                  0.5  bar 85',
+    '147.05  G4+D3                    0.5',
+    '147.25  G4+G3                      1',
+    '147.66  Bb3                      0.5',
+    '147.87  D5                         1',
+    '148.28  C5+C3                    0.5',
+    '148.49  C5+F2                      1  bar 86',
+    '148.90  A5+C3                    0.5',
+    '149.10  F5                       0.5',
+    '149.31  G5+F3                    0.5',
+    '149.51  A5                       0.5',
+    '149.72  F5                       0.5',
+    '149.92  A5                       0.5',
+    '150.13  F5+C3                    0.5  bar 87',
+    '150.34  E5+F3                    0.5',
+    '150.54  F5+A3                    0.5',
+    '150.75  C5                       0.5',
+    '150.95  C4                       0.5',
+    '151.16  D5                         1',
+    '151.57  Eb5+F3                   0.5',
+    '151.77  D5+Bb2                     1  bar 88',
+    '152.18  D5+F3                      1',
+    '152.60  Bb3                      0.5',
+    '152.80  D5                         1',
+    '153.21  C5                       0.5',
+    '153.42  Bb4+Bb2                  0.5  bar 89',
+    '153.62  G4+D3                    0.5',
+    '153.83  G4+G3                      1',
+    '154.24  Bb3                      0.5',
+    '154.44  D5                         1',
+    '154.86  C5+C3                    0.5',
+    '155.06  C5+F2                      1  bar 90',
+    '155.47  C3                         1',
+    '155.88  F3                         1',
+    '156.29  C5                       0.5',
+    '156.50  Bb4                      0.5',
+    '156.71  C5+Ab2                     1  bar 91',
+    '157.12  D5+C3                      1',
+    '157.53  Eb5+Eb3                    1',
+    '157.94  D5+Ab3                   0.5',
+    '158.14  C5                       0.5',
+    '158.35  C4                         1  bar 92',
+    '158.76  Eb4                        1',
+    '159.17  Ab4                      0.5',
+    '159.38  C5                       0.5',
+    '159.58  Ab2                      0.5',
+    '159.79  Bb4+G2                   0.5',
+    '159.99  C5+F2                    0.5  bar 93',
+    '160.20  A2                       0.5',
+    '160.40  C3                         1',
+    '160.81  C5+A4+F4+F3              1.5',
+    '161.43  C3                       0.5',
+    '161.64  F5+C5+A4+F2                1  bar 94',
+    '162.05  D4+C3                      1',
+    '162.46  E4+F3                      1',
+    '162.87  C5+F4+C3                 0.5',
+    '163.08  Bb4                      0.5',
+    '163.28  C5+Bb2                   0.5  bar 95',
+    '163.49  Eb3                      0.5',
+    '163.69  D5+G3                      1',
+    '164.10  Eb5+Bb3                    1',
+    '164.51  F5                       0.5',
+    '164.72  Bb4+Bb3                  0.5',
+    '164.92  Eb3                        1  bar 96',
+    '165.34  G3                         1',
+    '165.75  Bb4+Bb3                  0.5',
+    '165.95  Bb4                      0.5',
+    '166.16  C5+F3                    0.5',
+    '166.36  A4                       0.5',
+    '166.57  Bb4+Bb2                  0.5  bar 97',
+    '166.77  D3                       0.5',
+    '166.98  F3                         1',
+    '167.39  Bb3                        2',
+    '168.21  D5+Bb4+F4+Bb3+Bb2          2  bar 98',
+    '169.03  E5+C5+G4+C4+C3             2',
+    '169.86  F5+C5+A4+F4+F3             1  bar 99',
+    '170.27  A4                       0.5',
+    '170.47  A4                       0.5',
+    '170.68  C5+C4+A3                   1',
+    '171.09  C5                       0.5',
+    '171.29  C5+E3                    0.5',
+    '171.50  D3                         2  bar 100',
+    '172.32  A3+F3                      1',
+    '172.73  C5+C3                    0.5',
+    '172.94  F4                       0.5',
+    '173.14  G4+E3                      1  bar 101',
+    '173.55  C5                       0.5',
+    '173.76  C5                       0.5',
+    '173.97  C4+G3                    1.5',
+    '174.58  G3                       0.5',
+    '174.79  C3                       0.5  bar 102',
+    '174.99  E5                       0.5',
+    '175.20  F5                       0.5',
+    '175.40  C6                       0.5',
+    '175.61  G3+E3                    0.5',
+    '175.81  F5                       0.5',
+    '176.02  C3                       0.5',
+    '176.23  E5                       0.5',
+    '176.43  F5+F3                      1  bar 103',
+    '176.84  A4                       0.5',
+    '177.05  A4                       0.5',
+    '177.25  C5+C4+A3                   1',
+    '177.66  C5                       0.5',
+    '177.87  C5+E3                    0.5',
+    '178.08  D3                         2  bar 104',
+    '178.90  C5+A3+F3                   1',
+    '179.31  Bb4+C3                   0.5',
+    '179.51  A4                       0.5',
+    '179.72  G4+E3                      1  bar 105',
+    '180.13  G4                       0.5',
+    '180.34  G4                      0.25',
+    '180.44  A4                      0.25',
+    '180.54  G4+C4+G3                 1.5',
+    '181.16  G3                       0.5',
+    '181.36  C4+C3                      1  bar 106',
+    '181.77  D4                         1',
+    '182.18  E4+G3+E3                   1',
+    '182.60  F4+C3                    0.5',
+    '182.80  E4                       0.5',
+    '183.01  D4+Bb2                     1  bar 107',
+    '183.42  E4                       0.5',
+    '183.62  F4                       0.5',
+    '183.83  F3+D3                    0.5',
+    '184.03  Bb4                        1',
+    '184.44  A4+C3                    0.5',
+    '184.65  A4+C4+F2                   2  bar 108',
+    '185.47  F4+A3+C3                   1',
+    '185.88  F3                         1',
+    '186.29  D4+Bb2                     1  bar 109',
+    '186.71  E4                       0.5',
+    '186.91  F4                       0.5',
+    '187.12  F3+D3                    0.5',
+    '187.32  A4                         1',
+    '187.73  G4+G3                    0.5',
+    '187.94  G4+E4+C3                   2  bar 110',
+    '188.76  G3+E3                    0.5',
+    '188.97  G4                       0.5',
+    '189.17  F4+C3                    0.5',
+    '189.38  E4                       0.5',
+    '189.58  D4+Bb2                     1  bar 111',
+    '189.99  E4                       0.5',
+    '190.20  F4                       0.5',
+    '190.40  F3+D3                    0.5',
+    '190.61  Bb4                        1',
+    '191.02  A4+C3                    0.5',
+    '191.23  A4+C4+F2                   2  bar 112',
+    '192.05  F4+A3+C3                 0.5',
+    '192.25  G4                       0.5',
+    '192.46  A4+F3                    0.5',
+    '192.66  F4                       0.5',
+    '192.87  G4+E4+C4+C3                2  bar 113',
+    '193.69  F4+D4+Bb3+G3             1.5',
+    '194.31  G3                       0.5',
+    '194.51  G4+E4+C3                   1  bar 114',
+    '194.92  Bb3+G3                     1',
+    '195.34  C5                       0.5',
+    '195.54  Bb3+G3                   1.5',
+    '196.16  C4+A3+F3                   1  bar 115',
+    '196.57  A4                       0.5',
+    '196.77  A4                       0.5',
+    '196.98  C5+F3                      1',
+    '197.39  C5                       0.5',
+    '197.60  C5+E3                   0.25',
+    '197.70  D5                      0.25',
+    '197.80  D3                         2  bar 116',
+    '198.62  C4+A3+F3                   1',
+    '199.03  C5+C3                    0.5',
+    '199.24  F4                       0.5',
+    '199.44  G4+E3                      1  bar 117',
+    '199.86  D5                       0.5',
+    '200.06  C5                       0.5',
+    '200.27  G3+E3                    1.5',
+    '200.88  G3                       0.5',
+    '201.09  C3                         1  bar 118',
+    '201.50  E5+C5                      1',
+    '201.91  G3+E3                    0.5',
+    '202.12  G5+E5+C5                   1',
+    '202.53  C5+C4                    0.5',
+    '202.73  Bb4+F3                     1  bar 119',
+    '203.14  C5                       0.5',
+    '203.35  F5                       0.5',
+    '203.55  C4+Bb3                   0.5',
+    '203.76  Bb4                        1',
+    '204.17  A4+C3                    0.5',
+    '204.38  Bb4+F3                   0.5  bar 120',
+    '204.58  A4                       1.5',
+    '205.20  C4+A3                      1',
+    '205.61  Eb3                      0.5',
+    '205.81  Bb4                     0.25',
+    '205.92  A4                      0.25',
+    '206.02  Ab4+Ab3                    1  bar 121',
+    '206.43  Bb4                      0.5',
+    '206.64  Eb5                      0.5',
+    '206.84  Eb4+C4                   0.5',
+    '207.05  Bb4                        1',
+    '207.46  Ab4+Eb3                  0.5',
+    '207.66  Bb4+Ab3                  0.5  bar 122',
+    '207.87  Ab4                      1.5',
+    '208.49  C4+Eb3                     1',
+    '208.90  F4+F3                      1',
+    '209.31  Bb4+Bb2                    1  bar 123',
+    '209.72  C5                       0.5',
+    '209.92  Bb4                      0.5',
+    '210.13  F3+D3                    0.5',
+    '210.34  Ab4                        1',
+    '210.75  F4+F2                    0.5',
+    '210.95  Bb2                      1.5  bar 124',
+    '211.57  Eb4                      0.5',
+    '211.77  F3+D3                    0.5',
+    '211.98  F4                       0.5',
+    '212.18  Bb2                      0.5',
+    '212.39  G4                       0.5',
+    '212.60  G4+Ab2                   0.5  bar 125',
+    '212.80  Ab4                      1.5',
+    '213.42  Eb3+C3                   1.5',
+    '214.03  Ab3                      0.5',
+    '214.24  Ab2                      0.5  bar 126',
+    '214.44  C5                       0.5',
+    '214.65  Bb4                      0.5',
+    '214.86  Ab4                      0.5',
+    '215.06  Eb3+C3                   0.5',
+    '215.27  G4                       0.5',
+    '215.47  Ab2                      0.5',
+    '215.68  F4                       0.5',
+    '215.88  Bb4+Bb2                    1  bar 127',
+    '216.29  C5                       0.5',
+    '216.50  Bb4                      0.5',
+    '216.71  F3+D3                    0.5',
+    '216.91  Ab4                        1',
+    '217.32  F4+Bb3                   0.5',
+    '217.53  Bb2                        2  bar 128',
+    '218.35  F3+D3                    0.5',
+    '218.55  F4                       0.5',
+    '218.76  C3                       0.5',
+    '218.97  Eb4                      0.5',
+    '219.17  F4+F2                      1  bar 129',
+    '219.58  A5+F5                    0.5',
+    '219.79  Bb5+G5                   0.5',
+    '219.99  A5+F5+F3+C3              0.5',
+    '220.20  Bb5+G5                   0.5',
+    '220.40  A5+F5                    0.5',
+    '220.61  C3                       0.5',
+    '220.81  F2                         1  bar 130',
+    '221.23  A5+F5                    0.5',
+    '221.43  Bb5+G5                   0.5',
+    '221.64  A5+F5+F3+C3              0.5',
+    '221.84  Bb5+G5                   0.5',
+    '222.05  A5+F5                      1',
+    '222.46  F3                         1  bar 131',
+    '222.87  C5                         1',
+    '223.28  F5+A3+C3                   1',
+    '223.69  G5                       0.5',
+    '223.90  A5+C3                    0.5',
+    '224.10  A5+F3                      1  bar 132',
+    '224.51  G5                       0.5',
+    '224.72  F5                       0.5',
+    '224.92  C6+A3+C3                   1',
+    '225.34  C3                         1',
+    '225.75  F5+C3                    0.5  bar 133',
+    '225.95  E5+F3                    0.5',
+    '226.16  F5+A3                    0.5',
+    '226.36  C5                       0.5',
+    '226.57  C4                       0.5',
+    '226.77  D5                         1',
+    '227.18  Eb5+F3                   0.5',
+    '227.39  D5+Bb2                     1  bar 134',
+    '227.80  F3                         1',
+    '228.21  Bb3                        1',
+    '228.62  D5                       0.5',
+    '228.83  C5                       0.5',
+    '229.03  Bb4+Bb2                  0.5  bar 135',
+    '229.24  G4+D3                    0.5',
+    '229.44  G4+G3                      1',
+    '229.86  Bb3                      0.5',
+    '230.06  D5                         1',
+    '230.47  C5+C3                    0.5',
+    '230.68  C5+F2                      1  bar 136',
+    '231.09  C3                       0.5',
+    '231.29  C6+A5                    0.5',
+    '231.50  C6+A5+F3                 0.5',
+    '231.71  D6+Bb5                   0.5',
+    '231.91  C6+A5+C3                   1',
+    '232.32  F5+C3                    0.5  bar 137',
+    '232.53  E5+F3                    0.5',
+    '232.73  F5+A3                    0.5',
+    '232.94  C5                       0.5',
+    '233.14  C4                       0.5',
+    '233.35  D5                         1',
+    '233.76  Eb5+F3                   0.5',
+    '233.97  D5+Bb2                     1  bar 138',
+    '234.38  F3                         1',
+    '234.79  Bb3                      0.5',
+    '234.99  D5                         1',
+    '235.40  C5                       0.5',
+    '235.61  Bb4+Bb2                  0.5  bar 139',
+    '235.81  G4+D3                    0.5',
+    '236.02  G4+G3                      1',
+    '236.43  Bb3                      0.5',
+    '236.64  D5                         1',
+    '237.05  C5+C3                    0.5',
+    '237.25  C5+F2                      1  bar 140',
+    '237.66  C3                         1',
+    '238.08  F3                         1',
+    '238.49  C6+F2                    0.5',
+    '238.69  D6                       0.5',
+    '238.90  Eb6+Ab2                    1  bar 141',
+    '239.31  D6                         1',
+    '239.72  Eb6+Eb3+C3               0.5',
+    '239.92  F6                       0.5',
+    '240.13  Eb6                      0.5',
+    '240.34  D6+C3                    0.5',
+    '240.54  C6+F2                    0.5  bar 142',
+    '240.75  C3                       0.5',
+    '240.95  F6                         1',
+    '241.36  F3+A2                      1',
+    '241.77  C3                         1',
+    '242.18  F5+C3                    0.5  bar 143',
+    '242.39  E5+F3                    0.5',
+    '242.60  F5+A3                    0.5',
+    '242.80  C5                       0.5',
+    '243.01  C4                       0.5',
+    '243.21  D5                         1',
+    '243.62  Eb5+F3                   0.5',
+    '243.83  D5+Bb2                     1  bar 144',
+    '244.24  F3                         1',
+    '244.65  Bb3                        1',
+    '245.06  D5                       0.5',
+    '245.27  C5                       0.5',
+    '245.47  Bb4+Bb2                  0.5  bar 145',
+    '245.68  G4+D3                    0.5',
+    '245.88  G4+G3                      1',
+    '246.29  Bb3                      0.5',
+    '246.50  D5                         1',
+    '246.91  C5+C3                    0.5',
+    '247.12  C5+F2                      1  bar 146',
+    '247.53  F5+C3                    0.5',
+    '247.73  G5                       0.5',
+    '247.94  A5+F3                    0.5',
+    '248.14  F5                       0.5',
+    '248.35  C5                         1',
+    '248.76  F5+C3                    0.5  bar 147',
+    '248.97  E5+F3                    0.5',
+    '249.17  F5+A3                    0.5',
+    '249.38  C5                       0.5',
+    '249.58  C4                       0.5',
+    '249.79  D5                         1',
+    '250.20  Eb5+F3                   0.5',
+    '250.40  D5+Bb2                     1  bar 148',
+    '250.81  F3                         1',
+    '251.23  Bb3                      0.5',
+    '251.43  D5                         1',
+    '251.84  C5                       0.5',
+    '252.05  Bb4+Bb2                  0.5  bar 149',
+    '252.25  G4+D3                    0.5',
+    '252.46  G4+G3                      1',
+    '252.87  Bb3                      0.5',
+    '253.08  D5                         1',
+    '253.49  C5+C3                    0.5',
+    '253.69  C5+F2                      1  bar 150',
+    '254.10  C3                         1',
+    '254.51  F3                         1',
+    '254.92  C5                       0.5',
+    '255.13  Bb4                      0.5',
+    '255.34  C5+Ab2                   0.5  bar 151',
+    '255.54  C3                       0.5',
+    '255.75  D5+Eb3                     1',
+    '256.16  Eb5+Ab3                    1',
+    '256.57  D5                       0.5',
+    '256.77  C5+Eb3                   0.5',
+    '256.98  Ab2                        1  bar 152',
+    '257.39  C3                         1',
+    '257.80  Eb3                      0.5',
+    '258.01  C5                       0.5',
+    '258.21  Ab2                      0.5',
+    '258.42  Bb4+G2                   0.5',
+    '258.62  C5+F2                    0.5  bar 153',
+    '258.83  A2                       0.5',
+    '259.03  C3                         1',
+    '259.44  C5+A4+F4+F3              1.5',
+    '260.06  C3                       0.5',
+    '260.27  F5+C5+A4+F2                1  bar 154',
+    '260.68  C3                         1',
+    '261.09  F3                         1',
+    '261.50  C5+C3                    0.5',
+    '261.71  Bb4                      0.5',
+    '261.91  C5+Eb2                     1  bar 155',
+    '262.32  D5+Bb2                   0.5',
+    '262.53  C3                       0.5',
+    '262.73  Eb5+D3                   0.5',
+    '262.94  Eb3                      0.5',
+    '263.14  F5+F3                    0.5',
+    '263.35  Bb4+G3                   0.5',
+    '263.55  A3                       0.5  bar 156',
+    '263.76  Bb3                      0.5',
+    '263.97  C4                       0.5',
+    '264.17  D4                       0.5',
+    '264.38  Eb4                      0.5',
+    '264.58  Bb4+F4                   0.5',
+    '264.79  G4                       0.5',
+    '264.99  A4                       0.5',
+    '265.20  Bb4+D4+F3+Bb2              2  bar 157',
+    '266.02  Bb4+F4+D4                  2',
+    '266.84  D5+Bb4+F4+Bb3+Bb2          2  bar 158',
+    '267.66  E5+C5+G4+C4+C3             2',
+    '268.49  F5+C5+A4+F3                1  bar 159',
+    '268.90  A4                       0.5',
+    '269.10  A4                       0.5',
+    '269.31  C5+C4+A3                   1',
+    '269.72  C5                       0.5',
+    '269.92  C5+E3                   0.25',
+    '270.03  D5                      0.25',
+    '270.13  D3                         2  bar 160',
+    '270.95  A3+F3                      1',
+    '271.36  C5+C3                    0.5',
+    '271.57  F4                       0.5',
+    '271.77  G4+E3                      1  bar 161',
+    '272.18  C5                       0.5',
+    '272.39  C5                       0.5',
+    '272.60  C4+G3                    1.5',
+    '273.21  G3                       0.5',
+    '273.42  C3                       0.5  bar 162',
+    '273.62  E5                       0.5',
+    '273.83  F5                       0.5',
+    '274.03  C6                       0.5',
+    '274.24  G3+E3                    0.5',
+    '274.44  F5                       0.5',
+    '274.65  C3                       0.5',
+    '274.86  E5                       0.5',
+    '275.06  F5+F3                      1  bar 163',
+    '275.47  A4                       0.5',
+    '275.68  A4                       0.5',
+    '275.88  C5+C4+A3                   1',
+    '276.29  C5                       0.5',
+    '276.50  C5+E3                    0.5',
+    '276.71  D3                         2  bar 164',
+    '277.53  C5+A3+F3                   1',
+    '277.94  Bb4+C3                   0.5',
+    '278.14  A4                       0.5',
+    '278.35  G4+E3                      1  bar 165',
+    '278.76  G4                       0.5',
+    '278.97  G4                       0.5',
+    '279.17  C4+G3                    1.5',
+    '279.79  G3                       0.5',
+    '279.99  C4+C3                      1  bar 166',
+    '280.40  D4                         1',
+    '280.81  E4+G3+E3                   1',
+    '281.23  F4+C3                    0.5',
+    '281.43  E4                       0.5',
+    '281.64  D4+Bb2                     1  bar 167',
+    '282.05  E4                       0.5',
+    '282.25  F4                       0.5',
+    '282.46  F3+D3                    0.5',
+    '282.66  Bb4                        1',
+    '283.08  A4+C3                    0.5',
+    '283.28  A4+C4+F2                   2  bar 168',
+    '284.10  F4+A3+C3                   1',
+    '284.51  F3                         1',
+    '284.92  D4+Bb2                     1  bar 169',
+    '285.34  E4                       0.5',
+    '285.54  F4                       0.5',
+    '285.75  F3+D3                    0.5',
+    '285.95  A4                         1',
+    '286.36  G4+G3                    0.5',
+    '286.57  G4+E4+C3                   2  bar 170',
+    '287.39  G3+E3                    0.5',
+    '287.60  G4                       0.5',
+    '287.80  F4+C3                    0.5',
+    '288.01  E4                       0.5',
+    '288.21  D4+Bb2                     1  bar 171',
+    '288.62  E4                       0.5',
+    '288.83  F4                       0.5',
+    '289.03  F3+D3                    0.5',
+    '289.24  Bb4                        1',
+    '289.65  A4+C3                    0.5',
+    '289.86  A4+C4+F2                   2  bar 172',
+    '290.68  F4+A3+C3                 0.5',
+    '290.88  G4                       0.5',
+    '291.09  A4+F3                    0.5',
+    '291.29  F4                       0.5',
+    '291.50  G4+C3                    0.5  bar 173',
+    '291.71  F3                       0.5',
+    '291.91  G3                       0.5',
+    '292.12  F3                       0.5',
+    '292.32  C4                       0.5',
+    '292.53  G3                       0.5',
+    '292.73  C4                       0.5',
+    '292.94  F4                       0.5',
+    '293.14  C5+G4                    0.5  bar 174',
+    '293.35  F4                       0.5',
+    '293.55  F4+C4                    0.5',
+    '293.76  G3                       0.5',
+    '293.97  F4+C4                    0.5',
+    '294.17  G4+G3                    0.5',
+    '294.38  A4+F3                    0.5',
+    '294.58  F4+G3                    0.5',
+    '294.79  G4+C3                    0.5  bar 175',
+    '294.99  F3                       0.5',
+    '295.20  G3                       0.5',
+    '295.40  F3                       0.5',
+    '295.61  C4                       0.5',
+    '295.81  G3                       0.5',
+    '296.02  C4                       0.5',
+    '296.23  F4                       0.5',
+    '296.43  C5+G4                    0.5  bar 176',
+    '296.64  F4                       0.5',
+    '296.84  F4+C4                    0.5',
+    '297.05  G3                       0.5',
+    '297.25  F4+C4                    0.5',
+    '297.46  G4+G3                    0.5',
+    '297.66  A4+F3                    0.5',
+    '297.87  F4+G3                    0.5',
+    '298.08  G4+C4+G3+E3+C3             4  bar 177',
+</script>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const IS_BLACK = [0,1,0,1,0,0,1,0,1,0,1,0];
+  const PC = {C:0, D:2, E:4, F:5, G:7, A:9, B:11}, LETTER = {C:0, D:1, E:2, F:3, G:4, A:5, B:6};
+  const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+
+  /* ================= READING THE NOTES ================= */
+  // One note token: C4, F#4, Bb3 (♯/♭ too), with ~ ^ prefixes and @string suffixes ignored
+  function tok(t){
+    const m = String(t).replace(/^[~^]/, '').split('@')[0].match(/^([A-Ga-g])([#b♯♭]?)(-?\d)$/);
+    if(!m) return null;
+    const L = m[1].toUpperCase(), acc = m[2] === '#' || m[2] === '♯' ? '♯' : m[2] ? '♭' : '', oct = +m[3];
+    return {L, acc, oct, midi: (oct + 1) * 12 + PC[L] + (acc === '♯' ? 1 : acc === '♭' ? -1 : 0), name: L + acc + oct};
+  }
+  // song-library.js note lines; quotes, trailing commas and // comments ignored; "tempo: N" / "start: S" read from anywhere
+  function readLines(rawLines, text, tempo){
+    const num = re => { const m = (text || '').match(re); return m ? parseFloat(m[1]) : null; };
+    tempo = num(/\btempo\s*[:=]\s*(\d+(?:\.\d+)?)/i) || tempo || 100;
+    const start = num(/\bstart\s*[:=]\s*(\d+(?:\.\d+)?)/i) || 0;
+    const out = [];
+    rawLines.forEach(raw => {
+      let s = String(raw).replace(/\/\/.*$/, '').trim().replace(/,\s*$/, '').trim().replace(/^['"`]/, '').replace(/['"`]$/, '').trim();
+      const m = s.match(/^(-|\d+(?:\.\d+)?)\s+(\S+)(?:\s+(\d+(?:\.\d+)?))?(?:\s+(.*))?$/);
+      if(!m) return;
+      const notes = m[2].split('+').map(tok);
+      if(!notes.length || notes.some(n => !n)) return;
+      out.push({t: m[1] === '-' ? null : +m[1], notes, beats: m[3] ? +m[3] : 1, label: (m[4] || '').trim()});
+    });
+    if(out.length && out.every(l => l.t == null)){ let acc = start; out.forEach(l => { l.t = acc; acc += l.beats * 60 / tempo; }); }
+    else out.forEach((l, i) => { if(l.t == null) l.t = i ? out[i - 1].t + out[i - 1].beats * 60 / tempo : start; });
+    out.sort((a, b) => a.t - b.t);
+    return {lines: out, tempo};
+  }
+
+  /* ================= THE DEMO: Für Elise is built into the page (works opened from disk too) ================= */
+  const DEMO = {
+    fur:   {el: 'demoFur',   title: 'Für Elise (Beethoven)', info: '<em>Für Elise</em> by Ludwig van Beethoven'},
+    pehla: {el: 'demoPehla', title: 'Pehla Nasha (Jo Jeeta Wohi Sikandar)', info: '<em>Pehla Nasha</em> (Jo Jeeta Wohi Sikandar, music: Jatin–Lalit), piano arrangement by Nakul Jogdeo'}
+  };
+  let demoSong = null;
+  // Try it: show the two songs to choose from
+  $('tryBtn').addEventListener('click', () => {
+    ensureCtx();                                          // the click lets the browser start the sound
+    $('songPick').hidden = false;
+    $('srcInfo').textContent = 'Choose a song to play.';
+  });
+  document.querySelectorAll('.song-btn').forEach(btn => btn.addEventListener('click', async () => {
+    const d = DEMO[btn.dataset.song];
+    ensureCtx();
+    document.querySelectorAll('.song-btn').forEach(x => { x.classList.toggle('on', x === btn); x.disabled = true; });
+    demoSong = d;
+    const text = $(d.el).textContent;
+    load(readLines(text.split(/\r?\n/), text), d.title, d.title);
+    $('songTitle').textContent = d.title;
+    if(!samplesDone){ $('srcInfo').textContent = '⏳ Loading the piano sound…'; await samplesReady; }
+    $('srcInfo').innerHTML = `🎼 ${d.info} · ${fmtT(song.end)} · both hands. Use ■ Stop, the speed list or “Play a range of bars” below to practise.`;
+    document.querySelectorAll('.song-btn').forEach(x => x.disabled = false);
+    $('tryBtn').textContent = '▶ Try another song';
+    $('player').scrollIntoView({behavior: 'smooth', block: 'start'});
+    play(0);
+  }));
+
+  /* ================= HANDS: which hand plays what, and with which finger ================= */
+  // Each line's notes are split into a right-hand and a left-hand group (the split that keeps each hand near where it
+  // was, within an octave, and the first-written note in the right hand), then each group gets fingers.
+  function splitHands(lines){
+    let rC = 69, lC = 50;
+    lines.forEach(L => {
+      const ms = [...new Set(L.notes.map(n => n.midi))].sort((a, b) => b - a), main = L.notes[0].midi;
+      let best = null;
+      for(let k = ms.length; k >= 0; k--){
+        const R = ms.slice(0, k), H = ms.slice(k);
+        if(R.length > 5 || H.length > 5) continue;
+        const span = a => a.length ? a[0] - a[a.length - 1] : 0;
+        let c = Math.max(0, span(R) - 12) * 8 + Math.max(0, span(H) - 12) * 8;
+        if(R.length) c += Math.abs(mean(R) - rC);
+        if(H.length) c += Math.abs(mean(H) - lC);
+        if(H.includes(main) && ms.length > 1) c += 4;
+        R.forEach(m => { if(m < 62) c += 6; }); H.forEach(m => { if(m >= 65) c += 4; });   // the right hand rarely goes below D4
+        if(!best || c < best.c - 1e-9) best = {c, R, H};
+      }
+      L.rhM = best.R.slice().reverse(); L.lhM = best.H.slice().reverse();      // low to high
+      if(L.rhM.length) rC = 0.7 * rC + 0.3 * mean(L.rhM);
+      if(L.lhM.length) lC = 0.7 * lC + 0.3 * mean(L.lhM);
+      if(rC - lC < 8){ const mid = (rC + lC) / 2; rC = mid + 4; lC = mid - 4; }
+    });
+  }
+  // Fingers for one hand. us = key positions in white-key units (low to high, mirrored for the left hand so finger 1
+  // is always the thumb at the low end). p = where the thumb rests; finger f rests at p + f - 1.
+  function place(us, prevP){
+    const n = us.length, fits = us.every(u => u >= prevP - 0.3 && u <= prevP + 4.3);
+    let p = prevP, f;
+    if(n === 1){
+      const u = us[0];
+      if(!fits) p = u < prevP ? u - 2 : u;              // going down: finger 3 crosses over; going up: thumb passes under
+      f = [Math.min(5, Math.max(1, Math.round(u - p) + 1))];
+      if(!fits) p = u - (f[0] - 1);
+    } else {
+      const span = us[n - 1] - us[0];
+      if(span <= 4.3){
+        if(!fits) p = Math.min(Math.max(prevP, us[n - 1] - 4), us[0]);
+        f = us.map(u => Math.min(5, Math.max(1, Math.round(u - p) + 1)));
+      } else { p = us[0]; f = us.map(u => 1 + Math.round((u - us[0]) / span * 4)); }   // a stretch: thumb and little finger on the outside notes
+      for(let i = 1; i < n; i++) if(f[i] <= f[i - 1]) f[i] = f[i - 1] + 1;
+      for(let i = n - 1; i >= 0; i--){ const mx = 5 - (n - 1 - i); if(f[i] > mx) f[i] = mx; }
+    }
+    return {p, f};
+  }
+
+  /* ================= THE KEYBOARD ================= */
+  let LO = 48, HI = 84, WW = 24;
+  const keyEl = {};
+  const whiteIndex = m => { let w = 0; for(let k = LO; k < m; k++) if(!IS_BLACK[k % 12]) w++; return w; };
+  const keyU = m => IS_BLACK[m % 12] ? whiteIndex(m) : whiteIndex(m) + 0.5;      // key centre in white-key units
+  function buildKeyboard(lo, hi){
+    LO = lo; HI = hi;
+    const kbd = $('kbd'), hands = $('hands');
+    kbd.querySelectorAll('.wk, .bk').forEach(e => e.remove());
+    let whites = 0; for(let m = LO; m <= HI; m++) if(!IS_BLACK[m % 12]) whites++;
+    const avail = $('kbdScroll').clientWidth - 12;
+    WW = Math.max(16, Math.min(38, avail / whites));
+    const BW = WW * 0.62;
+    let w = 0;
+    for(let m = LO; m <= HI; m++){
+      const d = document.createElement('div');
+      if(IS_BLACK[m % 12]){ d.className = 'bk'; d.style.left = (w * WW - BW / 2) + 'px'; d.style.width = BW + 'px'; }
+      else{ d.className = 'wk'; d.style.left = (w * WW) + 'px'; d.style.width = WW + 'px'; w++;
+        if(m % 12 === 0) d.innerHTML = `<span class="nm">C${m / 12 - 1}</span>`; }
+      d.title = tokName(m);
+      kbd.insertBefore(d, hands); keyEl[m] = d;
+    }
+    kbd.style.width = hands.style.width = (w * WW) + 'px';
+  }
+  const tokName = m => ['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'][m % 12] + (Math.floor(m / 12) - 1);
+
+  // The hands are divs: a palm and five fingers each, moved with CSS transitions
+  const HAND = {};
+  function buildHands(){
+    $('hands').innerHTML = '';
+    ['r', 'l'].forEach(h => {
+      const g = document.createElement('div'); g.className = 'hand-' + h;
+      const palm = document.createElement('div'); palm.className = 'palm'; palm.textContent = h === 'r' ? 'R' : 'L';
+      g.appendChild(palm);
+      const fingers = [1, 2, 3, 4, 5].map(f => { const d = document.createElement('div'); d.className = 'finger'; d.innerHTML = `<span class="fn">${f}</span>`; g.appendChild(d); return d; });
+      $('hands').appendChild(g);
+      HAND[h] = {palm, fingers, key: ''};
+    });
+  }
+  // Positions (white-key units) of the five fingers: pressed ones on their keys, the others in between / beside them
+  function fingerXs(h, st){
+    const known = {};
+    st.f.forEach((f, i) => known[f] = st.u[i]);
+    const ks = Object.keys(known).map(Number).sort((a, b) => a - b);
+    const xs = [];
+    for(let f = 1; f <= 5; f++){
+      let x;
+      if(known[f] != null) x = known[f];
+      else if(!ks.length) x = st.p + f - 1;
+      else{
+        const lo = ks.filter(k => k < f).pop(), hi = ks.find(k => k > f);
+        if(lo != null && hi != null) x = known[lo] + (known[hi] - known[lo]) * (f - lo) / (hi - lo);
+        else if(lo != null) x = known[lo] + (f - lo);
+        else x = known[hi] - (hi - f);
+      }
+      xs.push(h === 'l' ? -x : x);                       // the left hand was placed mirrored
+    }
+    return xs;
+  }
+  function drawHand(h, st, down){
+    const H = HAND[h]; if(!st) return;
+    const key = st.id + '|' + down;
+    if(H.key === key) return;
+    H.key = key;
+    const xs = fingerXs(h, st), fw = Math.max(9, WW * 0.68);
+    xs.forEach((x, i) => {
+      const f = i + 1, el = H.fingers[i], k = st.f.indexOf(f), m = k >= 0 ? st.m[k] : null, pressed = down && m != null;
+      const tip = pressed ? (IS_BLACK[m % 12] ? 66 : 112) : (f === 1 ? 140 : 124);
+      el.style.left = (x * WW - fw / 2) + 'px'; el.style.width = fw + 'px';
+      el.style.top = tip + 'px'; el.style.height = (166 - tip) + 'px';
+      el.style.borderRadius = (fw / 2) + 'px ' + (fw / 2) + 'px 6px 6px';
+      el.classList.toggle('down', pressed);
+    });
+    const left = Math.min(...xs) * WW - fw * 0.8, right = Math.max(...xs) * WW + fw * 0.8;
+    H.palm.style.left = left + 'px'; H.palm.style.width = (right - left) + 'px';
+  }
+  $('showNums').addEventListener('change', () => $('hands').classList.toggle('no-nums', !$('showNums').checked));
+
+  /* ================= THE SONG ================= */
+  let lines = [], song = null;
+  function load(r, title, src){
+    stop();
+    lines = r.lines;
+    if(!lines.length){ $('srcInfo').innerHTML = '⚠️ No note lines found (<code>time  notes  beats</code>).'; $('player').hidden = true; return; }
+    splitHands(lines);
+    // per hand: the key positions and fingers of each line, and how long its notes are held (until that hand plays again)
+    const all = lines.flatMap(l => l.notes.map(n => n.midi));
+    let lo = Math.min(...all) - 2, hi = Math.max(...all) + 2;
+    while(lo % 12 !== 0) lo--; while(hi % 12 !== 11) hi++;
+    if(hi - lo < 47){ const extra = 48 - (hi - lo + 1); lo -= Math.ceil(extra / 24) * 12; hi += Math.floor(extra / 24) * 12; }
+    lo = Math.max(21, lo); hi = Math.min(108, hi);
+    $('player').hidden = false;
+    buildKeyboard(lo, hi); buildHands();
+    const prevP = {r: keyU(60), l: -keyU(55)};          // thumbs start on C4 (right) and G3 (left)
+    lines.forEach((L, i) => {
+      ['r', 'l'].forEach(h => {
+        const ms = h === 'r' ? L.rhM : L.lhM;
+        if(!ms.length){ L[h] = null; return; }
+        const us = ms.map(keyU), mu = h === 'r' ? us : us.map(u => -u).reverse(), mm = h === 'r' ? ms : ms.slice().reverse();
+        const pl = place(mu, prevP[h]); prevP[h] = pl.p;
+        L[h] = {id: i, m: mm, u: mu, f: pl.f, p: pl.p};
+      });
+    });
+    const songEnd = lines[lines.length - 1].t + Math.max(0.6, lines[lines.length - 1].beats * 0.5) + 0.4;
+    ['r', 'l'].forEach(h => {
+      lines.forEach((L, i) => {
+        if(!L[h]) return;
+        let j = i + 1; while(j < lines.length && !lines[j][h]) j++;
+        const next = j < lines.length ? lines[j].t : songEnd;
+        L[h].end = Math.min(next, L.t + 4);
+      });
+    });
+    // seconds per beat around each line (from the next line's time and its beats), for the notation
+    song = {title, src, end: songEnd + 0.8};
+    $('songTitle').textContent = title;
+    $('srcInfo').textContent = '';
+    renderScore();
+    setupRange();
+    showAt(0, true);
+  }
+  const fmtT = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+
+  /* ================= THE SCORE (staff notation in a scrolling frame) ================= */
+  const STAFF_TOP = 70, STAFF_BOT = 110, NAME_Y = 134, BASS_TOP = 204, BASS_BOT = 244, LH_NAME_Y = 276, INK = '#212529', LH_INK = '#084298';
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, parent, text){
+    const n = document.createElementNS(SVGNS, tag);
+    for(const k in attrs) n.setAttribute(k, attrs[k]);
+    if(text != null) n.textContent = text;
+    if(parent) parent.appendChild(n);
+    return n;
+  }
+  function headOf(n, clef){
+    const step = LETTER[n.L] + 7 * n.oct - (clef === 'B' ? LETTER.G + 14 : LETTER.E + 28);
+    return {y: (clef === 'B' ? BASS_BOT : STAFF_BOT) - step * 5, acc: n.acc, name: n.name};
+  }
+  function accidental(g, x, y, type, col){
+    if(type === '♭') el('path', {d:`M${x - 2},${y - 11} L${x - 2},${y + 4} C${x + 5},${y + 1} ${x + 5},${y - 5} ${x - 2},${y - 2}`, fill:'none', stroke:col, 'stroke-width':1.5}, g);
+    else el('path', {d:`M${x - 2.5},${y - 8} L${x - 2.5},${y + 8} M${x + 2},${y - 9} L${x + 2},${y + 7} M${x - 5},${y - 1} L${x + 5},${y - 4} M${x - 5},${y + 4} L${x + 5},${y + 1}`, fill:'none', stroke:col, 'stroke-width':1.4}, g);
+  }
+  const near = (a, b) => Math.abs(a - b) < 1e-3;
+  let BARS = [], COLS = [];
+  function buildBars(){
+    // beat position of every line: from bar labels ("bar N") when the file has them, else 4-beat bars
+    let pos = 0;
+    const B = lines.map((L, i) => { const p = pos; pos += L.beats; return p; });
+    const labelled = lines.some(L => /\bbar\s*\d+/i.test(L.label));
+    BARS = [];
+    let bar = null;
+    lines.forEach((L, i) => {
+      const lab = (L.label.match(/\bbar\s*(\d+)/i) || [])[1];
+      const newBar = labelled ? (lab != null || !bar) : (!bar || B[i] - bar.b0 >= 4 - 1e-6);
+      if(newBar){ bar = {num: lab != null ? +lab : BARS.length + 1, b0: labelled ? B[i] : (bar ? bar.b0 + 4 * Math.floor((B[i] - bar.b0) / 4) : 0), cols: [], t: L.t}; BARS.push(bar); }
+      const col = {i, p: B[i] - bar.b0, bar};
+      ['r', 'l'].forEach(h => {
+        if(!L[h]) return;
+        let j = i + 1; while(j < lines.length && !lines[j][h]) j++;
+        const endB = Math.min(j < lines.length ? B[j] : pos, bar.b0 + Math.max(4, col.p + L.beats));
+        const qv = Math.max(0.25, Math.round((endB - B[i]) * 12) / 12);
+        const toks = L.notes.filter(n => L[h].m.includes(n.midi));
+        const uniq = []; toks.forEach(n => { if(!uniq.some(u => u.midi === n.midi)) uniq.push(n); });
+        uniq.sort((a, b) => b.midi - a.midi);
+        col[h] = {qv: Math.min(4, qv), heads: uniq.map(n => headOf(n, h === 'r' ? 'T' : 'B'))};
+      });
+      bar.cols.push(col);
+    });
+    BARS.forEach(b => {
+      b.cols.forEach(c => { const q = Math.min(...['r', 'l'].filter(h => c[h]).map(h => c[h].qv)); c.w = 16 + 22 * Math.min(q, 2) + (['r', 'l'].some(h => c[h] && c[h].heads.some(x => x.acc)) ? 8 : 0); });
+      b.w = 14 + b.cols.reduce((s, c) => s + c.w, 0);
+    });
+    COLS = BARS.flatMap(b => b.cols);
+  }
+  function drawStaff(g, evs, clef){
+    const top0 = clef === 'T' ? STAFF_TOP : BASS_TOP, bot0 = clef === 'T' ? STAFF_BOT : BASS_BOT, mid = (top0 + bot0) / 2, col = clef === 'T' ? INK : LH_INK;
+    const groups = []; let last = null;
+    evs.forEach(e => { e.stem = null; e.beamed = false; });
+    evs.filter(e => e.qv <= .5 + 1e-6).forEach(e => {
+      const beat = Math.floor(e.p + 1e-6);
+      if(Math.floor(e.p + e.qv - 1e-6) !== beat){ last = null; return; }
+      if(last && last.beat === beat && last.bar === e.bar) last.ev.push(e); else groups.push(last = {beat, bar: e.bar, ev: [e]});
+    });
+    groups.filter(gr => gr.ev.length > 1).forEach(gr => {
+      const ys = gr.ev.flatMap(e => e.heads.map(h => h.y)), up = mean(ys) >= mid;
+      const by = up ? Math.min(...ys) - 30 : Math.max(...ys) + 30, sx = e => up ? e.x + 5 : e.x - 5, dir = up ? 1 : -1;
+      gr.ev.forEach(e => { e.stem = {up, y: by}; e.beamed = true; });
+      el('line', {x1:sx(gr.ev[0]), x2:sx(gr.ev[gr.ev.length - 1]), y1:by, y2:by, stroke:col, 'stroke-width':4}, g);
+      gr.ev.forEach((e, k) => {
+        if(!near(e.qv, .25)) return;
+        const nx = gr.ev[k + 1], pv = gr.ev[k - 1], y2 = by + 7 * dir;
+        if(nx && near(nx.qv, .25)) el('line', {x1:sx(e), x2:sx(nx), y1:y2, y2, stroke:col, 'stroke-width':4}, g);
+        else if(!(pv && near(pv.qv, .25))) el('line', {x1:sx(e), x2:sx(e) + (nx ? 8 : -8), y1:y2, y2, stroke:col, 'stroke-width':4}, g);
+      });
+    });
+    evs.forEach(e => {
+      const ys = e.heads.map(h => h.y), top = Math.min(...ys), bot = Math.max(...ys);
+      for(let y = top0 - 10; y >= top - 1; y -= 10) el('line', {x1:e.x - 9, x2:e.x + 9, y1:y, y2:y, stroke:INK, 'stroke-width':1}, g);
+      for(let y = bot0 + 10; y <= bot + 1; y += 10) el('line', {x1:e.x - 9, x2:e.x + 9, y1:y, y2:y, stroke:INK, 'stroke-width':1}, g);
+      const hollow = e.qv >= 2 - 1e-6;
+      e.heads.forEach(h => {
+        el('ellipse', {cx:e.x, cy:h.y, rx:5.6, ry:4, transform:`rotate(-20 ${e.x} ${h.y})`, fill: hollow ? '#fff' : col, stroke:col, 'stroke-width': hollow ? 1.6 : 1}, g);
+        if(h.acc) accidental(g, e.x - 15, h.y, h.acc, col);
+        if([.75, 1.5, 3].some(v => near(v, e.qv))) el('circle', {cx:e.x + 10, cy:h.y - (Math.abs(h.y) % 10 === 0 ? 3 : 0), r:1.8, fill:col}, g);
+      });
+      if(e.qv < 4 - 1e-6){
+        const st = e.stem || {up: (top + bot) / 2 >= mid}, flags = e.beamed ? 0 : (near(e.qv, .25) ? 2 : e.qv <= .5 + 1e-6 ? 1 : 0);
+        const y2 = st.y != null ? st.y : (st.up ? top - 30 : bot + 30), sx = st.up ? e.x + 5 : e.x - 5;
+        el('line', {x1:sx, x2:sx, y1: st.up ? bot - 1 : top + 1, y2, stroke:col, 'stroke-width':1.3}, g);
+        for(let f = 0; f < flags; f++) el('path', {d: st.up ? `M${sx},${y2 + f * 7} q8,8 6,18` : `M${sx},${y2 - f * 7} q8,-8 6,-18`, fill:'none', stroke:col, 'stroke-width':2}, g);
+      }
+      e.heads.forEach((h, k) => el('text', {x:e.x, y:(clef === 'T' ? NAME_Y : LH_NAME_Y) + k * 11, 'font-size':10.5, 'font-weight':700, 'text-anchor':'middle', fill:col}, g, h.name));
+    });
+  }
+  let lastWidth = 0;
+  function renderScore(force){
+    const box = $('scoreBox'), avail = Math.floor(box.clientWidth - 4);
+    if(!lines.length || avail < 100 || (!force && avail === lastWidth)) return;
+    lastWidth = avail;
+    buildBars();
+    box.innerHTML = '';
+    const PRE = 52, rows = []; let cur = [], used = PRE;
+    BARS.forEach(b => { if(cur.length && used + b.w > avail){ rows.push(cur); cur = []; used = PRE; } cur.push(b); used += b.w; });
+    if(cur.length) rows.push(cur);
+    rows.forEach(row => {
+      const natural = PRE + row.reduce((s, b) => s + b.w, 0), width = Math.max(natural, Math.min(avail, natural * 1.5));
+      const stack = Math.max(1, ...row.flatMap(b => b.cols.map(c => c.l ? c.l.heads.length : 1)));
+      const H = LH_NAME_Y + 11 * (stack - 1) + 8;
+      const svg = el('svg', {viewBox:`0 0 ${width} ${H}`, role:'img', 'aria-label':`Bars ${row[0].num} to ${row[row.length - 1].num}`}, box);
+      if(width < avail) svg.style.width = (width / avail * 100) + '%';
+      const scale = (width - PRE) / (natural - PRE), g = el('g', {}, svg);
+      [STAFF_TOP, BASS_TOP].forEach(top => { for(let i = 0; i < 5; i++) el('line', {x1:6, x2:width - 1, y1:top + i * 10, y2:top + i * 10, stroke:'#6c757d', 'stroke-width':1}, g); });
+      el('line', {x1:6, x2:6, y1:STAFF_TOP, y2:BASS_BOT, stroke:INK, 'stroke-width':1.2}, g);
+      el('text', {x:9, y:STAFF_BOT + 6, 'font-size':52, fill:INK, style:"font-family:'Segoe UI Symbol','Noto Music',serif"}, g, '𝄞');
+      el('text', {x:10, y:BASS_TOP + 30, 'font-size':36, fill:INK, style:"font-family:'Segoe UI Symbol','Noto Music',serif"}, g, '𝄢');
+      let x = PRE;
+      row.forEach(b => {
+        const W = b.w * scale;
+        el('text', {x:x + 3, y:STAFF_TOP - 22, 'font-size':10, fill:'#6c757d'}, g, `${b.num} · ${fmtT(b.t)}`);
+        let cx = x + 14 * scale;
+        const evT = [], evB = [];
+        b.cols.forEach(c => {
+          c.x = cx + (['r', 'l'].some(h => c[h] && c[h].heads.some(z => z.acc)) ? 8 : 0) + 8;
+          c.hit = el('rect', {class:'col-hit', x:c.x - 11, y:STAFF_TOP - 40, width:22, height:H - STAFF_TOP + 38, rx:4}, g);
+          c.hit.addEventListener('click', () => { const r = span(lines[c.i].t); play(r.a, r.b); });
+          el('title', {}, c.hit, 'Play from here');
+          c.svg = svg;
+          if(c.r) evT.push(Object.assign(c.r, {x:c.x, p:c.p, bar:b}));
+          if(c.l) evB.push(Object.assign(c.l, {x:c.x, p:c.p, bar:b}));
+          cx += c.w * scale;
+        });
+        drawStaff(g, evT, 'T'); drawStaff(g, evB, 'B');
+        el('line', {x1:x + W - .5, x2:x + W - .5, y1:STAFF_TOP, y2:BASS_BOT, stroke:INK, 'stroke-width':1.2}, g);
+        x += W;
+      });
+    });
+    curCol = -1;
+  }
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if(lines.length && !playing){ const lo = LO, hi = HI; buildKeyboard(lo, hi); buildHands(); renderScore(); showAt(posNow, true); } }, 200); });
+
+  /* ================= SOUND: recorded piano samples (SAMPLES/piano.js), soft piano voicing ================= */
+  let ctx = null, bus = null;
+  function ensureCtx(){
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC){ alert('Sorry, your browser does not support Web Audio.'); return false; }
+      ctx = new AC();
+      // soft piano: warm low-pass, treble shelf down, a little room echo, then a gentle compressor
+      bus = ctx.createGain(); bus.gain.value = 0.42;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 4200; lp.Q.value = 0.5;
+      const sh = ctx.createBiquadFilter(); sh.type = 'highshelf'; sh.frequency.value = 2200; sh.gain.value = -5;
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
+      bus.connect(lp); lp.connect(sh); sh.connect(comp); comp.connect(ctx.destination);
+      const sr = ctx.sampleRate, len = Math.round(sr * 1.6), ir = ctx.createBuffer(2, len, sr);
+      for(let ch = 0; ch < 2; ch++){ const x = ir.getChannelData(ch); let seed = 12345 + ch * 777, v = 0;
+        for(let i = 0; i < len; i++){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; v += 0.35 * ((seed / 0x7fffffff) * 2 - 1 - v); x[i] = v * Math.exp(-i / (sr * 0.4)); } }
+      const conv = ctx.createConvolver(); conv.buffer = ir; const wet = ctx.createGain(); wet.gain.value = 0.2;
+      sh.connect(conv); conv.connect(wet); wet.connect(comp);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return true;
+  }
+  async function decode(ab){
+    const oc = new OfflineAudioContext(1, 1, 48000);
+    return await new Promise((res, rej) => { const p = oc.decodeAudioData(ab, res, rej); if(p && p.catch) p.catch(rej); });
+  }
+  const sampleBufs = new Map();
+  let samplesDone = false, samplesOk;
+  const samplesReady = new Promise(r => samplesOk = () => { samplesDone = true; r(); });
+  (function loadSamples(){
+    const s = document.createElement('script'); s.src = 'NOTES-TESTER/SAMPLES/piano.js';
+    s.onload = async () => {
+      const set = window.NT_SAMPLES && window.NT_SAMPLES.piano;
+      if(!set){ $('sndInfo').textContent = '⚠️ Piano samples missing: using a simple synth.'; samplesOk(); return; }
+      for(const m of Object.keys(set).map(Number)){
+        try{
+          const bin = atob(set[m]), ab = new Uint8Array(bin.length);
+          for(let i = 0; i < bin.length; i++) ab[i] = bin.charCodeAt(i);
+          const b = await decode(ab.buffer), x = b.getChannelData(0);
+          let peak = 0; for(let i = 0; i < x.length; i++) if(Math.abs(x[i]) > peak) peak = Math.abs(x[i]);
+          let s0 = 0; while(s0 < x.length && Math.abs(x[s0]) < peak * 0.02) s0++;
+          s0 = Math.max(0, s0 - Math.round(b.sampleRate * 0.002));
+          const out = new AudioBuffer({numberOfChannels: 1, length: x.length - s0, sampleRate: b.sampleRate});
+          const y = out.getChannelData(0), gg = peak > 0 ? 0.6 / peak : 1;
+          for(let i = 0; i < y.length; i++) y[i] = x[i + s0] * gg;
+          sampleBufs.set(m, out);
+        }catch(e){}
+      }
+      $('sndInfo').textContent = `🎹 Piano sound ready (${sampleBufs.size} recorded notes).`;
+      samplesOk();
+    };
+    s.onerror = () => { $('sndInfo').textContent = '⚠️ Piano samples not found: using a simple synth.'; samplesOk(); };
+    document.head.appendChild(s);
+  })();
+  let voices = [];
+  function note(m, when, dur, lvl){
+    const g = ctx.createGain(); g.connect(bus);
+    const v = lvl * Math.max(0.5, Math.min(1, 1 - (m - 74) * 0.03));    // high notes a little softer
+    g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(v, when + 0.006);
+    g.gain.setTargetAtTime(0, when + dur, 0.3);
+    const buf = sampleBufs.get(m), stopAt = when + dur + 1.6;
+    if(buf){ const s = ctx.createBufferSource(); s.buffer = buf; s.connect(g); s.start(when); s.stop(Math.min(when + buf.duration, stopAt)); voices.push(s); }
+    else{
+      const f = 440 * Math.pow(2, (m - 69) / 12);
+      [['triangle', f, 0.5], ['sine', f * 2, 0.12]].forEach(([type, fr, l]) => { const o = ctx.createOscillator(), og = ctx.createGain(); o.type = type; o.frequency.value = fr; og.gain.value = l; o.connect(og); og.connect(g); o.start(when); o.stop(stopAt); voices.push(o); });
+    }
+  }
+
+  /* ================= PLAY ALL, OR A RANGE OF BARS ================= */
+  // The two boxes work like a switch: exactly one is ticked. Bar numbers must be bars of the chosen song.
+  let barMin = 1, barMax = 1;
+  function setupRange(){
+    const nums = BARS.map(b => b.num);
+    barMin = Math.min(...nums); barMax = Math.max(...nums);
+    $('barStart').value = barMin; $('barEnd').value = barMax;
+    ['barStart', 'barEnd'].forEach(id => { $(id).placeholder = barMin + '–' + barMax; });
+    checkRange();
+  }
+  function setMode(range){
+    $('allBox').checked = !range; $('rangeBox').checked = range;
+    $('barStart').disabled = $('barEnd').disabled = !range;
+    const r = checkRange();
+    if(playing) stop(true);
+    if(lines.length) showAt(r ? r.a : 0, true);          // "Play all" starts from the beginning, a range from its first bar
+  }
+  $('allBox').addEventListener('change', () => setMode(!$('allBox').checked));
+  $('rangeBox').addEventListener('change', () => setMode($('rangeBox').checked));
+  const barIdx = n => BARS.findIndex(b => b.num === n);
+  // {a, b} in seconds for the bars typed, or null (and says why, and disables Play) when they are not valid
+  function checkRange(){
+    const s0 = $('barStart'), e0 = $('barEnd');
+    s0.classList.remove('is-invalid'); e0.classList.remove('is-invalid');
+    if(!$('rangeBox').checked){ $('rangeInfo').textContent = `(bars ${barMin}–${barMax})`; $('playBtn').disabled = playing; return null; }
+    const sv = s0.value.trim(), ev = e0.value.trim(), st = +sv, en = +ev;
+    let why = '';
+    if(!/^\d+$/.test(sv) || barIdx(st) < 0){ why = `Start bar must be a whole number from ${barMin} to ${barMax}.`; s0.classList.add('is-invalid'); }
+    else if(!/^\d+$/.test(ev) || barIdx(en) < 0){ why = `End bar must be a whole number from ${barMin} to ${barMax}.`; e0.classList.add('is-invalid'); }
+    else if(en < st){ why = 'The end bar must not be before the start bar.'; e0.classList.add('is-invalid'); }
+    if(why){ $('rangeInfo').innerHTML = `<span class="text-danger fw-bold">⚠️ ${why}</span>`; $('playBtn').disabled = true; return null; }
+    const i = barIdx(st), j = barIdx(en), last = lines[lines.length - 1];
+    const a = BARS[i].t, b = j + 1 < BARS.length ? BARS[j + 1].t : last.t + Math.max(0.6, last.beats * 0.5);
+    $('rangeInfo').textContent = `bars ${st}–${en}: ${fmtT(a)} to ${fmtT(b)}`;
+    $('playBtn').disabled = playing;
+    return {a, b};
+  }
+  ['barStart', 'barEnd'].forEach(id => $(id).addEventListener('input', () => {
+    const v = $(id).value.replace(/\D+/g, '').slice(0, String(barMax).length);   // digits only
+    if(v !== $(id).value) $(id).value = v;
+    checkRange();
+  }));
+  // What a Play covers: the range (when "Play a range" is ticked), else from where it stopped to the end.
+  // A click at time T in the score or on the time bar plays from T, to the range end when T is inside the range.
+  function span(T){
+    const r = $('rangeBox').checked ? checkRange() : null;
+    if(T == null) return r || {a: posNow >= song.end - 0.5 ? 0 : posNow, b: song.end};
+    if(r && T >= r.a - 1e-3 && T < r.b) return {a: T, b: r.b};
+    return {a: T, b: song.end};
+  }
+
+  /* ================= PLAYING ================= */
+  let playing = false, t0 = 0, from = 0, until = 0, sp = 1, raf = 0, timer = 0, nextLine = 0, posNow = 0, curCol = -1;
+  const songTime = () => playing ? from + (ctx.currentTime - t0) * sp : posNow;
+  function lineAt(T){ let lo = 0, hi = lines.length - 1, r = -1; while(lo <= hi){ const m = (lo + hi) >> 1; if(lines[m].t <= T + 1e-6){ r = m; lo = m + 1; } else hi = m - 1; } return r; }
+  function play(at, end){
+    if(!lines.length || !ensureCtx()) return;
+    if(at == null){
+      if($('rangeBox').checked && !checkRange()) return;
+      const r = span(); at = r.a; end = r.b;
+    }
+    stop(true);
+    sp = +$('speed').value || 1;
+    from = Math.max(0, at); until = end != null ? end : song.end;
+    t0 = ctx.currentTime + 0.12; playing = true;
+    nextLine = lines.findIndex(L => L.t >= from - 1e-3); if(nextLine < 0) nextLine = lines.length;
+    pump(); timer = setInterval(pump, 250);
+    $('playBtn').disabled = true; $('stopBtn').disabled = false;
+    raf = requestAnimationFrame(loop);
+  }
+  function pump(){
+    const horizon = from + (ctx.currentTime - t0 + 1.2) * sp;
+    for(; nextLine < lines.length && lines[nextLine].t < horizon && lines[nextLine].t < until - 1e-3; nextLine++){
+      const L = lines[nextLine], when = t0 + (L.t - from) / sp;
+      if(when < ctx.currentTime - 0.05) continue;
+      const main = L.notes[0].midi, n = new Set(L.notes.map(x => x.midi)).size;
+      ['r', 'l'].forEach(h => { if(L[h]) L[h].m.forEach(m => note(m, when, Math.max(0.08, (Math.min(L[h].end, until) - L.t) / sp), m === main ? 1 : 0.55 / Math.sqrt(Math.max(1, n - 1)))); });
+    }
+    voices = voices.slice(-400);
+  }
+  function stop(keepPos){
+    if(playing) posNow = songTime();
+    playing = false; clearInterval(timer); cancelAnimationFrame(raf);
+    if(ctx){ const t = ctx.currentTime; voices.forEach(v => { try{ v.stop(t + 0.05); }catch(e){} }); }
+    voices = [];
+    $('stopBtn').disabled = true; $('playBtn').disabled = false; if(lines.length) checkRange();
+    if(!keepPos && lines.length) showAt(posNow, true);
+  }
+  function loop(){
+    const T = songTime();
+    if(T > until + 0.35){ const back = until >= song.end - 1e-3 ? 0 : from; stop(true); showAt(back, true); return; }   // a range goes back to its start
+    showAt(T);
+    raf = requestAnimationFrame(loop);
+  }
+  // Everything that depends on the position: keys, hands, the now line, the score highlight and scroll, the time bar
+  function showAt(T, force){
+    posNow = T;
+    const i = lineAt(T);
+    Object.values(keyEl).forEach(k => k.classList.remove('on-r', 'on-l'));
+    const now = [];
+    ['r', 'l'].forEach(h => {
+      let j = i; while(j >= 0 && !lines[j][h]) j--;
+      if(j < 0){ let k = 0; while(k < lines.length && !lines[k][h]) k++; if(k < lines.length) drawHand(h, lines[k][h], false); return; }
+      const st = lines[j][h], down = T >= lines[j].t && T < st.end - 0.05;
+      if(force) HAND[h].key = '';
+      drawHand(h, st, down);
+      if(down){
+        st.m.forEach(m => keyEl[m] && keyEl[m].classList.add('on-' + h));
+        now.push(`<span class="${h}h">${h === 'r' ? 'Right' : 'Left'}:</span> ` + st.m.map((m, k) => `${(lines[j].notes.find(n => n.midi === m) || {name: tokName(m)}).name.replace('#', '♯').replace(/^([A-G])b/, '$1♭')} <small class="text-muted">(${st.f[k]})</small>`).join(' + '));
+      }
+    });
+    $('nowVal').innerHTML = now.length ? now.join(' &nbsp;·&nbsp; ') : '&nbsp;';
+    $('timeVal').textContent = fmtT(T) + ' / ' + fmtT(song.end);
+    $('seekBar').style.width = Math.min(100, T / song.end * 100) + '%';
+    const ci = COLS.findIndex(c => c.i === i);
+    if(ci !== curCol){
+      if(curCol >= 0 && COLS[curCol] && COLS[curCol].hit) COLS[curCol].hit.classList.remove('on');
+      curCol = ci;
+      const c = COLS[ci];
+      if(c && c.hit){
+        c.hit.classList.add('on');
+        const fr = $('scoreFrame'), top = c.svg.getBoundingClientRect().top - fr.getBoundingClientRect().top + fr.scrollTop;
+        if(top < fr.scrollTop + 2 || top + c.svg.getBoundingClientRect().height > fr.scrollTop + fr.clientHeight) fr.scrollTop = Math.max(0, top - 4);
+      }
+      // keep the hands in view when the keyboard is wider than the screen
+      const sc = $('kbdScroll'), cxs = ['r', 'l'].map(h => parseFloat(HAND[h].palm.style.left) || 0);
+      if(sc.scrollWidth > sc.clientWidth + 4){ const mid = (Math.min(...cxs) + Math.max(...cxs)) / 2; sc.scrollLeft = Math.max(0, mid - sc.clientWidth / 2); }
+    }
+  }
+  $('playBtn').addEventListener('click', () => play());
+  $('stopBtn').addEventListener('click', () => stop());
+  $('speed').addEventListener('change', () => { if(playing) play(songTime(), until); });
+  $('seek').addEventListener('click', e => {
+    if(!song) return;
+    const r = $('seek').getBoundingClientRect(), T = (e.clientX - r.left) / r.width * song.end;
+    if(playing){ const s = span(T); play(s.a, s.b); } else showAt(T, true);
+  });
+  document.addEventListener('keydown', e => {
+    if(e.code !== 'Space' || /INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName) || !lines.length) return;
+    e.preventDefault(); playing ? stop() : play();
+  });
+
+  window.__pianoDemo = {load: (text, name) => load(readLines(text.split(/\r?\n/), text), name || 'test', name || 'test'), play, stop, showAt, lines: () => lines, songTime};
+})();
+</script>
+</body>
+</html>

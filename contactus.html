@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us — Music Practice App</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-purple:#6f42c1;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    --biz-yellow:#ffc107;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav: deep blue background, yellow font */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue);
+    color:var(--nav-yellow);
+    padding:.9rem 1.5rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.15rem; padding:.75rem 1rem; }
+  }
+
+  .hero{ background:#f7f8fa; padding-top:2rem; padding-bottom:2rem; }
+  .hero-subtitle{
+    font-size:1.25rem; background:#5BF527; color:#000;
+    padding:1rem 1.25rem; border-radius:.375rem;
+  }
+  @media (max-width:768px){ .hero-subtitle{ font-size:1rem; } }
+  @media (max-width:480px){ .hero-subtitle{ font-size:.85rem; } }
+
+  .about-card h2{
+    color:var(--nav-blue); font-size:1.35rem; font-weight:700;
+    margin-top:2rem; margin-bottom:.75rem;
+  }
+  .about-card h2:first-child{ margin-top:0; }
+  .about-card p, .about-card ul, .about-card ol{ line-height:1.7; }
+  .linkedin-btn{
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:var(--nav-blue); color:#fff; font-weight:600;
+    padding:.6rem 1.25rem; border-radius:.375rem; text-decoration:none;
+  }
+  .linkedin-btn:hover{ background:#08386e; color:#fff; }
+
+  /* three passions */
+  .passions{ display:flex; flex-wrap:wrap; gap:.8rem; margin:1rem 0 .5rem; }
+  .passion{ flex:1 1 180px; background:#fff8e1; border:2px solid var(--biz-yellow); border-radius:.6rem; padding:.7rem .9rem; }
+  .passion b{ display:block; font-size:1.05rem; color:var(--nav-blue); }
+  .passion span{ font-size:.9rem; }
+
+  /* the app's pages */
+  .app-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:.8rem; margin:1rem 0; }
+  .app-card{ display:block; background:#fff; border:2px solid #c9d3e3; border-radius:.6rem; padding:.75rem .9rem; text-decoration:none; color:#212529; }
+  .app-card:hover{ border-color:var(--nav-blue); box-shadow:0 .2rem .6rem rgba(4,38,77,.15); }
+  .app-card b{ display:block; color:var(--nav-blue); font-size:1rem; margin-bottom:.15rem; }
+  .app-card span{ font-size:.86rem; color:#4a5363; }
+
+  /* who did what */
+  .split{ display:flex; flex-wrap:wrap; gap:.8rem; margin:1rem 0; }
+  .split > div{ flex:1 1 260px; border-radius:.6rem; padding:.8rem 1rem; }
+  .split .me{ background:#e8f5e9; border:2px solid #2e7d32; }
+  .split .claude{ background:#f1ebfb; border:2px solid var(--biz-purple); }
+  .split h3{ font-size:1rem; font-weight:800; margin-bottom:.4rem; }
+  .split .me h3{ color:#1b5e20; } .split .claude h3{ color:var(--biz-purple); }
+  .split ul{ margin-bottom:0; padding-left:1.1rem; font-size:.92rem; }
+
+  .note-box{ background:#fde2ec; border:2px solid #f5a3c0; border-radius:.6rem; padding:.8rem 1rem; color:#3b2a31; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="container text-center">
+    <p class="lead mb-0 fst-italic fw-bold hero-subtitle">Music, software and AI: the person behind this app</p>
+  </div>
+</header>
+
+<main class="container mb-5">
+
+  <section id="contact">
+    <div class="card shadow-sm">
+      <div class="card-body p-4 p-md-5 about-card">
+
+        <div class="text-center mb-4 d-flex flex-column flex-md-row justify-content-center gap-3">
+          <a class="linkedin-btn" href="https://www.linkedin.com/in/dayanand-menashi-04969aba/" target="_blank" rel="noopener">
+            Connect with me on LinkedIn
+          </a>
+          <a class="linkedin-btn" href="mailto:d_menashi@yahoo.com">
+            Email me: d_menashi@yahoo.com
+          </a>
+        </div>
+        <p class="text-center fst-italic text-muted mb-4">Yes, a Yahoo email - I love to hold on to old stuff — Yahoo Mail is one of them (right up there with old cassette tapes of my favourite songs that I have nothing left to play on).</p>
+
+        <h2>About Me</h2>
+        <p>I am Daya, an AI professional. I started my tech career in 1997 working on COBOL mainframe, and my work has since spanned Mainframe, Web
+          technologies, Data Engineering and AI, building solutions for some of the world's largest Insurance and Financial Services organizations.
+          Outside work, and more and more inside it, three things keep me curious:</p>
+        <div class="passions">
+          <div class="passion"><b>🎶 Music</b><span>Old Bollywood melodies, classical pieces, guitar and piano: songs I want to be able to play, not just listen to.</span></div>
+          <div class="passion"><b>💻 Software</b><span>Nearly three decades of building things that work: from mainframes to the cloud.</span></div>
+          <div class="passion"><b>🤖 AI</b><span>Large language models and coding agents that can turn an idea into a working tool in an afternoon.</span></div>
+        </div>
+        <p>This Music Practice App is where the three meet.</p>
+
+        <h2>Why Music, and Why AI?</h2>
+        <p>Learning a song is harder than it should be. Sheet music has to be read, recordings go by too fast, and it is not obvious which note is being
+          played, when, or with which finger. Teachers help, but not everyone has one, and notes for the songs people love (especially Bollywood songs)
+          are often missing, paid, or wrong.</p>
+        <p>I am exploring how AI can lower that barrier so that <strong>more people can learn music easily</strong>: by finding the notes in a recording,
+          reading them from sheet music, playing them back slowly, and showing them on a keyboard, a guitar fretboard, a staff and even two moving hands.
+          The idea is simple: <em>see it, hear it, slow it down, then play it.</em></p>
+
+        <h2>What the App Does</h2>
+        <div class="app-grid">
+          <a class="app-card" href="index.html"><b>🎶 Song Practice</b><span>Plays the original recording and lights up each note on the piano or guitar as it sounds; slow it down to 50%.</span></a>
+          <a class="app-card" href="piano.html"><b>🎹 Piano demo</b><span>Press "Try it" and watch two hands play Für Elise or Pehla Nasha, with the score scrolling below.</span></a>
+          <a class="app-card" href="NOTES-TESTER/Piano-notes.html"><b>🙌 Piano Notes Player</b><span>Load any notes file: hear it, see the fingers press the keys, and loop just the bars you are learning.</span></a>
+          <a class="app-card" href="recorder.html"><b>🎙️ Recorder</b><span>Record a song playing in another browser tab as a WAV file, and trim it to the part you want to learn.</span></a>
+          <a class="app-card" href="NOTES-TESTER/index.html"><b>🧪 Notes Tester</b><span>Plays the written notes and compares them with the recording, line by line, to find the wrong ones.</span></a>
+          <a class="app-card" href="NOTES-TESTER/WAV-VISUALIZER.html"><b>🔬 WAV Visualizer</b><span>Two recordings side by side as coloured note boxes, with the differences outlined.</span></a>
+          <a class="app-card" href="NOTES-TESTER/Piano-tester.html"><b>🎹 Piano Capture</b><span>Play along on your laptop keyboard and capture the exact notes and timings.</span></a>
+          <a class="app-card" href="INFO/HOW-MUSIC-APP-WORKS.html"><b>📘 How it works</b><span>Step-by-step explainers of the app, the note analysis and the Piano Notes Player.</span></a>
+        </div>
+
+        <h2>Built Entirely with Claude Code</h2>
+        <p>Every page of this app, and every tool behind it, was built with <strong>Claude Code</strong>, Anthropic's AI coding agent, working in my
+          own folder on my own laptop. I did not hand-write the code. I described what I wanted in plain words (often with a screenshot), listened,
+          tested, and said what to change. Claude Code wrote, ran and checked everything else.</p>
+        <div class="split">
+          <div class="me">
+            <h3>🧑 What I did</h3>
+            <ul>
+              <li>Chose the songs, recorded clips and found the sheet music</li>
+              <li>Described each feature in everyday language, with screenshots</li>
+              <li>Listened: "it sounds like a spoon on a steel bowl", "the timing is off"</li>
+              <li>Decided the look and feel: colours, boxes, buttons</li>
+              <li>Tested every page and asked for fixes</li>
+            </ul>
+          </div>
+          <div class="claude">
+            <h3>🤖 What Claude Code did</h3>
+            <ul>
+              <li>Wrote every HTML, CSS and JavaScript page, with no build step</li>
+              <li>Analysed recordings with Python (pitch, note starts, tuning) to find the notes</li>
+              <li>Read 177 bars of Pehla Nasha from screenshots, and all of Für Elise from a PDF automatically</li>
+              <li>Worked out the hand split and fingering, and the soft piano sound</li>
+              <li>Tested in a headless browser, and wrote the "How it works" guides</li>
+            </ul>
+          </div>
+        </div>
+        <p>Some examples of what that looked like in practice: a 73-second film clip turned into 246 timed notes; a five-minute piano arrangement read bar by
+          bar and checked so that every bar adds up; a PDF of <em>Für Elise</em> converted into notes by code, with its repeats, triplets and "8va" passage handled;
+          and a keyboard where two hands press the keys with numbered fingers while the score scrolls in step.</p>
+
+        <h2>How You Can Use It, and Build on It</h2>
+        <ol>
+          <li><strong>Practise with it.</strong> Open the app in any browser, on a laptop or phone. No sign-up, nothing to install. Start with the
+            <a href="piano.html">Piano demo</a>.</li>
+          <li><strong>Add your own songs.</strong> The whole app is plain files in a public repository,
+            <a href="https://github.com/RAGchamp/MUSIC" target="_blank" rel="noopener">github.com/RAGchamp/MUSIC</a>. Record a clip with the
+            recorder page, put its notes in a text file (one line per note: time, notes, beats), and the practice pages, the Notes Tester and the
+            Piano Notes Player can all use it.</li>
+          <li><strong>Teachers and learners:</strong> make a practice page for a student, slow down the hard bars, and loop just those bars until they feel easy.</li>
+          <li><strong>Build your own with Claude Code.</strong> You don't need to be a programmer to start. What worked for me:
+            <ul>
+              <li>Describe the result you want in plain words; paste a screenshot when it is easier to show than to tell.</li>
+              <li>Ask it to <em>test</em> its work (it can open the page in a browser and check it), and to tell you honestly what it could not check.</li>
+              <li>Work in small steps, listen to the result, and say exactly what is wrong. "Too shrill" is useful feedback.</li>
+              <li>Keep a short project notes file (Claude Code uses a <code>CLAUDE.md</code>) so it remembers your decisions from one session to the next.</li>
+              <li>Ask it to explain what it built: the "How it works" guides in this app came from exactly that.</li>
+            </ul>
+          </li>
+        </ol>
+
+        <div class="note-box mt-4">
+          <strong>A note on accuracy:</strong> this is a personal learning project. Notes found from recordings, the left/right hand split and the fingering
+          are the app's best effort, not a teacher's or an arranger's. Please check against the music, trust your ears, and tell me when something is wrong.
+          I would love to hear which songs you would like to learn next.
+        </div>
+
+        <div class="text-center mt-4 d-flex flex-column flex-md-row justify-content-center gap-3">
+          <a class="linkedin-btn" href="https://www.linkedin.com/in/dayanand-menashi-04969aba/" target="_blank" rel="noopener">Connect with me on LinkedIn</a>
+          <a class="linkedin-btn" href="mailto:d_menashi@yahoo.com">Email me: d_menashi@yahoo.com</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">
+    Music Practice App · for personal practice · <a href="index.html">🎶 Song Practice</a> · <a href="piano.html">🎹 Piano demo</a> ·
+    <a href="contactus.html" class="text-white text-decoration-underline">Contact Us</a>
+  </div>
+</footer>
+
+</body>
+</html>

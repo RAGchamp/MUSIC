@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the Piano Notes Player Works</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-red:#dc3545;
+    --biz-green:#198754;
+    --biz-orange:#e8710a;
+    --biz-purple:#6f42c1;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    --box-line:#c9d3e3;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav (same as the app and the blog) */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{ font-weight:600; font-size:1.05rem; color:var(--nav-yellow); letter-spacing:.15em; word-spacing:.6em; font-style:italic; }
+  @media (max-width:576px){ .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; } }
+
+  section[id]{ scroll-margin-top:84px; }
+  html{ scroll-behavior:smooth; }
+
+  .hero{ background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%); color:#fff; }
+
+  /* Every box: the same thin border all the way round (no thick line on the left) */
+  .box{ border:2px solid var(--box-line) !important; border-radius:.6rem; }
+
+  .section-title{ display:inline-flex; align-items:center; gap:.6rem; padding-bottom:.4rem; border-bottom:3px solid var(--biz-blue); margin-bottom:1.25rem; }
+  .toc-num{
+    display:inline-flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.85rem; margin-right:.5rem; flex:none;
+  }
+  .toc-list a{ text-decoration:none; color:#212529; }
+  .toc-list a:hover{ color:var(--biz-blue); text-decoration:underline; }
+  .toc-item{ display:flex; align-items:center; padding:.4rem 0; }
+  .back-to-top{ font-size:.85rem; }
+  .color-key-dot{ width:.9rem; height:.9rem; border-radius:50%; display:inline-block; margin-right:.4rem; flex:none; }
+  h5 .color-key-dot{ vertical-align:1px; }
+  table thead th{ background:#eef3fb; }
+  .glossary-table thead th{ background:#04264d; color:#fff; }
+
+  /* Code windows */
+  .code-window{ background:#084298; border-radius:.5rem; overflow:hidden; margin:1rem 0 1.5rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.3); }
+  .code-window .code-titlebar{ background:#323233; color:#ccc; padding:.45rem .9rem; font-size:.8rem; display:flex; align-items:center; gap:.4rem; font-family:'Segoe UI',Roboto,sans-serif; }
+  .code-window .dot{ width:.7rem; height:.7rem; border-radius:50%; display:inline-block; }
+  .dot-red{ background:#ff5f56; } .dot-yellow{ background:#ffbd2e; } .dot-green{ background:#27c93f; }
+  .code-window .code-filename{ margin-left:.5rem; opacity:.85; }
+  .code-window pre{ margin:0; padding:1rem 1.25rem; background:#084298; overflow-x:auto; }
+  .code-window code{ font-family:'Fira Code',Consolas,Monaco,monospace; font-size:.83rem; color:#fff; font-weight:600; white-space:pre; }
+  .code-window .cm{ color:#9ec5fe; font-weight:400; }
+
+  /* Step-by-step boxes */
+  .step-box{ background:#e9ecef; border:2px solid var(--box-line); border-radius:.6rem; overflow:hidden; margin:0 0 1.25rem; }
+  .step-box .step-bar{ background:var(--nav-blue); color:#5BF527; font-weight:700; padding:.5rem 1.1rem; font-size:.95rem; letter-spacing:.02em; }
+  .step-box .step-body{ padding:1rem 1.25rem; }
+  .step-box .step-body p:last-child, .step-box .step-body ul:last-child{ margin-bottom:0; }
+  .step-box .step-file{ font-family:'Fira Code',Consolas,Monaco,monospace; font-size:.8rem; margin-bottom:.7rem; }
+  .step-box .step-file mark{ background:var(--biz-yellow); color:#2b2b2b; padding:.15rem .5rem; border-radius:.25rem; font-weight:600; }
+
+  /* Flow diagram: nodes with a uniform border */
+  .flow{ display:flex; flex-wrap:wrap; gap:.4rem; align-items:stretch; }
+  .flow .node{ flex:1 1 140px; background:#fff; border:2px solid var(--box-line); border-radius:.5rem; padding:.55rem .65rem; font-size:.8rem; }
+  .flow .node b{ display:block; font-size:.86rem; }
+  .flow .arrow{ align-self:center; color:#6c757d; font-weight:700; }
+  .who{ font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+  .who.you{ color:var(--biz-green); } .who.claude{ color:var(--biz-purple); } .who.code{ color:var(--biz-blue); }
+
+  .callout-num{ display:inline-flex; align-items:center; justify-content:center; width:1.35rem; height:1.35rem; border-radius:50%; background:var(--biz-red); color:#fff; font-size:.72rem; font-weight:700; margin:0 .2rem; vertical-align:middle; }
+
+  /* ---------- Small mock-ups of the app's own UI (static copies of its CSS) ---------- */
+  .mock{ border:2px solid var(--box-line); border-radius:.6rem; background:#fff; padding:.9rem; font-size:.85rem; }
+  .mock .m-title{ display:flex; align-items:center; font-weight:700; margin-bottom:.6rem; }
+  .step-num{ display:inline-flex; align-items:center; justify-content:center; width:1.6rem; height:1.6rem; border-radius:50%; background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.85rem; margin-right:.5rem; flex:none; }
+  .m-select{ border:1px solid #adb5bd; border-radius:.35rem; padding:.3rem .6rem; background:#fff; display:flex; justify-content:space-between; }
+  .m-meta{ color:#6c757d; font-size:.8rem; margin-top:.4rem; }
+  .m-prompt{ background:linear-gradient(120deg,var(--biz-blue-dark),var(--biz-blue)); color:#fff; border-radius:.5rem; padding:.55rem .8rem; margin-bottom:.6rem; }
+  .now-box{ display:flex; gap:.6rem; flex-wrap:wrap; }
+  .now-card{ flex:1 1 160px; background:#fff; border:2px solid #dde3ec; border-radius:.5rem; padding:.45rem .7rem; }
+  .now-card.now{ border-color:#c79100; background:#fff8e1; }
+  .now-card .lbl{ font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; }
+  .now-card .val{ font-size:1.2rem; font-weight:800; line-height:1.2; }
+  .now-card .det{ font-size:.78rem; color:#5a6475; }
+
+  .keyboard{ position:relative; display:flex; height:120px; user-select:none; }
+  .key.white{ flex:1 0 24px; position:relative; background:linear-gradient(#fff,#f1f1f1); border:1px solid #b9bec7; border-radius:0 0 .35rem .35rem; margin-right:-1px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding-bottom:.3rem; font-size:.6rem; font-weight:700; color:#333; }
+  .key.black{ position:absolute; top:0; right:-31%; width:62%; height:60%; z-index:2; background:linear-gradient(#333,#111); border-radius:0 0 .3rem .3rem; color:#fff; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding-bottom:.25rem; font-size:.5rem; font-weight:700; }
+  .key.white.used{ background:linear-gradient(#fff,#d7f0e1); }
+  .key.black.used{ background:linear-gradient(#2c6e49,#174a2f); }
+  .key.white.playing{ background:linear-gradient(#fff3c4,var(--biz-yellow)); }
+  .key.black.playing{ background:linear-gradient(#ffd75e,#c79100); color:#000; }
+  .key.white.pressed{ background:linear-gradient(#cfe2ff,#9ec5fe); }
+
+  .fb{ display:grid; grid-template-columns:34px 30px repeat(7, 1fr); grid-template-rows:auto repeat(6, 24px); border-radius:.4rem; overflow:hidden; min-width:420px; background:linear-gradient(180deg,#5a3a22,#6e4628 50%,#5a3a22); }
+  .fb-lbl{ background:#f1f4f9; display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:700; color:#6c757d; padding:.1rem 0; }
+  .fb-name{ background:#f1f4f9; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.75rem; }
+  .fb-cell{ position:relative; border-right:3px solid #c9c9c9; display:flex; align-items:center; justify-content:center; }
+  .fb-cell.open{ background:#efe6d8; border-right:6px solid #f5f0e6; }
+  .fb-cell::before{ content:''; position:absolute; left:0; right:-3px; top:50%; height:2px; transform:translateY(-50%); background:linear-gradient(#f4f4f4,#a9a9a9); }
+  .fb-dot{ position:relative; z-index:1; min-width:20px; height:20px; padding:0 3px; border-radius:10px; font-size:.56rem; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .fb-cell.used .fb-dot{ background:#2c6e49; color:#fff; }
+  .fb-cell.playing .fb-dot{ background:var(--biz-yellow); color:#000; box-shadow:0 0 0 3px #fff8, 0 0 10px #ffc107; transform:scale(1.15); }
+
+  .tab-strip{ display:flex; font-family:Consolas,Monaco,monospace; background:#fff; border:1px solid #dde3ec; border-radius:.5rem; padding:.35rem .5rem; overflow-x:auto; }
+  .tab-names{ display:flex; flex-direction:column; padding-top:16px; margin-right:.25rem; }
+  .tab-names div, .tab-col .tc{ height:18px; line-height:18px; font-size:.75rem; font-weight:700; }
+  .tab-col{ display:flex; flex-direction:column; min-width:32px; border-radius:.3rem; }
+  .tab-col .tt{ height:16px; font-size:.64rem; font-weight:800; color:var(--biz-purple); text-align:center; white-space:nowrap; }
+  .tab-col .tc{ position:relative; text-align:center; }
+  .tab-col .tc::before{ content:''; position:absolute; left:0; right:0; top:50%; border-top:1px solid #9aa6b8; }
+  .tab-col .tc span{ position:relative; background:#fff; padding:0 2px; color:#084298; }
+  .tab-col.playing{ background:var(--biz-yellow); }
+  .tab-col.playing .tc span{ background:var(--biz-yellow); color:#000; }
+
+  .song-area{ background:#f1f4f9; border:2px dashed var(--box-line); border-radius:.6rem; padding:.7rem .6rem .5rem; display:flex; flex-wrap:wrap; gap:.45rem; align-items:center; }
+  .chip{ position:relative; background:#fff; border:2px solid var(--biz-blue); border-radius:.5rem; padding:.35rem .5rem .25rem; text-align:center; min-width:46px; }
+  .chip .cname{ font-weight:800; font-size:.86rem; line-height:1.2; }
+  .chip .charm{ font-size:.66rem; font-weight:700; color:#5a6475; line-height:1.1; margin-top:.15rem; }
+  .chip .cbeats{ font-size:.58rem; color:#6c757d; margin-top:.15rem; }
+  .chip .ctech{ position:absolute; top:-.6rem; left:-.45rem; min-width:1.15rem; height:1.15rem; padding:0 .2rem; border-radius:.6rem; background:var(--biz-purple); color:#fff; font-size:.66rem; font-weight:800; line-height:1.15rem; text-align:center; }
+  .chip.done{ opacity:.55; }
+  .chip.playing{ background:var(--biz-yellow); border-color:#c79100; transform:translateY(-3px); }
+
+  .m-btn{ display:inline-block; border-radius:.4rem; padding:.3rem .9rem; font-weight:700; font-size:.82rem; }
+  .m-btn.go{ background:var(--biz-green); color:#fff; }
+  .m-btn.stop{ border:1px solid var(--biz-red); color:var(--biz-red); }
+  .m-btn.rec{ background:var(--biz-red); color:#fff; }
+  .m-bar{ height:.45rem; background:#e9ecef; border-radius:1rem; overflow:hidden; }
+  .m-bar > div{ height:100%; background:var(--biz-yellow); }
+
+  /* signal-chain diagram for the single-note sounds */
+  .chain{ display:flex; flex-wrap:wrap; gap:.35rem; align-items:center; font-size:.78rem; }
+  .chain span.n{ background:#fff; border:2px solid var(--box-line); border-radius:.4rem; padding:.25rem .5rem; font-weight:600; }
+  .chain span.a{ color:#6c757d; font-weight:700; }
+
+  .wave{ width:100%; height:auto; display:block; }
+  .num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+
+  /* Extra for this document */
+  .part-heading{ font-size:1.5rem; font-weight:800; color:var(--nav-blue); background:#fff3cd; border:2px solid var(--biz-yellow); border-radius:.6rem; padding:.6rem 1rem; margin:0 0 1.5rem; }
+  .part-label{ font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--biz-blue-dark); margin:.2rem 0 .3rem; }
+  .m-file{ display:flex; align-items:center; border:2px solid var(--nav-blue); border-radius:.4rem; overflow:hidden; background:#fff; }
+  .m-file-btn{ background:var(--nav-blue); color:var(--nav-yellow); font-weight:700; padding:.35rem .8rem; }
+  .hand-svg{ width:100%; max-width:300px; display:block; margin:0 auto; border-radius:.4rem; }
+  .m-range{ display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; background:#eef4ff; border:1px solid var(--box-line); border-radius:.5rem; padding:.45rem .7rem; }
+  .m-check{ width:1rem; height:1rem; border:2px solid var(--nav-blue); border-radius:.2rem; display:inline-block; background:#fff; }
+  .m-check.on{ background:var(--nav-blue); }
+  .m-in{ border:1px solid #adb5bd; border-radius:.3rem; padding:.05rem .5rem; min-width:3.2rem; background:#fff; font-size:.82rem; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<!-- HERO -->
+<header class="hero py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-9">
+        <span class="badge rounded-pill bg-warning text-dark mb-3">Piano Notes Player · one HTML page · Claude Code</span>
+        <h1 class="display-6 fw-bold">How the Piano Notes Player Works</h1>
+        <p class="lead mb-0">The <strong>Piano Notes Player</strong> (<code class="text-white">NOTES-TESTER/Piano-notes.html</code>) takes a <strong>notes file</strong>, plays it on a
+          recorded piano sound, shows <strong>two hands</strong> pressing the keys with numbered fingers, and scrolls the <strong>score</strong> underneath with the
+          current notes in <strong>yellow</strong>. Part 1 walks through the page step by step, from loading the file to the hands, the sound, the score and playing a range of bars.
+          Part 2 explains how the 5-minute Pehla Nasha notes file was made from a PDF of the sheet music.
+          <span class="d-block mt-2 small">Last updated 2026-11-16.</span></p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-5">
+
+  <!-- COLOR KEY -->
+  <div class="mb-5">
+    <div class="card shadow-sm box">
+      <div class="card-body py-3">
+        <div class="row g-2 small text-center text-md-start">
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-blue);"></span>Blue: how it works</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-green);"></span>Green: what you do</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-purple);"></span>Purple: what Claude Code does</div>
+          <div class="col-6 col-md"><span class="color-key-dot" style="background:var(--biz-yellow);"></span>Yellow: the highlight / background</div>
+          <div class="col-12 col-md"><span class="color-key-dot" style="background:var(--biz-red);"></span>Red: watch out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <section id="toc" class="mb-5">
+    <h2 class="section-title">Table of Contents</h2>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <div class="row toc-list">
+          <div class="col-md-6">
+            <div class="part-label">Part 1 · How the Piano Notes Player works</div>
+            <div class="toc-item"><span class="toc-num">1</span><a href="#overview">The Big Picture</a></div>
+            <div class="toc-item"><span class="toc-num">2</span><a href="#load">Loading the Notes File</a></div>
+            <div class="toc-item"><span class="toc-num">3</span><a href="#hands">Which Hand Plays Which Note</a></div>
+            <div class="toc-item"><span class="toc-num">4</span><a href="#fingers">Choosing the Fingers</a></div>
+            <div class="toc-item"><span class="toc-num">5</span><a href="#moves">How the Hands Move: Taps and Stretches</a></div>
+            <div class="toc-item"><span class="toc-num">6</span><a href="#sound">How the Sound Is Made</a></div>
+            <div class="toc-item"><span class="toc-num">7</span><a href="#score">The Score and the Yellow Highlight</a></div>
+            <div class="toc-item"><span class="toc-num">8</span><a href="#range">Playing a Range of Bars</a></div>
+          </div>
+          <div class="col-md-6">
+            <div class="part-label">Part 2 · From the PDF to the notes file</div>
+            <div class="toc-item"><span class="toc-num">9</span><a href="#pdf">What Was in the PDF</a></div>
+            <div class="toc-item"><span class="toc-num">10</span><a href="#omr">Finding Staves, Bar Lines and Note Heads</a></div>
+            <div class="toc-item"><span class="toc-num">11</span><a href="#reading">Reading Each Bar</a></div>
+            <div class="toc-item"><span class="toc-num">12</span><a href="#write">Checking and Writing the File</a></div>
+            <div class="toc-item"><span class="toc-num">13</span><a href="#limits">What Was Automatic, What Was Not</a></div>
+            <div class="toc-item"><span class="toc-num">14</span><a href="#file-map">File Map</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="part-heading">Part 1 · How the Piano Notes Player works</h2>
+
+  <!-- 1. OVERVIEW -->
+  <section id="overview" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">1</span>The Big Picture</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>From a text file to moving hands</h5>
+        <p>Everything starts from a plain text file of note lines. The page turns it into a list of lines, decides which hand and finger plays each note,
+          and then drives three things from <strong>one clock</strong>: the sound, the hands on the keyboard, and the score.</p>
+        <div class="flow">
+          <div class="node"><span class="who you">You</span><b>1. Choose a file</b>Pick a .txt from <code>REFERENCE-AUDIO-FILES</code>, e.g. the 5-minute Pehla Nasha notes.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">readLines()</span><b>2. Read the lines</b>Each line becomes {time, notes, beats, label}.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">splitHands() · place()</span><b>3. Hands and fingers</b>Right or left hand for every note, and a finger 1–5.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">pump() · showAt()</span><b>4. Play</b>Schedule the piano samples; move the hands; light the keys; highlight and scroll the score.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-yellow);"></span>Things worth knowing up front</h5>
+        <ul class="mb-0">
+          <li><strong>One self-contained page.</strong> HTML, CSS and JavaScript in one file; it only reads files and works opened straight from disk (<code>file://</code>).</li>
+          <li><strong>No recording is played.</strong> The sound is built from recorded single piano notes (the FluidR3 SoundFont samples in <code>NOTES-TESTER/SAMPLES/piano.js</code>).</li>
+          <li><strong>The hands are a sensible guess.</strong> The notes file does not say which hand or finger plays a note, so the page works it out. It is a reasonable fingering, not the arranger's.</li>
+          <li><strong>No AI runs in the page.</strong> Every step is ordinary, repeatable code: the same file always gives the same hands, fingers and sound.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 2. LOAD -->
+  <section id="load" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">2</span>Loading the Notes File</h2>
+    <div class="step-box">
+      <div class="step-bar">Step 1 · You pick the file</div>
+      <div class="step-body">
+        <p>Step 1 of the page has one file box (<em>Notes File, the .txt file from Reference-Audio-Files</em>). A browser page cannot look into a folder by itself,
+          so you choose the file; the page then reads it with <code>file.text()</code>. Nothing is uploaded anywhere.</p>
+        <div class="mock mb-0">
+          <div class="m-title"><span class="step-num">1</span>Choose the notes <em class="fw-normal ms-2 small text-muted">Notes File, the .txt file from Reference-Audio-Files</em></div>
+          <div class="m-file"><span class="m-file-btn">Choose File</span><span class="ms-2">SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt</span></div>
+          <div class="m-meta">📄 996 lines, 5:01. Right hand: 743 lines · left hand: 591 lines.</div>
+        </div>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 2 · Each line is read into four parts</div>
+      <div class="step-body">
+        <p>The file uses the same line format as <code>song-library.js</code>: <strong>time</strong> (seconds), <strong>notes</strong> joined by <code>+</code>,
+          <strong>beats</strong> (how long until the next line), and an optional <strong>label</strong> such as <code>bar 5</code>. Quotes, trailing commas and
+          <code>//</code> comment lines are skipped, so the file can also be pasted into the song list unchanged.</p>
+        <div class="code-window"><div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt</span></div>
+<pre><code><span class="cm">//   time  notes                 beats  label</span>
+    '  8.98  D5+A3+F3+D3              0.5  bar 5',
+    '  9.25  D5                       0.5',
+    '  9.52  F5                       0.5',
+    '  9.79  D5                       2.5',</code></pre></div>
+        <p class="mb-2"><code>readLines()</code> matches each line with one pattern and turns every note name into a key number (MIDI: middle C = 60):</p>
+        <div class="code-window"><div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">Piano-notes.html · readLines() (shortened)</span></div>
+<pre><code>const m = s.match(/^(-|\d+(?:\.\d+)?)\s+(\S+)(?:\s+(\d+(?:\.\d+)?))?(?:\s+(.*))?$/);
+const notes = m[2].split('+').map(tok);      <span class="cm">// 'D5' -> {L:'D', acc:'', oct:5, midi:74, name:'D5'}</span>
+out.push({t: m[1] === '-' ? null : +m[1], notes, beats: +m[3] || 1, label: m[4] || ''});
+<span class="cm">// lines written with '-' instead of a time get times from the beats and "tempo: N" in the file</span></code></pre></div>
+        <ul class="mb-0">
+          <li><strong>First note = main note.</strong> In these files the right hand comes first, highest note first, so the first name is the melody.</li>
+          <li><strong>Untimed files work too.</strong> If the times are <code>-</code>, the page adds up beats × 60 ÷ tempo, starting at <code>start:</code> (or 0).</li>
+          <li>The lines are sorted by time, and the keyboard is drawn for the song's range (lowest to highest note, rounded out to whole octaves, at least 4 octaves).</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 3. HANDS -->
+  <section id="hands" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">3</span>Which Hand Plays Which Note</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>The problem</h5>
+        <p>A line such as <code>D5+A3+F3+D3</code> says which keys go down together, but not which hand presses them. A pianist would play the high D5 with the
+          right hand and the D minor chord (D3 F3 A3) with the left. <code>splitHands()</code> makes that choice for every line.</p>
+        <h5 class="mt-3"><span class="color-key-dot" style="background:var(--biz-blue);"></span>How it chooses: try every split, keep the cheapest</h5>
+        <p>The notes of a line are sorted from high to low. The page tries every way of cutting the list in two (top part = right hand, bottom part = left hand),
+          gives each split a <strong>cost</strong>, and keeps the lowest:</p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead><tr><th>Rule</th><th>Why</th><th class="num">Cost</th></tr></thead>
+            <tbody>
+              <tr><td>Distance of each hand's notes from where that hand has been playing</td><td>Hands stay in their area; they don't jump around.</td><td class="num">1 per semitone</td></tr>
+              <tr><td>A hand covering more than an octave</td><td>One hand can't reach that far.</td><td class="num">8 per semitone over</td></tr>
+              <tr><td>The main (first-written) note given to the left hand</td><td>The melody is normally in the right hand.</td><td class="num">4</td></tr>
+              <tr><td>A right-hand note below D4</td><td>The right hand rarely goes that low.</td><td class="num">6 per note</td></tr>
+              <tr><td>A left-hand note from F4 up</td><td>The left hand rarely goes that high.</td><td class="num">4 per note</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-0">After each line, each hand's "centre" moves 30% of the way towards the notes it just played, and the two centres are kept at least 8 semitones
+          apart. The weights were tuned against the hands in the printed score: <strong>975 of the 996 Pehla Nasha lines</strong> are split exactly as written
+          (935 before tuning).</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 4. FINGERS -->
+  <section id="fingers" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">4</span>Choosing the Fingers</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>Five fingers over five white keys</h5>
+        <p>The page measures key positions in <strong>white-key units</strong>: white key number 0, 1, 2 … across the keyboard, with a black key halfway between its
+          neighbours (e.g. 3.0 between white keys 2.5 and 3.5). A relaxed hand covers five neighbouring white keys, so a hand is described by one number,
+          <strong>p</strong>: where the thumb (finger 1) rests. Finger <em>f</em> rests at <code>p + f − 1</code>. Finger numbers are the pianist's: <strong>1 = thumb,
+          2 = index, 3 = middle, 4 = ring, 5 = little finger</strong>. The left hand uses the same rule in a mirrored keyboard, so its thumb is on the right.</p>
+        <h5 class="mt-3"><span class="color-key-dot" style="background:var(--biz-blue);"></span>The rules in <code>place()</code></h5>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Situation</th><th>What the hand does</th></tr></thead>
+            <tbody>
+              <tr><td>The notes fit under the hand where it is</td><td><strong>The hand stays put</strong>; each note goes to the finger over it.</td></tr>
+              <tr><td>One note, above the hand</td><td><strong>Thumb passes under</strong>: the new note gets finger 1 and the hand moves up (as in a rising scale).</td></tr>
+              <tr><td>One note, below the hand</td><td><strong>Finger 3 crosses over</strong>: the new note gets finger 3 and the hand moves down.</td></tr>
+              <tr><td>A chord that fits within five white keys</td><td>The hand moves as little as possible so the chord fits, then fingers by position.</td></tr>
+              <tr><td>A chord wider than the hand</td><td><strong>A stretch</strong>: thumb on the lowest note, little finger on the highest, the others shared out in between.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-yellow);"></span>How long a finger stays down</h5>
+        <p class="mb-0">A hand keeps its keys down <strong>until that same hand plays again</strong> (at most 4 seconds). So a left-hand chord is held while the right hand
+          plays several melody notes over it, the way a pianist holds a chord. This is also how long each note sounds.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 5. MOVES -->
+  <section id="moves" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">5</span>How the Hands Move: Taps and Stretches</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>What a hand is made of</h5>
+        <p>Each hand is six plain boxes laid over the keyboard: a <strong>palm</strong> (with <strong>R</strong> or <strong>L</strong>) below the keys and five
+          <strong>fingers</strong> reaching up onto them. The right hand has an orange outline, the left a blue one. The page only ever sets each box's position
+          and length; the browser's <strong>CSS transitions</strong> animate the change, so the hand <em>slides</em> to a new position (0.16 s) and a finger
+          <em>dips</em> into a key (0.07 s) instead of jumping.</p>
+        <div class="row g-3 align-items-stretch">
+          <div class="col-md-6">
+            <div class="mock h-100">
+              <div class="small fw-bold mb-2">A tap on a white key (right hand, thumb)</div>
+              <svg viewBox="0 0 170 150" class="hand-svg" aria-label="Right hand pressing a white key with the thumb">
+                <rect x="0" y="0" width="170" height="150" fill="#1f2937"/>
+                <g stroke="#9aa3af" fill="#fff"><rect x="5" y="5" width="26" height="100"/><rect x="31" y="5" width="26" height="100" fill="#fde68a"/><rect x="57" y="5" width="26" height="100"/><rect x="83" y="5" width="26" height="100"/><rect x="109" y="5" width="26" height="100"/><rect x="135" y="5" width="26" height="100"/></g>
+                <g fill="#111827"><rect x="22" y="5" width="16" height="60"/><rect x="74" y="5" width="16" height="60"/><rect x="100" y="5" width="16" height="60"/><rect x="126" y="5" width="16" height="60"/></g>
+                <g stroke="#c2410c" stroke-width="2"><rect x="36" y="76" width="17" height="50" rx="8" fill="#e8a06e"/><rect x="62" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="88" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="114" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="140" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/>
+                <rect x="25" y="106" width="142" height="40" rx="14" fill="#fdd5aa"/></g>
+                <circle cx="44.5" cy="84" r="6.5" fill="#c2410c"/><text x="44.5" y="87" font-size="8" font-weight="900" fill="#fff" text-anchor="middle">1</text>
+                <text x="96" y="132" font-size="13" font-weight="900" fill="#c2410c" text-anchor="middle">R</text>
+              </svg>
+              <p class="small mb-0 mt-2">Most of the time a finger just <strong>dips a little</strong>: a white key is pressed near the player, so the fingertip only moves from its
+                resting line (y = 124 px) to y = 112 px, and the key turns yellow.</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mock h-100">
+              <div class="small fw-bold mb-2">A reach to a black key (left hand, finger 3)</div>
+              <svg viewBox="0 0 170 150" class="hand-svg" aria-label="Left hand reaching a black key with finger 3">
+                <rect x="0" y="0" width="170" height="150" fill="#1f2937"/>
+                <g stroke="#9aa3af" fill="#fff"><rect x="5" y="5" width="26" height="100"/><rect x="31" y="5" width="26" height="100"/><rect x="57" y="5" width="26" height="100"/><rect x="83" y="5" width="26" height="100"/><rect x="109" y="5" width="26" height="100"/><rect x="135" y="5" width="26" height="100"/></g>
+                <g fill="#111827"><rect x="22" y="5" width="16" height="60"/><rect x="48" y="5" width="16" height="60"/><rect x="100" y="5" width="16" height="60"/><rect x="126" y="5" width="16" height="60"/></g>
+                <rect x="74" y="5" width="16" height="60" fill="#3b82f6"/>
+                <g stroke="#1d4ed8" stroke-width="2"><rect x="22" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="48" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="73.5" y="40" width="17" height="86" rx="8" fill="#e8a06e"/><rect x="100" y="88" width="17" height="38" rx="8" fill="#fdd5aa"/><rect x="126" y="98" width="17" height="28" rx="8" fill="#fdd5aa"/>
+                <rect x="12" y="106" width="142" height="40" rx="14" fill="#fdd5aa"/></g>
+                <circle cx="82" cy="48" r="6.5" fill="#1d4ed8"/><text x="82" y="51" font-size="8" font-weight="900" fill="#fff" text-anchor="middle">3</text>
+                <text x="83" y="132" font-size="13" font-weight="900" fill="#1d4ed8" text-anchor="middle">L</text>
+              </svg>
+              <p class="small mb-0 mt-2">When the key is <strong>black</strong>, the finger <strong>extends</strong> much further, to y = 66 px, because black keys sit further
+                from the player and are shorter. A long finger therefore means "this note is a black key" (here B♭2), and the key turns blue for the left hand.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>The finger shapes, in numbers</h5>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead><tr><th>Finger state</th><th>Fingertip (from the top of the keys)</th><th>What you see</th></tr></thead>
+            <tbody>
+              <tr><td>Resting (fingers 2–5)</td><td class="num">124 px</td><td>Light colour, just touching the front of the white keys.</td></tr>
+              <tr><td>Resting thumb</td><td class="num">140 px</td><td>Shorter, because a thumb sits lower on a real hand.</td></tr>
+              <tr><td>Pressing a white key</td><td class="num">112 px</td><td>Darker, a little longer, with its finger number; the key turns yellow (right) or light blue (left).</td></tr>
+              <tr><td>Pressing a black key</td><td class="num">66 px</td><td>Much longer: the finger <strong>extends</strong> up into the black key.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="mb-0">
+          <li><strong>Resting fingers follow the pressing ones.</strong> Fingers that are not pressing are placed between (or beside) the pressing fingers
+            (<code>fingerXs()</code>), so in a stretch the whole hand spreads out and the palm widens with it.</li>
+          <li><strong>A short lift before the next press.</strong> A finger lifts 0.05 s before its note ends, so repeated notes on the same key show as separate taps.</li>
+          <li><strong>A hand that is waiting</strong> shows where it will play next, with no finger down.</li>
+          <li>The line above the keyboard spells it out, e.g. <em>Right: F5 (4) · Left: C4 (1) + A3 (3)</em> (note and finger). <strong>Finger numbers</strong> can be switched off.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 6. SOUND -->
+  <section id="sound" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">6</span>How the Sound Is Made</h2>
+    <div class="step-box">
+      <div class="step-bar">Step 1 · Load the recorded piano notes</div>
+      <div class="step-body">
+        <p class="mb-0">When the page opens it adds <code>SAMPLES/piano.js</code> as a script (this also works from disk). The file holds one short MP3 per key
+          (64 keys, A1–C7, grand piano from the FluidR3 SoundFont, CC BY 3.0). Each is decoded once, its silent lead-in is cut so notes start on time, and its
+          loudness is set to the same peak. A key outside that range falls back to a simple synthesised tone. The status shows <em>🎹 Piano sound ready (64 recorded notes)</em>.</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 2 · Make each note sound like a piano, softly</div>
+      <div class="step-body">
+        <ul>
+          <li><strong>The melody stands out:</strong> the main note of a line plays at full level; the other notes of the line (chord notes, the left hand) at 0.55 ÷ √(number of others).</li>
+          <li><strong>High notes are softer:</strong> above D5 each semitone is 3% quieter (down to half), so the top doesn't sound shrill.</li>
+          <li><strong>A pedal-like release:</strong> when a note ends it fades over about 0.3 s instead of stopping dead.</li>
+        </ul>
+        <div class="chain mb-0">
+          <span class="n">piano sample</span><span class="a">→</span><span class="n">note volume (main / chord / high-note)</span><span class="a">→</span>
+          <span class="n">low-pass 4.2 kHz</span><span class="a">→</span><span class="n">treble −5 dB</span><span class="a">→</span><span class="n">room echo 20%</span><span class="a">→</span><span class="n">compressor</span><span class="a">→</span><span class="n">speakers</span>
+        </div>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 3 · Schedule the notes a little ahead</div>
+      <div class="step-body">
+        <p>Web Audio plays a note at an exact future time. Every 0.25 s, <code>pump()</code> schedules all the lines that start in the next 1.2 s, so even a
+          5-minute song never has thousands of notes waiting at once. Speed (50–115%) simply divides the gaps: at 50% a 1-second gap becomes 2 seconds,
+          and the pitch is unchanged because each note is still the same sample.</p>
+        <div class="code-window"><div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">Piano-notes.html · pump() (shortened)</span></div>
+<pre><code>const horizon = from + (ctx.currentTime - t0 + 1.2) * sp;     <span class="cm">// song time 1.2 s from now</span>
+for(; nextLine &lt; lines.length &amp;&amp; lines[nextLine].t &lt; horizon &amp;&amp; lines[nextLine].t &lt; until; nextLine++){
+  const L = lines[nextLine], when = t0 + (L.t - from) / sp;    <span class="cm">// when to play it, on the audio clock</span>
+  L.r / L.l notes -> note(midi, when, held / sp, level);       <span class="cm">// each hand's notes, held until that hand plays again</span>
+}</code></pre></div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 7. SCORE -->
+  <section id="score" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">7</span>The Score and the Yellow Highlight</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>Building the score from the lines</h5>
+        <ol class="mb-3">
+          <li><strong>Bars.</strong> A line labelled <code>bar N</code> starts bar N (files without labels are cut into 4-beat bars).</li>
+          <li><strong>Columns.</strong> Each line is one column: its right-hand notes go on the treble staff (black) and its left-hand notes on the bass staff (blue),
+            using the same hand split as the keyboard. Each note is drawn at its height on the staff, with a flat or sharp sign when needed.</li>
+          <li><strong>Note shapes.</strong> A note's length is the time until <em>that hand</em> plays again (in beats): 2 beats or more is an open note, a dot adds
+            half, eighths and sixteenths get flags or are joined by beams within a beat. So a held left-hand chord shows as a half note under four melody eighths.</li>
+          <li><strong>Names.</strong> The note names are written under each staff, highest first.</li>
+          <li><strong>Rows.</strong> Bars are packed into rows that fit the frame's width; each bar shows its number and start time (e.g. <em>27 · 0:51</em>).</li>
+        </ol>
+        <div class="mock">
+          <svg viewBox="0 0 520 190" class="w-100" aria-label="One bar of the score with the current column highlighted">
+            <rect x="160" y="8" width="26" height="178" rx="4" fill="rgba(255,193,7,.55)"/>
+            <text x="12" y="14" font-size="10" fill="#6c757d">27 · 0:51</text>
+            <g stroke="#6c757d" stroke-width="1"><line x1="8" x2="512" y1="30" y2="30"/><line x1="8" x2="512" y1="40" y2="40"/><line x1="8" x2="512" y1="50" y2="50"/><line x1="8" x2="512" y1="60" y2="60"/><line x1="8" x2="512" y1="70" y2="70"/>
+              <line x1="8" x2="512" y1="120" y2="120"/><line x1="8" x2="512" y1="130" y2="130"/><line x1="8" x2="512" y1="140" y2="140"/><line x1="8" x2="512" y1="150" y2="150"/><line x1="8" x2="512" y1="160" y2="160"/></g>
+            <line x1="8" x2="8" y1="30" y2="160" stroke="#212529" stroke-width="1.2"/><line x1="511" x2="511" y1="30" y2="160" stroke="#212529" stroke-width="1.2"/>
+            <ellipse cx="173" cy="45" rx="5.6" ry="4" fill="#212529" transform="rotate(-20 173 45)"/><line x1="178" x2="178" y1="45" y2="15" stroke="#212529" stroke-width="1.3"/><circle cx="183" cy="42" r="1.8" fill="#212529"/>
+            <ellipse cx="290" cy="45" rx="5.6" ry="4" fill="#212529" transform="rotate(-20 290 45)"/><line x1="295" x2="295" y1="45" y2="15" stroke="#212529" stroke-width="1.3"/><path d="M295,15 q8,8 6,18" fill="none" stroke="#212529" stroke-width="2"/>
+            <ellipse cx="400" cy="45" rx="5.6" ry="4" fill="#fff" stroke="#212529" stroke-width="1.6" transform="rotate(-20 400 45)"/><line x1="405" x2="405" y1="45" y2="15" stroke="#212529" stroke-width="1.3"/>
+            <g font-size="10.5" font-weight="700" text-anchor="middle" fill="#212529"><text x="173" y="92">D5</text><text x="290" y="92">D5</text><text x="400" y="92">D5</text></g>
+            <ellipse cx="173" cy="155" rx="5.6" ry="4" fill="#fff" stroke="#084298" stroke-width="1.6" transform="rotate(-20 173 155)"/><line x1="178" x2="178" y1="155" y2="125" stroke="#084298" stroke-width="1.3"/>
+            <path d="M156,144 L156,159 C163,156 163,150 156,153" fill="none" stroke="#084298" stroke-width="1.5"/>
+            <ellipse cx="290" cy="140" rx="5.6" ry="4" fill="#084298" transform="rotate(-20 290 140)"/><ellipse cx="290" cy="130" rx="5.6" ry="4" fill="#084298" transform="rotate(-20 290 130)"/><line x1="295" x2="295" y1="140" y2="100" stroke="#084298" stroke-width="1.3"/>
+            <circle cx="300" cy="127" r="1.8" fill="#084298"/><circle cx="300" cy="137" r="1.8" fill="#084298"/>
+            <ellipse cx="400" cy="165" rx="5.6" ry="4" fill="#084298" transform="rotate(-20 400 165)"/><line x1="395" x2="395" y1="165" y2="195" stroke="#084298" stroke-width="1.3"/>
+            <g font-size="10.5" font-weight="700" text-anchor="middle" fill="#084298"><text x="173" y="182">B♭2</text><text x="290" y="182">F3 D3</text><text x="400" y="182">F2</text></g>
+          </svg>
+          <div class="small text-muted mt-1">Bar 27: the yellow column is the line being played now (D5 in the right hand, B♭2 in the left).</div>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-yellow);"></span>How the yellow highlight stays in sync</h5>
+        <p>There is <strong>one clock</strong>: the audio clock. While playing, the song position is</p>
+        <div class="code-window"><div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">Piano-notes.html</span></div>
+<pre><code>const songTime = () => from + (ctx.currentTime - t0) * sp;   <span class="cm">// seconds into the song, at the chosen speed</span></code></pre></div>
+        <p>About 60 times a second (<code>requestAnimationFrame</code>), <code>showAt(songTime())</code> does everything that depends on the position:</p>
+        <ol class="mb-0">
+          <li>finds the current line with a quick binary search (the last line whose time has passed);</li>
+          <li>moves both hands and presses or lifts their fingers; lights the pressed keys;</li>
+          <li>writes the "Right: … · Left: …" line, the time and the progress bar;</li>
+          <li>moves the <strong>yellow highlight</strong> to that line's column in the score, and if that column's row is out of view, <strong>scrolls the score frame</strong> so the row is at the top.</li>
+        </ol>
+        <p class="mt-2 mb-0">Because the sound, the hands and the score are all worked out from the same clock, they cannot drift apart, even at 50% speed.
+          Clicking a column in the score starts playing from that line.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 8. RANGE -->
+  <section id="range" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">8</span>Playing a Range of Bars</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-green);"></span>What you do</h5>
+        <div class="mock mb-3">
+          <div class="m-range"><span class="m-check on"></span><b>Play all notes</b><span class="m-check ms-3"></span><b>Play a range of bars</b>
+            <span class="ms-3 small">Start bar</span><span class="m-in">159</span><span class="small">End bar</span><span class="m-in">162</span><span class="small text-muted">bars 159–162: 4:28 to 4:35</span></div>
+        </div>
+        <p class="mb-0">Tick <strong>Play a range of bars</strong>, type the first and last bar, and press ▶ Play: only those bars play (here bars 159–162 of Pehla Nasha,
+          4:28 to 4:35), then the page goes back to the start bar so you can repeat it.</p>
+      </div>
+    </div>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-blue);"></span>How it was built</h5>
+        <ol class="mb-0">
+          <li><strong>Two boxes that act as a switch.</strong> Ticking one unticks the other (<code>setMode()</code>); the bar boxes only work when "Play a range" is ticked.</li>
+          <li><strong>Only valid bar numbers.</strong> Typing anything but digits is removed straight away. <code>checkRange()</code> then checks that both numbers are
+            bars of this song (1–177 for Pehla Nasha, taken from the score's bars) and that the end is not before the start. If not, a red message explains why
+            and ▶ Play is switched off.</li>
+          <li><strong>Bars to seconds.</strong> The range starts at the start bar's first line and ends where the bar after the end bar begins (or at the last note).</li>
+          <li><strong>Play only that stretch.</strong> <code>play(a, b)</code> sets the stop time <code>until = b</code>: <code>pump()</code> schedules no line at or after it,
+            notes that would ring past it are cut to end there, and the animation stops just after it and returns to the start bar.</li>
+          <li><strong>Clicks inside the range</strong> (a score column or the time bar) play from there to the end of the range; switching back to "Play all notes" starts from the beginning.</li>
+        </ol>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <h2 class="part-heading">Part 2 · From the PDF to the notes file</h2>
+
+  <!-- 9. PDF -->
+  <section id="pdf" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">9</span>What Was in the PDF</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <p>The source was a solo-piano arrangement of <em>Pehla Nasha</em> by Nakul Jogdeo on MuseScore. MuseScore blocks automated fetching, so the owner saved the
+          score as <code>S-PAD/PEHLA-NASHA-notes.pdf</code>. That PDF does not contain notes as data: it holds <strong>23 screenshots</strong> of the score
+          (5 pages), each about 780 pixels wide and one or two lines of music tall. The gap between two staff lines is only about <strong>6 pixels</strong>.</p>
+        <div class="flow">
+          <div class="node"><span class="who you">The owner</span><b>1. PDF</b>23 screenshots of 177 bars.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">Python script</span><b>2. Pictures</b>Each screenshot saved as a PNG.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">Python script</span><b>3. Note heads</b>Staves, bar lines, heads and their pitches found automatically.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who claude">Claude Code</span><b>4. Read each bar</b>Rhythm, flats, chords, hands: checked against an enlarged picture.</div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="who code">Python scripts</span><b>5. Check and write</b>Every bar = 4 beats; times from the tempo marks; the .txt file.</div>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 10. OMR -->
+  <section id="omr" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">10</span>Finding Staves, Bar Lines and Note Heads</h2>
+    <div class="step-box">
+      <div class="step-bar">Step 1 · Take the pictures out of the PDF</div>
+      <div class="step-body"><p class="mb-0">A short Python script (pypdf) saved the 23 embedded images as PNG files, page by page, in order.</p></div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 2 · Find the staff lines and bar lines</div>
+      <div class="step-body">
+        <ul class="mb-0">
+          <li><strong>Staff lines</strong> are pixel rows that are dark across more than half the picture. Five evenly spaced ones make a staff; two staves (treble and bass) make one line of music.</li>
+          <li><strong>Bar lines</strong> are pixel columns that are dark all the way from the top treble line to the bottom bass line.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 3 · Find the note heads (template matching)</div>
+      <div class="step-body">
+        <p>Three tiny samples were cut from the first screenshot: a <strong>filled</strong> head (quarter and shorter notes), an <strong>open</strong> head (half note) and a
+          <strong>whole note</strong>. The staff lines are rubbed out of the picture, then each sample is slid over every position (OpenCV's <code>matchTemplate</code>);
+          wherever the match score is above 0.70 a head is recorded, keeping only the best one in each small area.</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 4 · Turn a head's height into a note name</div>
+      <div class="step-body">
+        <p>Each line or space is one step of the scale. The number of half-gaps between the head's centre and the bottom staff line gives the step, counted from E4 on the
+          treble staff or G2 on the bass staff:</p>
+        <div class="code-window"><div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">omr2.py (idea)</span></div>
+<pre><code>step = round((bottom_line_y - head_y) / (gap / 2))   <span class="cm"># 0 = bottom line, 1 = first space, ...</span>
+name = letters_from('E', 4)[step]                    <span class="cm"># treble: E4 F4 G4 A4 B4 C5 ... ; bass starts at G2</span>
+<span class="cm"># the key signature (one flat) then makes every B a B-flat unless marked</span></code></pre></div>
+        <p class="mb-0">The output was a list per bar, e.g. <em>bar 5, treble: D5 D5 F5 D5 · bass: A3 D3 F3 (whole notes)</em>. It found most heads, but it also
+          picked up stray marks (slurs, letters, the clefs) and missed some heads that sit on a line or are packed into chords.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 11. READING -->
+  <section id="reading" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">11</span>Reading Each Bar</h2>
+    <div class="card shadow-sm box mb-3">
+      <div class="card-body">
+        <h5><span class="color-key-dot" style="background:var(--biz-purple);"></span>What Claude Code did by looking at the pictures</h5>
+        <p>For every line of music Claude Code looked at an <strong>enlarged picture</strong> (2× to 4×) next to the list of heads. Where a head was unclear it
+          printed the pixels as text, row by row with the pitch of each row, to see exactly which line or space the head covered. From that it decided:</p>
+        <ul>
+          <li><strong>Rhythm:</strong> beams, flags, dots, rests, ties and triplets, and so where each note falls in the bar.</li>
+          <li><strong>Flats and naturals:</strong> the key's B♭, plus written E♭, A♭ and B♮.</li>
+          <li><strong>Chords and hands:</strong> which heads belong together, which voice holds on, and which hand plays them.</li>
+          <li><strong>What to leave out:</strong> grace notes (they are drawn smaller), trills and rolled chords.</li>
+        </ul>
+        <p>Each bar was then typed into a data file as <em>(beat position, length, notes)</em> for each hand:</p>
+        <div class="code-window"><div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">tr.py (the transcription)</span></div>
+<pre><code>B[5]  = ([(0,.5,'D5'),(.5,.5,'D5'),(1,.5,'F5'),(1.5,2.5,'D5')],   <span class="cm"># right hand</span>
+         [(0,4,'A3+F3+D3')])                                      <span class="cm"># left hand: D minor, a whole bar</span>
+B[100] = B[40]                                                    <span class="cm"># repeats re-use the earlier bar</span></code></pre></div>
+        <h5 class="mt-3"><span class="color-key-dot" style="background:var(--biz-red);"></span>Examples of the tricky parts</h5>
+        <ul class="mb-0">
+          <li><strong>Bar 1 checked against the recording:</strong> at ♩ = 112 its eighths fall at 0.41, 0.68, 0.95 and 1.22 s; the film recording has A5 A5 C6 C6 at 0.41, 0.70, 0.97 and 1.23 s.</li>
+          <li><strong>Bar 66:</strong> the first two low notes are 5 pixels wide instead of 8, so they are grace notes; the bar is C4, then B♭3 held, then a C major chord.</li>
+          <li><strong>Bar 76:</strong> what looked like three-note chords high above the staff are two notes each (C6+A5, D6+B♭5), counted from the ledger lines.</li>
+          <li><strong>Repeats:</strong> many bars come back (e.g. bars 39–48 return as 99–108 and 159–168); each repeat was compared with the earlier bar before re-using it.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 12. WRITE -->
+  <section id="write" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">12</span>Checking and Writing the File</h2>
+    <div class="step-box">
+      <div class="step-bar">Step 1 · Check every bar</div>
+      <div class="step-body"><p class="mb-0">A checking script confirmed that all <strong>177 bars</strong> are present, every note name is valid, nothing runs past the end of a bar, and
+        both hands fill <strong>4 beats</strong>. The only bars that came up short were the ones with rests in them, which is expected.</p></div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 2 · Beats to seconds</div>
+      <div class="step-body"><p class="mb-0">The score's tempo marks set the speed: ♩ = 112 from bar 1, 121 from bar 11, 133 from bar 19 and 146 from bar 23 to the end. Bar 1 starts at
+        0.41 s (where the recording's first note is), and every later position is beats × 60 ÷ tempo after that. The whole piece comes to <strong>4:59</strong>.</p></div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 3 · One line per moment</div>
+      <div class="step-body">
+        <p>All notes struck at the same moment, in either hand, become one line: right hand first (highest first, so the melody is the main note), then the left hand.
+          Beats = time to the next line; the first line of each bar gets the label <code>bar N</code> (and the new tempo where it changes). Held notes are written
+          only where they start. The result: <strong>996 lines</strong>.</p>
+        <div class="code-window"><div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt</span></div>
+<pre><code>    ' 21.84  F5+C4+A3+F3                1  bar 11 (quarter = 121)',
+    ' 22.33  A4                       0.5',</code></pre></div>
+        <p class="mb-0">The same data also became the notes list of the sheet-music page <code>MUSIC-NOTES/SONG-3-pehla-nasha-notes.html</code> (right hand and left hand kept apart there).</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-bar">Step 4 · Test it</div>
+      <div class="step-body"><p class="mb-0">The Notes Tester played all 996 lines and read <strong>981</strong> of them back correctly from its own audio, and the owner listened to
+        the result. Compared with the 73-second <em>film</em> recording only bar 1 lines up, because the film version is a different arrangement.</p></div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 13. LIMITS -->
+  <section id="limits" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">13</span>What Was Automatic, What Was Not</h2>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead><tr><th>Step</th><th>Done by</th><th>Repeatable?</th></tr></thead>
+            <tbody>
+              <tr><td>Pictures out of the PDF</td><td>Python script</td><td>Yes</td></tr>
+              <tr><td>Staves, bar lines, note heads and their pitches</td><td>Python script (template matching)</td><td>Yes</td></tr>
+              <tr><td>Rhythm, accidentals, chords, hands, grace notes</td><td><span class="who claude">Claude Code</span>, reading enlarged pictures</td><td><strong>No</strong>: judgement</td></tr>
+              <tr><td>Checking the bars; beats to seconds; writing the file</td><td>Python scripts</td><td>Yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-0">So the notes file is <strong>not</strong> the output of a fully automatic reader. The judgement step is what makes screenshots hard for a plain
+          program. A reliable automatic route needs better input: a <strong>MusicXML or MIDI</strong> file (every note and length is already there, so a converter is
+          exact), or a PDF <strong>exported by MuseScore</strong> itself (its notes are music-font characters at exact positions, which a program can read).</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 14. FILE MAP -->
+  <section id="file-map" class="mb-5">
+    <h2 class="section-title"><span class="toc-num">14</span>File Map</h2>
+    <div class="card shadow-sm box">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>File</th><th>What it is</th></tr></thead>
+            <tbody>
+              <tr><td><code>NOTES-TESTER/Piano-notes.html</code></td><td>The Piano Notes Player (Part 1).</td></tr>
+              <tr><td><code>NOTES-TESTER/SAMPLES/piano.js</code></td><td>The recorded piano notes (FluidR3 SoundFont, CC BY 3.0).</td></tr>
+              <tr><td><code>S-PAD/PEHLA-NASHA-notes.pdf</code></td><td>The owner's PDF of the score: 23 screenshots.</td></tr>
+              <tr><td><code>REFERENCE-AUDIO-FILES/SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt</code></td><td>The notes file made from it (Part 2): 996 lines, 177 bars, both hands.</td></tr>
+              <tr><td><code>MUSIC-NOTES/SONG-3-pehla-nasha-notes.html</code></td><td>The sheet-music page with the same notes, right and left hand on two staves.</td></tr>
+              <tr><td><code>NOTES-TESTER/index.html</code></td><td>The Notes Tester: plays and checks a notes file ("Notes from: text file").</td></tr>
+              <tr><td><code>INFO/HOW-MUSIC-APP-WORKS.html</code></td><td>How the main practice app works.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">
+    Music Practice App: how the Piano Notes Player works and how the Pehla Nasha notes were read from the sheet music · <a href="../NOTES-TESTER/Piano-notes.html" target="_blank" rel="noopener">Open the Piano Notes Player</a> · <a href="HOW-MUSIC-APP-WORKS.html">How the app works</a>
+  </div>
+</footer>
+
+</body>
+</html>

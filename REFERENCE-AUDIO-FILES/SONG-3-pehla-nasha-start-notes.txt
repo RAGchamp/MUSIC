@@ -23,7 +23,7 @@ follow the accompaniment (broken chords) more than the voice, so that part is le
    8.20s     1  A5
    9.12s   1.5  D5
   10.23s   0.5  D5
-  10.75s     1  D5
+  10.83s     1  D5
   11.73s   0.5  D4
   11.97s   0.5  D5
   12.23s   0.5  D5
@@ -46,6 +46,7 @@ follow the accompaniment (broken chords) more than the voice, so that part is le
   18.90s   0.5  G4
   19.17s   0.5  G4
   19.70s   0.5  A4
+  19.80s   0.5  G4
   19.92s   0.5  F4
   20.21s     1  F4
   21.03s   0.5  C5
@@ -56,6 +57,7 @@ follow the accompaniment (broken chords) more than the voice, so that part is le
   22.21s   0.5  C5
   22.49s   0.5  A5
   22.73s   0.5  G5
+  23.01s   0.5  F5
   23.25s   0.5  G5
   23.49s   0.5  A5
   23.76s   0.5  G5
@@ -187,6 +189,7 @@ follow the accompaniment (broken chords) more than the voice, so that part is le
   69.45s   0.5  F4
   69.63s   0.5  D4
   69.85s   0.5  D4
+  70.05s   0.5  F5
   70.23s   0.5  G5
   70.63s   0.5  C5
   71.21s   0.5  C4
@@ -196,3 +199,10 @@ follow the accompaniment (broken chords) more than the voice, so that part is le
   72.19s   0.5  C4
   72.40s   0.5  A4
   72.80s   0.5  E5
+
+Update 2026-11-15 (from the Notes Tester report, checked with inspect_time.py):
+  moved D5 10.75 s -> 10.83 s (its attack; D5 was already ringing from 10.23 s);
+  added the passing note G4 at 19.80 s, and F5 at 23.01 s and 70.05 s.
+  Not added: the many A3/G3/A#3 onsets (accompaniment chords below the melody), C4 at 48.05 s
+  (busy accompaniment section), F4 at 65.81 s and 68.34 s (doubled attacks of the next F4).
+  Now 189 notes.
