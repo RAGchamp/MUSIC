@@ -34,6 +34,8 @@ The owner uses it for personal learning.
 | `contactus.html` | **Contact Us** (adapted from BLOG/contactus.html): LinkedIn/email buttons, About Me, the owner's three passions (music, software, AI), why AI for learning music, cards linking every page of the app, "Built entirely with Claude Code" (what the owner did vs what Claude Code did), how others can use and build on it, an accuracy note. Linked from the index.html and piano.html footers. |
 | `piano.html` | **Piano demo** (site root; linked from index.html as "🎹 Try our Piano player" under the pink box and in the footer): nav, pink "How does the RAG Champ Piano app work?" box, one **▶ Try it** button that shows two song buttons (🎼 Für Elise, 🎬 Bollywood: Pehla Nasha), then the Piano Notes Player playing the chosen one. Built by a script from `NOTES-TESTER/Piano-notes.html` with `SONG-6-FUL-ELISE-BEETHOVEN.txt` and `SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt` embedded in `<script type="text/plain" id="demoFur">` / `id="demoPehla"` (so it works from disk) and samples from `NOTES-TESTER/SAMPLES/piano.js`; rebuild it after changing the player. |
 | `mini-piano.html` | **Mini Piano** (site root, made for phones): one octave C5–C6 of big keys; Manual (tap) and Automated (table of key + wait ms, ▶ Play) modes. See "Mini Piano" below. Linked from the index.html, piano.html and contactus.html footers and a contactus card. |
+| `MUSIC-THEORY/MUSIC-BASICS-TEST-1.html` | **Music Basics Test 1** (2026-11-18): 25 multiple-choice questions on MUSIC-BASICS.html, each with a mini piano to hear every option. See "Music Basics Test" below. Linked from the Music Basics page (end of Part D and footer), SITE-MAP.html and contactus.html. |
+| `INFO/MUSIC-THEORY-TEST-APP-PLAN.md` | The approved plan for the Music Basics Test, with the owner's decisions. |
 | `INFO/MINI-PIANO-PLAN.md` | The approved plan for the Mini Piano, with the owner's decisions. |
 | `INFO/HOW-PIANO-NOTES-PLAYER-WORKS.html` | Explainer (same look as HOW-MUSIC-APP-WORKS.html): part 1 how Piano-notes.html works (loading, hand split, fingering, taps vs black-key reaches, sound, score sync, bar ranges); part 2 how the Pehla Nasha PDF became the 5-minute notes file. |
 | `NOTES-TESTER/Piano-notes.html` | **Piano Notes Player**: plays a notes file (or a song-list song) on the piano samples with two animated hands pressing the keys (numbered fingers) and the score scrolling in a frame below. See "Piano Notes Player" below. |
@@ -221,6 +223,33 @@ Made for the owner's picture of a phone piano app showing "Pehla Nasha: F5 F5 F5
 - `window.__miniPiano` = {press, release, play, stop, setMode, rows, setRows, lit, now, playing, events, samples}.
 - Checked headless (touch events at 390 px): taps play the right keys; the 25 notes light in order, at most 10–21 ms late.
 - piano.html's footer was edited by hand to add the link; if piano.html is rebuilt from Piano-notes.html, keep that link.
+
+## Music Basics Test (MUSIC-THEORY/MUSIC-BASICS-TEST-1.html, 2026-11-18)
+
+One self-contained page; nav, step cards and pink box like the other pages.
+- **Layout:** sticky score bar (Answered / Correct, ↺ Start again), a contents list grouped by Music Basics part (✅/❌ after
+  submitting), one card per question, and a results box listing the topics to re-read.
+- **Card:** pink box (question, "Tests:", "Topic:" link to the MUSIC-BASICS.html anchor), four options A–D (fixed order),
+  a mini piano (Mini Piano look; range = smallest C-to-C span holding the question's notes, C4–C5 or C4–C6, from `rangeOf`),
+  ▶ Play your option (lights the keys; ■ Stop while playing), Submit, then a result box: Correct/Wrong, what the
+  wrong choice really is (`wrong[i]`), the explanation, ▶ Play the right answer, Read more, ↺ Try again.
+- **Score:** the first submitted answer counts (owner's choice); retries only change the result box.
+  Saved in localStorage `musicBasicsTest1` = {sel, first, last, retry}.
+- **Questions:** the `QUESTIONS` array (Music Basics order). `play` strings use Music Basics' `data-play` format
+  (`C4+E4+G4:2`, `r:1`) plus clicks `X x o w` (accent, beat, tick, wave), drones `~C3:4`, and `&&` for layers;
+  helpers `seq`, `clk`, `bars`, `meter`, `scale`, `brokenThen`. Per-question `bpm` (default 90).
+- **Sound:** Mini Piano's sample code, decoding MIDI 60–84 from `../NOTES-TESTER/SAMPLES/piano.js`, but **clearer** (the owner
+  found the keys hard to tell apart with the soft voicing): low-pass 9 kHz, +2 dB treble shelf, echo 0.07, 0.1 s release.
+  Band-passed noise clicks; a soft sawtooth drone for the Indian questions.
+- **Shared vs different keys:** while an option plays, keys every option has light yellow and keys only some options have
+  (`diffKeys`) light orange, also in the note names next to the buttons; a legend sits under the piano.
+  A chord every option plays (e.g. the C major ending each Q22 example) is left out of that and stays yellow.
+- **Chord questions** (Q19–Q22, Q24, Q25) play each chord note by note, then together (`brokenThen`, `then`): the owner
+  found Q22's four block chords, each followed by C major, sounded the same.
+- `window.__theoryTest` = {questions, parsePlay, rangeOf, check, choose, submit, play, stop, playing, lit, score, state}.
+  `check()` returns problems (parsing, 4 options, a note for every wrong option, range inside C4–C6).
+- Checked headless (2026-11-18): `check()` empty; 11 answers worked out from their notes agree with the key; every topic
+  anchor exists; first-answer scoring, retry and reload; keys light in order; 390 px page has no sideways scroll.
 
 ## How new songs are made (from 2026-11-17)
 
