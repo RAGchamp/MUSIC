@@ -217,7 +217,11 @@ Made for the owner's picture of a phone piano app showing "Pehla Nasha: F5 F5 F5
   between taps (rounded to 50 ms; last row 500 ms) and switches to Automated.
 - **🤖 Automated:** table rows = key drop-down + wait (ms, whole 50–5000, else red box and Play disabled) + 🗑; ➕ Add row
   copies the last row. A row's wait = time from its key to the next key; the last row's wait is how long the last note rings;
-  each note sounds for its wait (0.1–1.5 s). Starts with the owner's 25-note Pehla Nasha tune, waits from the song's rhythm in the 5-min piano arrangement (bars 25–31, 48.21–58.08 s, ♩ = 146, eighth = 205 ms; the 73 s film clip does not contain this tune; an unedited saved table with the old 400 ms waits is replaced); presets
+  each note sounds for its wait (0.1–1.5 s). Starts with Pehla Nasha **bars 23–30** of the 5-min piano arrangement as piano.html plays it (owner's choice 2026-11-17;
+  44.92–58.08 s, ♩ = 146, eighth = 205 ms): the 35 right-hand melody notes (all C5–C6), wait = time to the next melody note, the
+  last E5 205 ms (until bar 31's F5), then three rows the owner added: F5 616, F5 205, F5 1027 (bar 23's opening again);
+  38 rows, 14.98 s. Preset `ver: 4` is saved with the table; an unedited saved table with an older
+  version (400 ms waits, the 25-note bars 25–31 tune, or the 35-note ver 3) is replaced. The 73 s film clip does not contain this tune; presets
   Pehla Nasha / Empty (5 rows). Tap a row's # then piano keys to fill rows in turn. ▶ Play schedules every note on
   `ctx.currentTime`; a rAF loop lights the key, the table row and the strip note. ■ Stop, Speed 50–150 %, 🔁 Loop, Space.
 - **✨ Highlight keys** (checkbox next to the tune title in the strip, 2026-11-17): a guide for playing the table's tune by hand.
