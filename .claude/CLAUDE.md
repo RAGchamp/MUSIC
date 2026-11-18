@@ -220,7 +220,12 @@ Made for the owner's picture of a phone piano app showing "Pehla Nasha: F5 F5 F5
   each note sounds for its wait (0.1–1.5 s). Starts with the owner's 25-note Pehla Nasha tune, waits from the song's rhythm in the 5-min piano arrangement (bars 25–31, 48.21–58.08 s, ♩ = 146, eighth = 205 ms; the 73 s film clip does not contain this tune; an unedited saved table with the old 400 ms waits is replaced); presets
   Pehla Nasha / Empty (5 rows). Tap a row's # then piano keys to fill rows in turn. ▶ Play schedules every note on
   `ctx.currentTime`; a rAF loop lights the key, the table row and the strip note. ■ Stop, Speed 50–150 %, 🔁 Loop, Space.
-- Saved in localStorage: `miniPianoTable` (rows, name, speed, loop), `miniPianoMode`.
+- **✨ Highlight keys** (checkbox next to the tune title in the strip, 2026-11-17): a guide for playing the table's tune by hand.
+  The next key glows green (pulsing) and its strip note is outlined; only the right key moves it on. A run of the same key
+  (F5 F5 F5) shows a green bubble above the key with the presses left (3 → 2 → 1). After the last note: "🎉 Well done!" and it
+  starts again. ↺ Restart, or tap a strip note to practise from there. In Manual mode with it on, the strip shows the tune instead
+  of "Your notes". Off during Automated playback and while a table row is selected for filling.
+- Saved in localStorage: `miniPianoTable` (rows, name, speed, loop), `miniPianoMode`, `miniPianoGuide`.
 - `window.__miniPiano` = {press, release, play, stop, setMode, rows, setRows, lit, now, playing, events, samples}.
 - Checked headless (touch events at 390 px): taps play the right keys; the 25 notes light in order, at most 10–21 ms late.
 - piano.html's footer was edited by hand to add the link; if piano.html is rebuilt from Piano-notes.html, keep that link.

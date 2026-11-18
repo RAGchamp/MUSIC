@@ -54,6 +54,21 @@
   .key .tag{ pointer-events:none; font-weight:700; }
   .key.w .tag{ background:var(--tag); color:var(--tag-ink); border-radius:.35rem; font-size:clamp(.62rem, 2.6vw, .85rem); padding:.25rem .3rem; }
   .key.b .tag{ color:#e5e7eb; font-size:clamp(.5rem, 2vw, .68rem); }
+  /* "Highlight keys": the next key to press glows green; a bubble above it counts the presses left */
+  .key.w.guide:not(.down){ background:linear-gradient(#86efac, #dcfce7 70%, #bbf7d0); box-shadow:inset 0 0 0 3px #16a34a, inset 0 0 18px rgba(22,163,74,.55); animation:glowW 1s ease-in-out infinite; }
+  .key.b.guide:not(.down){ background:linear-gradient(#22c55e, #15803d); box-shadow:0 0 14px 5px rgba(34,197,94,.85); animation:glowB 1s ease-in-out infinite; }
+  @keyframes glowW{ 50%{ box-shadow:inset 0 0 0 3px #16a34a, inset 0 0 30px rgba(22,163,74,.85); } }
+  @keyframes glowB{ 50%{ box-shadow:0 0 22px 9px rgba(34,197,94,1); } }
+  .key .cnt{ position:absolute; top:-1.75rem; left:50%; transform:translateX(-50%); z-index:5; display:none; pointer-events:none;
+    min-width:1.6rem; height:1.6rem; padding:0 .35rem; border-radius:.8rem; background:#16a34a; color:#fff; font-weight:800;
+    font-size:1rem; line-height:1.6rem; text-align:center; box-shadow:0 0 10px 3px rgba(34,197,94,.8); }
+  .key .cnt.on{ display:block; }
+  .kbd-frame.guiding{ padding-top:1.9rem; }
+  .strip-head{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.2rem 1rem; }
+  .guide-box{ font-weight:700; font-size:.9rem; color:#166534; margin:0; }
+  .guide-box .form-check-input{ border-color:#16a34a; }
+  .guide-box .form-check-input:checked{ background-color:#16a34a; border-color:#16a34a; }
+  .strip-notes .n.next{ background:#bbf7d0; color:#14532d; box-shadow:0 0 0 2px #16a34a; }
   .key.down, .key.auto{ background:var(--biz-yellow) none !important; transform:translateY(2px); }
   .key.b.down .tag, .key.b.auto .tag{ color:#2b2b2b; }
   .key.w.down, .key.w.auto{ box-shadow:inset 0 -1px 0 #d39e00; }
@@ -125,7 +140,14 @@
   <p class="hint mb-2" id="modeHint"></p>
 
   <div class="strip mb-3">
-    <div class="strip-title" id="stripTitle">Pehla Nasha</div>
+    <div class="strip-head">
+      <div class="strip-title" id="stripTitle">Pehla Nasha</div>
+      <div class="form-check guide-box">
+        <input class="form-check-input" type="checkbox" id="guideBox">
+        <label class="form-check-label" for="guideBox">✨ Highlight keys</label>
+      </div>
+      <button class="btn btn-sm btn-outline-success py-0" id="guideRestart" title="Start the tune again from the first note" style="display:none">↺ Restart</button>
+    </div>
     <div class="strip-notes" id="stripNotes"></div>
   </div>
 
@@ -223,7 +245,7 @@
     NAMES.forEach(n => {
       const d = document.createElement('div');
       d.className = 'key ' + (isBlack(n) ? 'b' : 'w'); d.dataset.note = n;
-      d.innerHTML = `<span class="tag">${n}</span>`;
+      d.innerHTML = `<span class="cnt"></span><span class="tag">${n}</span>`;
       if(isBlack(n)){ d.style.left = (wi * W - W * 0.3) + '%'; d.style.width = (W * 0.6) + '%'; }
       else{ d.style.left = (wi * W) + '%'; d.style.width = W + '%'; wi++; }
       kbd.appendChild(d); keyEl[n] = d;
@@ -345,15 +367,64 @@
   let tuneName = 'Pehla Nasha';
   function renderStrip(){
     const box = $('stripNotes');
-    if(mode === 'manual'){
+    if(mode === 'manual' && !guideOn){
       $('stripTitle').textContent = 'Your notes';
       const last = tapped.slice(-12);
       box.innerHTML = last.length ? last.map(x => `<span class="n">${x.key}</span>`).join('') : '<span class="strip-empty">Tap a key…</span>';
     }else{
-      $('stripTitle').textContent = tuneName;
+      $('stripTitle').textContent = cheering ? '🎉 Well done!' : tuneName;
       box.innerHTML = rows.length ? rows.map((r, i) => `<span class="n" data-i="${i}">${r.key}</span>`).join('') : '<span class="strip-empty">The table is empty.</span>';
     }
+    renderGuide();
   }
+
+  /* ================= HIGHLIGHT KEYS (a guide for playing the tune by hand) =================
+     The next key of the tune (the Automated table's rows) glows. When the same key comes several times in a row,
+     a bubble above it shows how many presses are left, counting down. Only the right key moves the guide on. */
+  let guideOn = false, gPos = 0, guideKey = null, doneTimer = 0, cheering = false;
+  const guideActive = () => guideOn && !playing && rows.length > 0 && !(mode === 'auto' && selRow >= 0);
+  function renderGuide(){
+    if(gPos >= rows.length) gPos = 0;
+    const act = guideActive(), k = act ? rows[gPos].key : null;
+    if(guideKey && guideKey !== k){ keyEl[guideKey].classList.remove('guide'); keyEl[guideKey].querySelector('.cnt').classList.remove('on'); }
+    guideKey = k;
+    $('kbd').parentElement.classList.toggle('guiding', guideOn);
+    $('guideRestart').style.display = guideOn ? '' : 'none';
+    if(k){
+      let s = gPos, e = gPos;                              // the run of this key around gPos: rows s .. e-1
+      while(s > 0 && rows[s - 1].key === k) s--;
+      while(e < rows.length && rows[e].key === k) e++;
+      const cnt = keyEl[k].querySelector('.cnt');
+      keyEl[k].classList.add('guide');
+      cnt.textContent = e - gPos; cnt.classList.toggle('on', e - s > 1);
+    }
+    if(!playing) $('stripNotes').querySelectorAll('.n[data-i]').forEach((el, j) => {
+      el.classList.toggle('next', act && j === gPos); el.classList.toggle('done', act && j < gPos); el.classList.remove('now');
+    });
+    if(act){ const el = $('stripNotes').children[gPos], box = $('stripNotes');
+      if(el && (el.offsetTop - box.offsetTop < box.scrollTop || el.offsetTop - box.offsetTop > box.scrollTop + box.clientHeight - el.offsetHeight)) box.scrollTop = el.offsetTop - box.offsetTop - 4; }
+  }
+  function guideHit(n){
+    if(!guideActive() || n !== rows[gPos].key) return;
+    gPos++;
+    if(gPos >= rows.length){                               // the whole tune played: cheer, then start again
+      gPos = 0; clearTimeout(doneTimer); cheering = true;
+      $('stripTitle').textContent = '🎉 Well done!';
+      doneTimer = setTimeout(() => { cheering = false; renderStrip(); }, 1800);
+    }
+    renderGuide();
+  }
+  function setGuide(on){
+    guideOn = !!on; $('guideBox').checked = guideOn; gPos = 0;
+    store.set('miniPianoGuide', guideOn);
+    renderStrip();
+  }
+  $('guideBox').addEventListener('change', e => setGuide(e.target.checked));
+  $('guideRestart').addEventListener('click', () => { gPos = 0; renderGuide(); });
+  $('stripNotes').addEventListener('click', e => {          // tap a note in the strip to practise from there
+    const el = e.target.closest('.n[data-i]'); if(!el || !guideActive()) return;
+    gPos = +el.dataset.i; renderGuide();
+  });
 
   /* ================= MANUAL PLAYING (pointer events: touch, mouse, pen) ================= */
   const held = {};                                       // note -> {count, voice}
@@ -364,6 +435,7 @@
     h.voice = note(MIDI[n], ctx.currentTime + 0.005);
     h.count++;
     keyEl[n].classList.add('down');
+    guideHit(n);
     if(mode === 'manual' && !playing){ tapped.push({key: n, t: performance.now()}); if(tapped.length > 500) tapped.shift(); updateTapInfo(); renderStrip(); }
     if(mode === 'auto' && !playing && selRow >= 0) fillSelected(n);
   }
@@ -436,7 +508,7 @@
     rows = list.map(r => ({key: MIDI[r.key] ? r.key : 'C5', wait: String(r.wait)}));
     if(!rows.length) rows = [{key: 'C5', wait: '500'}];
     if(name) tuneName = name;
-    selRow = -1; dirty = false; renderRows();
+    selRow = -1; dirty = false; gPos = 0; renderRows();
   }
   let dirty = false;
   $('rowsBody').addEventListener('change', e => {
@@ -458,7 +530,7 @@
       if(selRow === i) selRow = -1; else if(selRow > i) selRow--;
       renderRows();
     }else if(e.target.closest('td.num')){
-      selRow = selRow === i ? -1 : i; markSel();
+      selRow = selRow === i ? -1 : i; markSel(); renderGuide();
     }
   });
   function markSel(){ $('rowsBody').querySelectorAll('tr').forEach((tr, i) => tr.classList.toggle('sel', i === selRow)); }
@@ -521,7 +593,7 @@
     selRow = -1; markSel();
     playing = true; curI = -1;
     ev = schedule(ctx.currentTime + 0.15); endAt = ev.end; nextEv = null;
-    lock(true);
+    lock(true); renderGuide();
     raf = requestAnimationFrame(tick);
   }
   function tick(){
@@ -549,7 +621,7 @@
     playing = false; cancelAnimationFrame(raf);
     if(!natural) silenceAll();
     setAuto(null); showCurrent(-1); curI = -1; nextEv = null;
-    lock(false);
+    lock(false); renderGuide();
   }
   function lock(on){
     $('autoPanel').querySelectorAll('#rowsBody select, #rowsBody input, #rowsBody button, #addBtn, #preset').forEach(el => { el.disabled = on || (el.classList.contains('del-btn') && rows.length < 2); });
@@ -569,6 +641,7 @@
     $('loopBox').checked = !!saved.loop;
     setRows(saved.rows, saved.name || 'My tune'); dirty = !!saved.dirty;
   }else setRows(PRESETS.pehla.rows, PRESETS.pehla.name);
+  guideOn = store.get('miniPianoGuide') === true; $('guideBox').checked = guideOn;
   setMode(store.get('miniPianoMode') || 'manual');
   updateTapInfo();
 
@@ -578,6 +651,7 @@
     rows: () => rows.map(r => ({key: r.key, wait: +r.wait})),
     setRows: (list, name) => setRows(list, name),
     lit: () => NAMES.filter(n => keyEl[n].classList.contains('auto') || keyEl[n].classList.contains('down')),
+    setGuide, guide: () => ({on: guideOn, pos: gPos, key: guideKey, count: guideKey ? keyEl[guideKey].querySelector('.cnt').textContent : '', shown: guideKey ? keyEl[guideKey].querySelector('.cnt').classList.contains('on') : false}),
     now: () => ctx ? ctx.currentTime : 0, playing: () => playing, events: () => ev, samples: () => sampleBufs.size,
   };
 })();
