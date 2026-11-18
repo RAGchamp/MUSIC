@@ -37,7 +37,7 @@ The owner uses it for personal learning.
 | `INFO/MINI-PIANO-PLAN.md` | The approved plan for the Mini Piano, with the owner's decisions. |
 | `INFO/HOW-PIANO-NOTES-PLAYER-WORKS.html` | Explainer (same look as HOW-MUSIC-APP-WORKS.html): part 1 how Piano-notes.html works (loading, hand split, fingering, taps vs black-key reaches, sound, score sync, bar ranges); part 2 how the Pehla Nasha PDF became the 5-minute notes file. |
 | `NOTES-TESTER/Piano-notes.html` | **Piano Notes Player**: plays a notes file (or a song-list song) on the piano samples with two animated hands pressing the keys (numbered fingers) and the score scrolling in a frame below. See "Piano Notes Player" below. |
-| `MUSIC-NOTES/*.html` | The owner's sheet music pages (staff notation + note names), one per song; the Notes Tester can test them. |
+| `S-PAD/MUSIC-NOTES/*.html` | **Retired** (moved 2026-11-17, git-ignored): the old sheet music pages made from WAV analysis and web searches. Nothing uses them. See "How new songs are made". |
 
 ## Why the song list is a .js file
 
@@ -149,21 +149,8 @@ One self-contained page, same look as index.html (nav, pink box, step cards). It
 `../REFERENCE-AUDIO-FILES/song-library.js` and `../SONG-INSTRUMENT.json`, and never edits them.
 
 1. **Choose a song:** the whole song is always tested (the owner chose no per-line selection).
-   **Notes from: song list / sheet music** (`#srcSel`): "sheet music" reads `MUSIC-NOTES/<audio minus -start>-notes.html`
-   (the owner's sheet music pages). Only the page's notes list is used, in one of two shapes:
-   `const RAW = [bars]` (positions and lengths in sixteenths) or `const PARTS = [{L, q, sec, raw: [bars]}, ...]`
-   (Pehla Nasha: a 12/8 part in eighths and a 4/4 part in sixteenths; L = steps per bar, q = quarter-note beats per
-   step, sec = seconds per step; bars are numbered on across parts). Bar items are `[position, length, note, tie,
-   seconds]` or `[p, d, 'r']`. `readList()` reads it as **text** and `JSON.parse`s it (comments and trailing commas
-   stripped, 'strings' and object keys quoted); the page's code is never run. Tied items lengthen the
-   note before; a note followed by a rest stops at its written length; notes without seconds are left out; the tempo
-   comes from "NN BPM" in the page. On `file://` it shows a picker for the .html. The report then says "Notes from:"
-   the sheet, names each line's bar, and suggests fixes as RAW items (`bar 5: [3,2,'C5',0,11.3]`; "(about)" when
-   the position was worked out from the time). The Inteha page is guitar tab built by code with no seconds, so it
-   is refused with a message. Sheets on 2026-11-15: Tip Tip 93/93, Pehla Nasha 187/187 (the old page, replaced 2026-11-16), Chura 81/82, Anhoni 148/148
-   (MISSING lists the notes a sheet left out).
-   A part may also have `lh: [bars]` (left hand, same item format, same bar numbers): a left-hand item struck at the
-   same position as a right-hand item joins its line, otherwise it gets its own line.
+   **Notes from: song list / text file** (`#srcSel`). The "sheet music" option (it read `MUSIC-NOTES/*-notes.html`) was
+   removed on 2026-11-17 together with that folder.
    **Notes from: text file** (`txtSong`, added 2026-11-16) takes any .txt through a file picker: song-library.js note lines
    (quotes, trailing commas and `//` comments ignored; unreadable lines are listed and skipped). `tempo: N` and `start: S`
    anywhere in the file (comments too) set the tempo and the second in the recording where `-` (beat-timed) lines begin,
@@ -191,7 +178,7 @@ Made 2026-11-16: the owner wanted to see *how* a song is played. One self-contai
   and show the finger number; pressed keys light yellow (right) / blue (left).
 - **Sound:** SAMPLES/piano.js, scheduled 1.2 s ahead, the Notes Tester's soft voicing (high notes softer, chord notes
   0.55/√(n−1), 0.3 s release, low-pass 4.2 kHz, −5 dB shelf, room echo). Speed 50–115 %.
-- **Score:** staff notation like the sheet page, built from the lines: bars from "bar N" labels (else 4 beats), each
+- **Score:** staff notation, built from the lines: bars from "bar N" labels (else 4 beats), each
   line a column, right hand on the treble and left hand on the bass staff, note lengths until that hand's next line;
   inside a fixed-height frame that scrolls to the current row; the current column is yellow; clicking a column plays from there.
 - **Phones (≤ 576 px, added 2026-11-16 after the owner tried it on a phone):** slim one-line top bar that does not stick;
@@ -234,6 +221,14 @@ Made for the owner's picture of a phone piano app showing "Pehla Nasha: F5 F5 F5
 - Checked headless (touch events at 390 px): taps play the right keys; the 25 notes light in order, at most 10–21 ms late.
 - piano.html's footer was edited by hand to add the link; if piano.html is rebuilt from Piano-notes.html, keep that link.
 
+## How new songs are made (from 2026-11-17)
+
+The owner supplies **sheet music as a PDF** (e.g. `S-PAD/PEHLA-NASHA-notes.pdf`, `S-PAD/fur-elise-beethoven-notes.pdf`;
+`S-PAD/` is git-ignored). Claude Code reads it into a `.txt` of song-library.js note lines in `REFERENCE-AUDIO-FILES/`
+(bar labels, tempo, both hands; see the two sections below for how), which the Piano Notes Player / piano.html play.
+The old method (notes found by WAV analysis plus web searches, kept in `MUSIC-NOTES/*.html` sheet pages) is retired:
+that folder was moved to `S-PAD/MUSIC-NOTES/` on 2026-11-17 and the Notes Tester's "sheet music" option was removed.
+
 ## Für Elise from a vector PDF (2026-11-16)
 
 `REFERENCE-AUDIO-FILES/SONG-6-FUL-ELISE-BEETHOVEN.txt` (owner's file name) was made **fully by code** from
@@ -258,11 +253,7 @@ bar by eye; every bar adds up to 4 beats. Grace notes, trills and rolls are left
 121 (bar 11), 133 (bar 19), 146 (bar 23 to the end), about 5:00. Many bars repeat (39–48 = 99–108 ≈ 159–168, etc.).
 - `REFERENCE-AUDIO-FILES/SONG-3-PEHLA-NASHA-ORGIG-NOTES-5MIN.txt` (owner's file name, "ORGIG" kept): 996 song-library
   lines with seconds from the tempo marks, bar 1 at 0.41 s; right hand first (melody = main note), then the left hand.
-- `MUSIC-NOTES/SONG-3-pehla-nasha-notes.html` was **replaced** with this arrangement (the old film-opening page, 26 bars
-  measured from the recording, is backed up as `S-PAD/SONG-3-pehla-nasha-notes-OLD-film-opening.html`). Its PARTS are
-  one part per tempo, grid L = 48 (a step = 1/12 quarter, so triplets fit), `raw` = right hand, `lh` = left hand; the
-  renderer lays out columns of notes struck together on both staves (left hand blue, names under each staff), and
-  plays with a look-ahead scheduler (a 5-minute play-through would otherwise create thousands of oscillators).
+- The same notes were also put in a sheet-music page, now retired in `S-PAD/MUSIC-NOTES/SONG-3-pehla-nasha-notes.html`.
 - Only bar 1 matches the 73 s film clip (`SONG-3-pehla-nasha-start.wav`); Compare against it flags almost everything
   after that. Comparing properly needs a recording of this arrangement.
 2. **Test notes:** renders every note line with an `OfflineAudioContext`, using copies of the practice page's
@@ -297,10 +288,9 @@ bar by eye; every bar adds up to 4 beats. Grace notes, trills and rolls are left
    shorter on accordion, on its own bus at 0.17 (melody 0.5). The chords found are listed in `#bandInfo`. It needs
    the recording, so on `file://` press Compare once first. Compare's control always renders the melody alone.
    **⬇ Download WAV:** 16-bit, **stereo**, 48 kHz (same as the recordings), named `<audio>-from-notes.wav`
-   (`-from-sheet` for sheet music, `-band` with the band, `-tuned` with the tuning box; the same name is overwritten).
+   (`-from-text` for a text file, `-band` with the band, `-tuned` with the tuning box; the same name is overwritten).
    Entries that share a recording get their own name: the entry's `wavTag` goes after `-from-notes`
-   (e.g. `…-from-notes-v2.wav`; no entry uses one since the Pehla Nasha draft was merged); a later entry without one gets `entryN`. Sheet-music WAVs get no tag
-   (a sheet page belongs to the recording, not to an entry). The WAV Visualizer
+   (e.g. `…-from-notes-v2.wav`; no entry uses one since the Pehla Nasha draft was merged); a later entry without one gets `entryN`. The WAV Visualizer
    reads the tag back to choose that entry's note lines and to list only its files in TEST-FILES. It saves into
    **`NOTES-TESTER/TEST-FILES/`** (the owner's choice): the first click asks for the folder (`showDirectoryPicker`),
    the handle is kept in IndexedDB (`notes-tester` / `saveDir`), later clicks write straight into it. A

@@ -1188,7 +1188,6 @@
     out.push(`Settings: ${mel ? 'melody only' : `threshold ${(+$('thr').value).toFixed(2)}, ${$('maxN').value} notes/frame`}, ${noteName(results.lo)}–${noteName(results.hi)}, ` +
       `tuning ${results.cents >= 0 ? '+' : ''}${results.cents.toFixed(0)} cents; notes outside the lines' range ${noteName(rLo)}–${noteName(rHi)} (band, bass) ignored`);
     const genOK = lines.filter(l => heard(1, l)).length;
-    if(/-from-sheet/i.test(F[1].name)) out.push('Generated file: made from the sheet music page (MUSIC-NOTES), not from these song-list lines, so its column compares the sheet with these lines.');
     if(/-from-text/i.test(F[1].name)) out.push('Generated file: made from a text file of note lines (Notes Tester "Notes from: text file"), not from these song-list lines, so its column compares that file with these lines.');
     out.push(`Written lines heard: original ${lines.length - A.length}/${lines.length}, generated ${genOK}/${lines.length}` +
       (genOK < 0.9 * lines.length ? '   ⚠ the generated file does not match these lines: was it made from this song entry, with the current notes?' : ''));

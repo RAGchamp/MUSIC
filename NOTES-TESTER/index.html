@@ -115,7 +115,7 @@
   <!-- What this page does (pink box) -->
   <div class="about-box mb-4">
     <h2>What does the Notes Tester do?</h2>
-    <p class="mb-1">It checks the notes written for a song. <strong>Test notes</strong> plays a version made only from the notes (in the song list, or in a sheet music page in <code>MUSIC-NOTES</code>), never the original recording, and you can download it as a WAV file. <strong>Compare audio files</strong> then listens to the original recording at the time of every note: is the written note really the one playing there, does it start at the right moment, and are notes missing? The result goes in a text box you can copy and paste into Claude Code to fix the notes. The comparison is plain signal processing; no AI runs in this page.</p>
+    <p class="mb-1">It checks the notes written for a song. <strong>Test notes</strong> plays a version made only from the notes (in the song list, or in a text file of note lines), never the original recording, and you can download it as a WAV file. <strong>Compare audio files</strong> then listens to the original recording at the time of every note: is the written note really the one playing there, does it start at the right moment, and are notes missing? The result goes in a text box you can copy and paste into Claude Code to fix the notes. The comparison is plain signal processing; no AI runs in this page.</p>
     <a href="../index.html">← Back to Song Practice</a>
   </div>
 
@@ -133,18 +133,12 @@
         <div class="col-md-4">
           <select id="srcSel" class="form-select" aria-label="Where the notes come from" disabled>
             <option value="lib">Notes from: song list</option>
-            <option value="sheet">Notes from: sheet music</option>
             <option value="txt">Notes from: text file</option>
           </select>
         </div>
       </div>
       <div class="song-meta mt-2" id="songMeta"></div>
-      <div class="small mt-2" id="sheetMsg" aria-live="polite"></div>
-      <div class="pick-box mt-2" id="sheetBox" hidden>
-        <label class="form-label small fw-bold mb-1" for="sheetFile">This page was opened from disk, so it can't read the sheet music page by itself.
-          Choose <code id="sheetName"></code> from the <code>MUSIC-NOTES</code> folder:</label>
-        <input type="file" class="form-control form-control-sm" id="sheetFile" accept=".html,.htm,text/html">
-      </div>
+      <div class="small mt-2" id="srcMsg" aria-live="polite"></div>
       <div class="pick-box mt-2" id="txtBox" hidden>
         <label class="form-label small fw-bold mb-1" for="txtFile">Choose a text file of note lines (e.g. from <code>REFERENCE-AUDIO-FILES</code>).
           Each line is <code>time  notes  beats  label</code> as in song-library.js (quotes, commas and <code>//</code> comments are fine);
@@ -530,14 +524,14 @@
   let playSrc = null, playStart = 0, raf = 0, idx = -1;
   let lastReport = '';
 
-  let base = null;                          // the chosen library song; cur is it, or its sheet-music version
+  let base = null;                          // the chosen library song; cur is it, or its text-file version
   $('songSel').addEventListener('change', async () => {
     stopPlay(true);
     const v = $('songSel').value;
     base = cur = v === '' ? null : library[+v];
     inst = null; synth = null;
     $('step2').hidden = $('step3').hidden = true;
-    $('sheetMsg').innerHTML = ''; $('sheetBox').hidden = true; $('txtBox').hidden = true; $('bandInfo').hidden = true;
+    $('srcMsg').innerHTML = ''; $('txtBox').hidden = true; $('bandInfo').hidden = true;
     $('srcSel').value = 'lib'; $('srcSel').disabled = !cur;
     if(!cur){ $('songMeta').innerHTML = ''; return; }
     await songInstReady;
@@ -548,34 +542,15 @@
   $('srcSel').addEventListener('change', async () => {
     if(!base) return;
     stopPlay(true);
-    $('sheetMsg').innerHTML = ''; $('sheetBox').hidden = true; $('txtBox').hidden = true;
+    $('srcMsg').innerHTML = ''; $('txtBox').hidden = true;
     if($('srcSel').value === 'lib'){ activate(base); return; }
     if($('srcSel').value === 'txt'){
       const had = txtCache.get(base.file);
       if(had){ useTxt(had); return; }
       $('txtFile').value = ''; $('txtBox').hidden = false;
-      $('sheetMsg').innerHTML = 'Choose the text file below. Until then the song list notes are shown.';
+      $('srcMsg').innerHTML = 'Choose the text file below. Until then the song list notes are shown.';
       activate(base); return;
     }
-    const hit = sheetCache.get(base.file);
-    if(hit){ useSheet(hit); return; }
-    $('sheetMsg').innerHTML = '⏳ Reading the sheet music page…';
-    let text = null;
-    try{ const r = await fetch(SHEET_DIR + sheetFileFor(base), { cache:'no-cache' }); if(r.ok) text = await r.text(); }catch(e){}
-    if($('srcSel').value !== 'sheet') return;
-    if(text == null){
-      if(location.protocol === 'file:'){
-        $('sheetMsg').innerHTML = '';
-        $('sheetName').textContent = sheetFileFor(base); $('sheetFile').value = ''; $('sheetBox').hidden = false;
-      } else noSheet('There is no sheet music page <code>MUSIC-NOTES/' + esc(sheetFileFor(base)) + '</code> for this song.');
-      return;
-    }
-    useSheet(sheetSong(base, text, 'MUSIC-NOTES/' + sheetFileFor(base)));
-  });
-  $('sheetFile').addEventListener('change', async e => {
-    const f = e.target.files && e.target.files[0];
-    if(!f || !base) return;
-    useSheet(sheetSong(base, await f.text(), 'MUSIC-NOTES/' + f.name));
   });
   $('txtFile').addEventListener('change', async e => {
     const f = e.target.files && e.target.files[0];
@@ -583,10 +558,10 @@
     useTxt(txtSong(base, await f.text(), f.name));
   });
   function useTxt(s){
-    if(s.error){ $('sheetMsg').innerHTML = '⚠️ ' + s.error + ' Showing the song list notes.'; activate(base); return; }
+    if(s.error){ $('srcMsg').innerHTML = '⚠️ ' + s.error + ' Showing the song list notes.'; activate(base); return; }
     txtCache.set(base.file, s);
     $('txtBox').hidden = true;
-    $('sheetMsg').innerHTML = `📄 Notes read from <code>${esc(s.srcFile)}</code>: ${s.notes.length} notes` +
+    $('srcMsg').innerHTML = `📄 Notes read from <code>${esc(s.srcFile)}</code>: ${s.notes.length} notes` +
       (s.untimedAll ? `, timed from the beats at ${s.tempo} BPM starting at ${s.start.toFixed(2)} s` : ', with their own times') +
       (s.skipped ? ` (${s.skipped} line${s.skipped > 1 ? 's' : ''} not understood and left out: ${s.skippedAt.join(', ')})` : '') +
       `. <a href="#" id="txtAgain">Choose another file</a>`;
@@ -621,90 +596,6 @@
     return Object.assign({}, b, {notes, src: 'txt', srcFile: name, tempo, start, untimedAll, skipped: skippedAt.length, skippedAt});
   }
 
-  function noSheet(msg){
-    $('sheetBox').hidden = true;
-    $('sheetMsg').innerHTML = '⚠️ ' + msg + ' Showing the song list notes.';
-    $('srcSel').value = 'lib'; activate(base);
-  }
-  function useSheet(s){
-    if(s.error){ noSheet(s.error); return; }
-    sheetCache.set(base.file, s);
-    $('sheetBox').hidden = true;
-    $('sheetMsg').innerHTML = `📄 Notes read from <code>${esc(s.srcFile)}</code>: ${s.notes.length} notes in ${s.bars} bars at ${s.tempo} BPM` +
-      (s.untimed ? ` (${s.untimed} note${s.untimed > 1 ? 's' : ''} without a recording time left out)` : '') + '.';
-    activate(s);
-  }
-
-  /* ================= SHEET MUSIC (MUSIC-NOTES/<song>-notes.html) =================
-     A sheet page keeps its notes in one of two lists, read as text and parsed as JSON (the page's own
-     code is never run):
-       const RAW = [ bars ];                              one array per bar, positions and lengths in sixteenths
-       const PARTS = [ {L, q, sec, raw: [ bars ]}, ... ]  parts with their own grid: L steps per bar,
-                                                          q = quarter-note beats per step, sec = seconds per step
-     Each bar item is [position, length, note, tie, seconds] or [position, length, 'r'] (a rest). */
-  const SHEET_DIR = '../MUSIC-NOTES/';
-  const sheetCache = new Map();
-  const sheetFileFor = s => (s.file || '').replace(/(-start)?\.[^.]+$/i, '') + '-notes.html';
-  // The bracketed list after "const NAME =", turned into JSON: comments and trailing commas removed,
-  // 'strings' to "strings", object keys quoted
-  function readList(html, name){
-    const at = html.search(new RegExp('const\\s+' + name + '\\s*='));
-    if(at < 0) return null;
-    let i = html.indexOf('[', at), depth = 0, j = i, q = null;
-    for(; j < html.length; j++){
-      const ch = html[j];
-      if(q){ if(ch === q) q = null; continue; }
-      if(ch === "'" || ch === '"') q = ch;
-      else if(ch === '[') depth++;
-      else if(ch === ']' && --depth === 0) break;
-    }
-    const text = html.slice(i, j + 1);
-    const txt = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
-      .replace(/'([^'\n]*)'/g, (m, x) => JSON.stringify(x))
-      .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
-      .replace(/,\s*([\]}])/g, '$1');
-    return {list: JSON.parse(txt), text};
-  }
-  function sheetSong(b, html, srcFile){
-    const fail = error => ({error});
-    let got, parts;
-    try{
-      if((got = readList(html, 'RAW'))) parts = [{raw: got.list, L: 16, q: 0.25}];
-      else if((got = readList(html, 'PARTS'))) parts = got.list.filter(p => p && Array.isArray(p.raw))
-        .map(p => ({raw: p.raw, lh: Array.isArray(p.lh) ? p.lh : null, L: +p.L || 16, q: +p.q || 0.25, sec: +p.sec || 0}));
-    }catch(e){ return fail(`Could not read the notes list in <code>${esc(srcFile)}</code> (${esc(e.message)}).`); }
-    if(!parts || !parts.length) return fail(`<code>${esc(srcFile)}</code> has no list of notes with recording times (it may be written as guitar tab), so it can't be lined up with the recording.`);
-    const bpm = +((html.match(/(\d+(?:\.\d+)?)\s*BPM/) || [])[1]) || b.tempo || 100;
-    const flats = /'[A-G]b\d/.test(got.text);
-    const notes = []; let untimed = 0, prev = null, barNo = 0;
-    parts.forEach(part => {
-      const stepSec = part.sec || 60 / bpm * part.q;
-      part.raw.forEach((bar, bi) => { barNo++; (bar || []).forEach(ev => {
-        const [p, d, n, tie, t] = ev;
-        if(n === 'r'){ if(prev) prev.restAfter = true; prev = null; return; }
-        if(tie){ if(prev) prev.len += d; return; }
-        if(t == null || !isFinite(t)){ untimed++; prev = null; return; }
-        let ms; try{ ms = String(n).split('+').map(parseName); }catch(e){ untimed++; prev = null; return; }
-        prev = {raw: JSON.stringify(ev), tok: String(n), t: +t, lbl: `bar ${barNo}`, pre: '', ms, bar: barNo, pos: p, len: d, q: part.q, L: part.L, stepSec};
-        notes.push(prev);
-      });
-      // left hand (PARTS with lh: [bars]): notes struck with a right-hand note join its line, others get their own line
-      ((part.lh || [])[bi] || []).forEach(ev => {
-        const [p, d, n, tie, t] = ev;
-        if(n === 'r' || tie || t == null || !isFinite(t)) return;
-        let ms; try{ ms = String(n).split('+').map(parseName); }catch(e){ untimed++; return; }
-        const with_ = notes.find(x => x.bar === barNo && x.pos === p);
-        if(with_){ ms.forEach(m => { if(!with_.ms.includes(m)) with_.ms.push(m); }); with_.tok += '+' + n; return; }
-        notes.push({raw: JSON.stringify(ev), tok: String(n), t: +t, lbl: `bar ${barNo}`, pre: '', ms, bar: barNo, pos: p, len: d, q: part.q, L: part.L, stepSec, lh: true});
-      });
-      });
-    });
-    if(!notes.length) return fail(`<code>${esc(srcFile)}</code> has no notes with recording times.`);
-    notes.sort((x, y) => x.t - y.t);
-    notes.forEach(n => { n.b = n.len * n.q; n.bTxt = String(+n.b.toFixed(3)); });
-    return Object.assign({}, b, {notes, src: 'sheet', srcFile, tempo: bpm, bars: barNo, untimed, flats});
-  }
-
   function activate(s){
     cur = s; synth = null;
     const bits = [];
@@ -715,7 +606,7 @@
     $('songMeta').innerHTML = bits.join(' · ');
     $('toneNote').innerHTML = inst === 'piano' ? 'Changes are used the next time you press <strong>▶ Test notes</strong> (or Compare / Download).'
       : `⚠️ These controls shape the <strong>piano</strong> sound; this song plays on ${INST_LABEL[inst]}, so they don't change it.`;
-    $('listLabel').textContent = cur.src === 'sheet' ? '🎵 Notes in the sheet music' : cur.src === 'txt' ? '🎵 Notes in ' + cur.srcFile : '🎵 Notes in the song list';
+    $('listLabel').textContent = cur.src === 'txt' ? '🎵 Notes in ' + cur.srcFile : '🎵 Notes in the song list';
     $('bandInfo').hidden = true;
     buildTimeline();
     buildList();
@@ -737,7 +628,6 @@
     cur.notes.forEach((n, i) => {
       const own = n.b * spb;
       let d = i + 1 < times.length ? Math.max(0.06, times[i + 1] - times[i]) : own;
-      if(n.restAfter) d = Math.max(0.06, Math.min(d, own));   // sheet music: a rest follows, so stop at the written length
       durs.push(d);
     });
   }
@@ -1163,7 +1053,7 @@
   $('dlBtn').addEventListener('click', async () => {
     if(!synth) return;
     const base = (cur.file || cur.title.replace(/[^\w-]+/g, '-')).replace(/\.[^.]+$/, '');
-    const name = base + '-from-' + (cur.src === 'sheet' ? 'sheet' : cur.src === 'txt' ? 'text' : 'notes') + (cur.wavTag && !cur.src ? '-' + cur.wavTag : '')   /* a sheet page belongs to the recording, not to an entry */ + (synth.band ? '-band' : '') + (synth.cents ? '-tuned' : '') + '.wav';
+    const name = base + '-from-' + (cur.src === 'txt' ? 'text' : 'notes') + (cur.wavTag && !cur.src ? '-' + cur.wavTag : '') + (synth.band ? '-band' : '') + (synth.cents ? '-tuned' : '') + '.wav';
     const blob = wavBlob(synth.buf);
     if(canPickFolder){
       try{
@@ -1400,11 +1290,6 @@
   function libLine(t, pre, notesTxt, beats, lbl){
     return `'${fmtT(t)}  ${(pre + notesTxt).padEnd(24)} ${String(beats).padStart(4)}${lbl ? '  ' + lbl : ''}'`;
   }
-  // A fix written as an item of the sheet page's RAW list: bar N: [position, length, 'note', tie, seconds]
-  const sheetName = (song, m) => (song.flats ? FLAT_NAMES : NAMES)[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
-  function sheetItem(song, bar, pos, len16, ms, t, about){
-    return `bar ${bar}${about ? ' (about)' : ''}: [${pos},${len16},'${ms.map(m => sheetName(song, m)).join('+')}',0,${+t.toFixed(2)}]`;
-  }
   const heardTxt = (A, r) => { const top = r.v[r.order[0] - A.lo] || 1; return r.order.slice(0, 3).map(m => noteName(m) + ' ' + (r.v[m - A.lo] / top).toFixed(2)).join(', '); };
 
   async function compare(){
@@ -1462,9 +1347,9 @@
         else if(verdict !== 'OK'){
           if(shift){
             const ms = n.ms.map(m => m + shift);
-            sugg = song.src === 'sheet' ? sheetItem(song, n.bar, n.pos, n.len, ms, newT) : libLine(newT, n.pre, ms.map(noteName).join('+'), n.bTxt, '');
+            sugg = libLine(newT, n.pre, ms.map(noteName).join('+'), n.bTxt, '');
           } else if(newT !== times[i]){
-            sugg = song.src === 'sheet' ? sheetItem(song, n.bar, n.pos, n.len, n.ms, newT) : libLine(newT, '', n.tok, n.bTxt, n.lbl);
+            sugg = libLine(newT, '', n.tok, n.bTxt, n.lbl);
           } else sugg = verdict === 'TIME?' ? '- (no clear note start found; listen)' : '- (listen: written note is the best fit but quiet here)';
         }
         res.push({i, n, r, c, verdict, sugg, chroma, ctrlOK: c.pitchOK && c.timeOK});
@@ -1491,13 +1376,7 @@
         const ms = shape.map(m => m - shape[0] + order[0] + d);
         const spb = 60 / (song.tempo || 100), beats = Math.max(0.5, Math.round((nextT - on.t) / spb * 2) / 2);
         const top = v[order[0] - lo] || 1;
-        let sugg = libLine(on.t, '', ms.map(noteName).join('+'), beats, '');
-        if(song.src === 'sheet' && k >= 0){   // where it would go on the sheet: after line k, by the sheet's tempo
-          const ln = song.notes[k];
-          let pos = ln.pos + Math.max(1, Math.round((on.t - times[k]) / ln.stepSec)), bar = ln.bar;
-          while(pos >= ln.L){ pos -= ln.L; bar++; }
-          sugg = sheetItem(song, bar, pos, Math.max(1, Math.round(beats / ln.q)), ms, on.t, true);
-        }
+        const sugg = libLine(on.t, '', ms.map(noteName).join('+'), beats, '');
         missing.push({t: on.t, after: k, heard: order.slice(0, 3).map(m => noteName(m) + ' ' + (v[m - lo] / top).toFixed(2)).join(', '), sugg});
       });
 
@@ -1532,7 +1411,7 @@
     const L = [];
     L.push('NOTES TESTER REPORT');
     L.push('Song:         ' + song.title);
-    L.push('Notes from:   ' + (song.src === 'sheet' ? song.srcFile + ' (sheet music: ' + song.bars + ' bars at ' + song.tempo + ' BPM' + (song.untimed ? ', ' + song.untimed + ' notes without a time left out' : '') + ')' : song.src === 'txt' ? song.srcFile + ' (text file' + (song.untimedAll ? ', timed from the beats at ' + song.tempo + ' BPM from ' + song.start.toFixed(2) + ' s' : '') + ')' : 'REFERENCE-AUDIO-FILES/song-library.js (song list)'));
+    L.push('Notes from:   ' + (song.src === 'txt' ? song.srcFile + ' (text file' + (song.untimedAll ? ', timed from the beats at ' + song.tempo + ' BPM from ' + song.start.toFixed(2) + ' s' : '') + ')' : 'REFERENCE-AUDIO-FILES/song-library.js (song list)'));
     L.push('Audio file:   REFERENCE-AUDIO-FILES/' + song.file + (o.name && o.name !== song.file ? '   (compared with the chosen file "' + o.name + '": the names differ!)' : ''));
     L.push('Instrument:   ' + inst + '      Tuning of recording: ' + sign(A.cents) + ' cents' + (s.cents ? '   (synth tuned to match)' : ''));
     L.push(`Lines tested: all ${res.length} (${times[0].toFixed(2)} s – ${tEnd.toFixed(2)} s)`);
@@ -1542,7 +1421,7 @@
     L.push(`Rules: OK = a written note is among the ${CFG.TOP_N} strongest notes heard ${CFG.WIN_FROM}-${(CFG.WIN_FROM + CFG.WIN_SPAN).toFixed(2)} s after the line's time, and a note start (onset) is within ±${CFG.TIME_OK * 1000} ms.`);
     L.push('       Strengths are relative to the strongest note heard (1.00). Times are seconds in the original file.');
     L.push('');
-    const wr = n => song.src === 'sheet' ? n.tok + ' (bar ' + n.bar + ')' : n.tok;
+    const wr = n => n.tok;
     const W = Math.max(18, ...res.map(x => wr(x.n).length)) + 2;
     L.push('#    time   ' + 'written'.padEnd(W) + 'verdict   ' + 'heard (strongest first)'.padEnd(30) + 'onset   suggested line');
     const rowsOut = [];
@@ -1554,18 +1433,12 @@
     rowsOut.sort((a, b) => a.t - b.t).forEach(r => L.push(r.txt));
     L.push('');
     const bad = res.filter(x => x.verdict !== 'OK');
-    L.push('Lines to fix: ' + (bad.length ? bad.map(x => x.i + 1 + ' (' + (song.src === 'sheet' ? 'bar ' + x.n.bar + ', ' : '') + x.verdict + ')').join(', ') : 'none'));
+    L.push('Lines to fix: ' + (bad.length ? bad.map(x => x.i + 1 + ' (' + x.verdict + ')').join(', ') : 'none'));
     L.push('Missing notes at: ' + (missing.length ? missing.map(m => m.t.toFixed(2) + ' s').join(', ') : 'none'));
     L.push(`Re-strikes not listed: ${restrikes.length}` + (restrikes.length ? ' (the note already sounding, or an octave of it, starts again; often tremolo or accompaniment, so not listed above): ' + restrikes.map(t => t.toFixed(2)).join(', ') : ''));
     L.push('');
     if(!bad.length && !missing.length) L.push('All lines match the recording. Nothing to change.');
-    else if(song.src === 'sheet'){
-      L.push('Notes for Claude Code: update these notes in the notes list (RAW or PARTS) of ' + song.srcFile + ' (song "' + song.title + '").');
-      L.push('Each suggestion is a bar item: bar N: [position, length, note, tie, seconds], position and length in the');
-      L.push('grid steps of that bar (sixteenths, or the steps of its part when the page has PARTS, e.g. eighths in 12/8).');
-      L.push('"(about)" means the position was worked out from the time and the tempo, so check the bar adds up.');
-      L.push('A flag is not always a mistake: confirm doubtful ones with SCRIPTS/inspect_time.py, then run the Notes Tester again.');
-    } else if(song.src === 'txt'){
+    else if(song.src === 'txt'){
       L.push('Notes for Claude Code: these lines come from the text file ' + song.srcFile + ' (song "' + song.title + '"),');
       L.push('not from song-library.js. The "time" column is where each line falls in the recording' + (song.untimedAll ? ' (worked out from the beats, so a' : ' (a'));
       L.push('wrong beat count early on shifts every later line). A flag is not always a mistake: confirm doubtful ones');
