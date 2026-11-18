@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Basics: Western &amp; Indian</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-light:#6ea8fe;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-red:#dc3545;
+    --biz-green:#198754;
+    --biz-purple:#6f42c1;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    --saffron:#e8730c;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav — same as index.html */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue);
+    color:var(--nav-yellow);
+    padding:.9rem 1.5rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+  }
+
+  section[id]{ scroll-margin-top:84px; }
+  html{ scroll-behavior:smooth; }
+
+  .hero{
+    background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%);
+    color:#fff;
+  }
+  .accent-blue{ border-left:5px solid var(--biz-blue); }
+  .accent-green{ border-left:5px solid var(--biz-green); }
+  .accent-red{ border-left:5px solid var(--biz-red); }
+  .accent-yellow{ border-left:5px solid var(--biz-yellow); }
+  .accent-purple{ border-left:5px solid var(--biz-purple); }
+  .accent-saffron{ border-left:5px solid var(--saffron); }
+
+  .section-title{
+    display:inline-flex; align-items:center; gap:.6rem;
+    padding-bottom:.4rem; border-bottom:3px solid var(--biz-blue);
+    margin-bottom:1.25rem;
+  }
+  .part-title{ font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--biz-blue-dark); }
+  .part-title.indian{ color:var(--saffron); }
+  .toc-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.8rem; height:1.8rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.85rem;
+    margin-right:.5rem; flex:none;
+  }
+  .toc-list a{ text-decoration:none; color:#212529; }
+  .toc-list a:hover{ color:var(--biz-blue); text-decoration:underline; }
+  .toc-item{ display:flex; align-items:center; padding:.4rem 0; }
+  .toc-part{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6c757d; margin-top:.5rem; }
+  .back-to-top{ font-size:.85rem; }
+  .color-key-dot{ width:.9rem; height:.9rem; border-radius:50%; display:inline-block; margin-right:.4rem; }
+  table thead th{ background:#eef3fb; }
+
+  .code-window{ background:#084298; border-radius:.5rem; overflow:hidden; margin:1rem 0 1.5rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.3); }
+  .code-window .code-titlebar{
+    background:#323233; color:#cccccc; padding:.45rem .9rem; font-size:.8rem;
+    display:flex; align-items:center; gap:.4rem; font-family:'Segoe UI',Roboto,sans-serif;
+  }
+  .code-window .dot{ width:.7rem; height:.7rem; border-radius:50%; display:inline-block; }
+  .dot-red{ background:#ff5f56; } .dot-yellow{ background:#ffbd2e; } .dot-green{ background:#27c93f; }
+  .code-window .code-filename{ margin-left:.5rem; opacity:.85; }
+  .code-window pre{ margin:0; padding:1rem 1.25rem; background:#084298; overflow-x:auto; }
+  .code-window code{ font-family:'Fira Code',Consolas,Monaco,monospace; font-size:.85rem; color:#fff; font-weight:700; }
+
+  .fun-fact{ background:linear-gradient(120deg,#e8f1ff,#f3ecff); border-radius:.5rem; padding:.75rem 1rem; }
+  .watchout{ background:#fdeef0; border:1px dashed var(--biz-red); border-radius:.5rem; padding:.6rem 1rem; }
+  .listen-btn{ font-size:.85rem; }
+  .listen-row{ display:flex; flex-wrap:wrap; gap:.5rem; margin:.75rem 0; }
+  .staff-svg{ width:100%; max-width:560px; height:auto; display:block; }
+
+  /* Indian notation marks */
+  .komal{ text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:2px; }
+  .tivra{ text-decoration:overline; text-decoration-thickness:2px; }
+  .mandra, .taar, .atitaar{ position:relative; display:inline-block; }
+  .mandra::after{ content:'•'; position:absolute; left:50%; bottom:-.85em; transform:translateX(-50%); font-size:.7em; line-height:1; }
+  .taar::before{ content:'•'; position:absolute; left:50%; top:-.75em; transform:translateX(-50%); font-size:.7em; line-height:1; }
+  .atitaar::before{ content:'••'; position:absolute; left:50%; top:-.75em; transform:translateX(-50%); font-size:.7em; line-height:1; letter-spacing:-.1em; }
+
+  /* ===== Composer app ===== */
+  .composer{ background:#fff; border-radius:.75rem; }
+  .composer-prompt{
+    background:linear-gradient(120deg,var(--biz-blue-dark),var(--biz-blue)); color:#fff;
+    border-radius:.6rem; padding:.9rem 1.1rem; font-size:1.05rem; min-height:3.2rem;
+  }
+  .composer-prompt .small{ color:#e3ecff; }
+  .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
+  .dur-group .btn{ font-size:.82rem; }
+  .kb-wrap{ overflow-x:auto; padding-bottom:.25rem; -webkit-overflow-scrolling:touch; }
+  .keyboard{ position:relative; display:flex; height:170px; min-width:640px; user-select:none; touch-action:manipulation; }
+  .key{ cursor:pointer; }
+  .key.white{
+    flex:1; position:relative; background:linear-gradient(#fff,#f1f1f1); border:1px solid #b9bec7;
+    border-radius:0 0 .4rem .4rem; margin-right:-1px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+    padding-bottom:.35rem; font-size:.72rem; font-weight:700; color:#333;
+  }
+  .key.black{
+    position:absolute; top:0; right:-31%; width:62%; height:60%; z-index:2;
+    background:linear-gradient(#333,#111); border-radius:0 0 .3rem .3rem; color:#fff;
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding-bottom:.3rem;
+    font-size:.6rem; font-weight:700; box-shadow:0 2px 3px rgba(0,0,0,.4);
+  }
+  .key .kname{ line-height:1.15; text-align:center; }
+  .key .khint{ font-size:.58rem; opacity:.45; font-weight:600; margin-top:.15rem; }
+  .key.white.in-scale{ background:linear-gradient(#fff,#d7f0e1); }
+  .key.black.in-scale{ background:linear-gradient(#2c6e49,#174a2f); }
+  .key.white.tonic{ background:linear-gradient(#fff,#ffe9a8); }
+  .key.white.pressed, .key.white.playing{ background:linear-gradient(#cfe2ff,#9ec5fe) !important; }
+  .key.black.pressed, .key.black.playing{ background:linear-gradient(#3d8bfd,#0a58ca) !important; }
+
+  .song-area{
+    background:#f1f4f9; border:2px dashed #c9d3e3; border-radius:.6rem; min-height:92px; padding:.6rem;
+    display:flex; flex-wrap:wrap; gap:.4rem; align-items:center;
+  }
+  .song-empty{ color:#6c757d; font-style:italic; width:100%; text-align:center; }
+  .chip{
+    position:relative; background:#fff; border:2px solid var(--biz-blue); border-radius:.5rem;
+    padding:.45rem .5rem .3rem; text-align:center; cursor:pointer; min-width:44px;
+  }
+  .chip.rest{ border-style:dashed; border-color:#adb5bd; color:#6c757d; }
+  .chip .cname{ font-weight:800; font-size:.95rem; line-height:1.2; padding-top:.15rem; }
+  .chip .cbeats{ font-size:.65rem; color:#6c757d; margin-top:.35rem; }
+  .chip .charm{ font-size:.7rem; font-weight:700; color:#5a6475; line-height:1.1; margin-top:.3rem; }
+  .chip .ctech{
+    position:absolute; top:-.6rem; left:-.45rem; min-width:1.2rem; height:1.2rem; padding:0 .2rem; border-radius:.6rem;
+    background:var(--biz-purple); color:#fff; font-size:.7rem; font-weight:800; line-height:1.2rem; text-align:center;
+  }
+  .chip .cdel{
+    position:absolute; top:-.55rem; right:-.55rem; width:1.15rem; height:1.15rem; border-radius:50%;
+    border:none; background:var(--biz-red); color:#fff; font-size:.7rem; line-height:1; padding:0; display:none;
+  }
+  .chip:hover .cdel, .chip:focus-within .cdel{ display:block; }
+  .chip.playing{ background:var(--biz-yellow); border-color:#c79100; transform:translateY(-3px); transition:transform .08s; }
+  .barline{ width:3px; align-self:stretch; background:#9aa6b8; border-radius:2px; }
+  .barline.cycle{ width:5px; background:var(--biz-blue-dark); }
+  .big-play{ font-size:1.15rem; font-weight:700; padding:.6rem 1.6rem; }
+
+  /* ===== Guitar view ===== */
+  .view-tabs{ gap:.4rem; }
+  .view-tabs .nav-link{ transition:none; font-weight:700; font-size:.9rem; color:#084298 !important; background:#eef3fb !important; border:1px solid #c9d3e3; }
+  .view-tabs .nav-link.active{ color:#fff !important; background:var(--biz-blue) !important; border-color:var(--biz-blue); }
+  .fb-wrap, .tab-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .fretboard{
+    position:relative; min-width:760px; border-radius:.4rem; overflow:hidden; user-select:none; touch-action:manipulation;
+    background:linear-gradient(180deg,#5a3a22,#6e4628 50%,#5a3a22); box-shadow:inset 0 0 12px rgba(0,0,0,.5);
+  }
+  .fb-head, .fb-row{ display:grid; grid-template-columns:44px 38px repeat(15, 1fr); }
+  .fb-head{ background:#f1f4f9; }
+  .fb-head div{ text-align:center; font-size:.68rem; font-weight:700; color:#6c757d; padding:.15rem 0; }
+  .fb-row{ height:30px; }
+  .fb-name{ background:#f1f4f9; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; color:#333; }
+  .fb-cell{ position:relative; cursor:pointer; border-right:3px solid #c9c9c9; display:flex; align-items:center; justify-content:center; }
+  .fb-cell.open{ background:#efe6d8; border-right:7px solid #f5f0e6; }
+  .fb-cell::before{ content:''; position:absolute; left:0; right:-3px; top:50%; height:var(--sw,2px); transform:translateY(-50%); background:linear-gradient(#f4f4f4,#a9a9a9); box-shadow:0 1px 1px rgba(0,0,0,.5); }
+  .fb-cell.open::before{ right:-7px; }
+  .fb-cell:hover .fb-dot{ opacity:1; background:#ffffffcc; color:#333; }
+  .fb-dot{
+    position:relative; z-index:1; min-width:22px; height:22px; padding:0 3px; border-radius:11px; font-size:.62rem; font-weight:800;
+    display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .1s;
+  }
+  .fb-cell.in-scale .fb-dot{ opacity:.9; background:#2c6e49; color:#fff; }
+  .fb-cell.tonic .fb-dot{ background:#c79100; color:#fff; }
+  .fb-cell.pressed .fb-dot{ opacity:1; background:#0d6efd; color:#fff; }
+  .fb-cell.playing .fb-dot{ opacity:1; background:var(--biz-yellow); color:#000; box-shadow:0 0 0 3px #fff8, 0 0 10px #ffc107; transform:scale(1.15); }
+  .fb-inlay{ position:absolute; width:12px; height:12px; border-radius:50%; background:#e9dcc3; opacity:.55; transform:translate(-50%,-50%); pointer-events:none; }
+
+  .tab-wrap{ position:relative; background:#fff; border:1px solid #dde3ec; border-radius:.5rem; padding:.4rem .5rem; }
+  .tab-strip{ display:flex; align-items:stretch; min-height:150px; font-family:Consolas,Monaco,monospace; }
+  .tab-names{ display:flex; flex-direction:column; padding-top:18px; margin-right:.25rem; }
+  .tab-names div, .tab-col .tc{ height:20px; line-height:20px; font-size:.8rem; font-weight:700; }
+  .tab-col{ position:relative; display:flex; flex-direction:column; min-width:30px; cursor:pointer; border-radius:.3rem; }
+  .tab-col .tt{ height:18px; font-size:.68rem; font-weight:800; color:var(--biz-purple); text-align:center; white-space:nowrap; }
+  .tab-col .tc{ position:relative; text-align:center; }
+  .tab-col .tc::before{ content:''; position:absolute; left:0; right:0; top:50%; border-top:1px solid #9aa6b8; }
+  .tab-col .tc span{ position:relative; background:#fff; padding:0 2px; color:#084298; }
+  .tab-col.playing{ background:var(--biz-yellow); }
+  .tab-col.playing .tc span{ background:var(--biz-yellow); color:#000; }
+  .tab-bar{ width:2px; background:#555; margin:18px 2px 0; }
+  .tab-empty{ color:#6c757d; font-style:italic; font-family:inherit; padding:1rem; }
+  .stat-pill{ background:#eef3fb; border-radius:2rem; padding:.2rem .7rem; font-size:.8rem; font-weight:600; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Educational Blog</div>
+</div>
+
+<!-- HERO -->
+<header class="hero py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-9">
+        <span class="badge rounded-pill bg-warning text-dark mb-3">Educational Blog · Music Basics</span>
+        <h1 class="display-6 fw-bold">Music Basics: Western &amp; Indian</h1>
+        <p class="lead mb-3 text-white">Do Re Mi Fa Sol La Ti… Sa Re Ga Ma Pa Dha Ni… Two of the world's great musical traditions start from the same seven notes and then grow in very different directions. Learn how <strong>Western music</strong> (notes, staff, scales, chords) and <strong>Indian classical music</strong> (swaras, ragas, talas) work. Press the 🔊 buttons to hear each idea, then <strong>compose your own tune</strong> in the music app at the end and press Play.</p>
+        <p class="mb-0 text-white">⏱️ Reading time: about 20 minutes · 🎯 Level: Beginner · 🎧 Turn your sound on!</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-5">
+
+  <!-- COLOR KEY -->
+  <div class="mb-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body py-3">
+        <div class="row g-2 small text-center text-md-start">
+          <div class="col-6 col-md-2"><span class="color-key-dot" style="background:var(--biz-blue);"></span>Blue: Western music</div>
+          <div class="col-6 col-md-2"><span class="color-key-dot" style="background:var(--saffron);"></span>Saffron: Indian music</div>
+          <div class="col-6 col-md-2"><span class="color-key-dot" style="background:var(--biz-purple);"></span>Purple: both traditions</div>
+          <div class="col-6 col-md-2"><span class="color-key-dot" style="background:var(--biz-yellow);"></span>Yellow: try it yourself</div>
+          <div class="col-6 col-md-2"><span class="color-key-dot" style="background:var(--biz-green);"></span>Green: key ideas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="mb-4"><a href="index.html" class="text-decoration-none">&larr; Back to Blog Home</a></p>
+
+  <!-- TOC -->
+  <section id="toc" class="mb-5">
+    <h2 class="section-title">Table of Contents</h2>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row toc-list">
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">0</span><a href="#what">What Is Music? The Building Blocks</a></div>
+            <div class="toc-part">Part A: Western music</div>
+            <div class="toc-item"><span class="toc-num">1</span><a href="#notes">The 12 Notes &amp; the Octave</a></div>
+            <div class="toc-item"><span class="toc-num">2</span><a href="#reading">Reading Music: Staff, Note Lengths &amp; Beats</a></div>
+            <div class="toc-item"><span class="toc-num">3</span><a href="#scales">Scales, Chords &amp; Harmony</a></div>
+            <div class="toc-part">Part B: Indian music</div>
+            <div class="toc-item"><span class="toc-num">4</span><a href="#traditions">Two Great Traditions: Hindustani &amp; Carnatic</a></div>
+            <div class="toc-item"><span class="toc-num">5</span><a href="#swaras">Swaras &amp; Saptak: The Notes</a></div>
+          </div>
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">6</span><a href="#raga">Raga: The Soul of Indian Music</a></div>
+            <div class="toc-item"><span class="toc-num">7</span><a href="#tala">Tala: The Rhythm Cycle</a></div>
+            <div class="toc-part">Part C: Both together</div>
+            <div class="toc-item"><span class="toc-num">8</span><a href="#instruments">Instruments of Both Worlds</a></div>
+            <div class="toc-item"><span class="toc-num">9</span><a href="#compare">Western vs. Indian: Side by Side</a></div>
+            <div class="toc-item"><span class="toc-num">10</span><a href="#composer">🎹 Compose Your Own Music!</a></div>
+            <div class="toc-item"><span class="toc-num">11</span><a href="#glossary">Mini Glossary</a></div>
+            <div class="toc-item"><span class="toc-num">12</span><a href="#takeaways">Key Takeaways</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 0. WHAT IS MUSIC -->
+  <section id="what" class="mb-5">
+    <h2 class="section-title">0. What Is Music? The Building Blocks</h2>
+    <div class="card shadow-sm accent-purple mb-4">
+      <div class="card-body">
+        <p>Every sound is a <strong>vibration</strong>: a guitar string, a drum skin or your vocal cords shake the air, and those waves reach your ears. Music is sound <strong>organized</strong> in time. The faster something vibrates, the <strong>higher</strong> the note sounds. We measure that speed in <strong>Hertz (Hz)</strong>, which means vibrations per second.</p>
+        <div class="listen-row">
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-seq="45" data-beats="2">🔊 Low: 110 Hz</button>
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-seq="69" data-beats="2">🔊 Middle: 440 Hz</button>
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-seq="93" data-beats="2">🔊 High: 1760 Hz</button>
+        </div>
+        <p class="mb-0">Both Western and Indian music are built from the same ingredients. They just use different names for them:</p>
+      </div>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-0">
+            <thead><tr><th>Building block</th><th>What it means</th><th>Western word</th><th>Indian word</th></tr></thead>
+            <tbody>
+              <tr><td>🎯 Pitch</td><td>How high or low a single note sounds</td><td>Note</td><td>Swara</td></tr>
+              <tr><td>🥁 Rhythm</td><td>The pattern of long and short sounds in time</td><td>Rhythm, meter</td><td>Tala, laya</td></tr>
+              <tr><td>🎶 Melody</td><td>A line of notes, one after another, like a tune you hum</td><td>Melody, tune</td><td>Raga-based melody, bandish (composition)</td></tr>
+              <tr><td>🎹 Harmony</td><td>Several notes sounding together</td><td>Chords, harmony</td><td>Drone (tanpura) under the melody</td></tr>
+              <tr><td>🏃 Tempo</td><td>How fast or slow the music goes</td><td>Tempo (BPM)</td><td>Laya: vilambit (slow), madhya (medium), drut (fast)</td></tr>
+              <tr><td>🎻 Timbre</td><td>The "color" of a sound: why a flute and a violin playing the same note sound different</td><td>Tone color</td><td>Naad (tone quality)</td></tr>
+              <tr><td>🔉 Dynamics</td><td>How loud or soft</td><td><em>piano</em> (soft), <em>forte</em> (loud)</td><td>Expressed through voice and touch</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <h3 class="part-title mb-4">Part A · Western Music</h3>
+
+  <!-- 1. NOTES -->
+  <section id="notes" class="mb-5">
+    <h2 class="section-title">1. The 12 Notes &amp; the Octave</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <p>Western music names its notes with the first seven letters of the alphabet: <strong>C D E F G A B</strong>. These are the <strong>white keys</strong> on a piano. Between most of them sits a <strong>black key</strong>, a note halfway between. It's called a <strong>sharp (♯)</strong> when you go up from the note below, or a <strong>flat (♭)</strong> when you come down from the note above. So C♯ and D♭ are the same key.</p>
+        <div class="code-window">
+          <div class="code-titlebar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="code-filename">the 12 notes in one octave</span></div>
+          <pre><code>  C   C♯  D   D♯  E   F   F♯  G   G♯  A   A♯  B   | C (again, but higher!)
+  1   2   3   4   5   6   7   8   9   10  11  12  | 13
+  └── each step = one "semitone" (half step) ──┘</code></pre>
+        </div>
+        <p>After B, the pattern starts again at C. The distance from one C to the next C is called an <strong>octave</strong>. The two notes sound so alike that they share a name, because the higher one vibrates <strong>exactly twice as fast</strong>. The A above middle C is tuned to <strong>440 Hz</strong> around the world, so the next A up is 880 Hz.</p>
+        <div class="listen-row">
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-seq="60,72" data-beats="1.5">🔊 C4, then C5 (an octave)</button>
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-seq="60,61,62,63,64,65,66,67,68,69,70,71,72" data-beats="0.5">🔊 All 12 semitones</button>
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-seq="69,81" data-beats="1.5">🔊 A 440 Hz → A 880 Hz</button>
+        </div>
+        <p class="mb-0">The number after a note name tells you <em>which</em> octave: <strong>C4</strong> is "middle C" near the center of the piano, and C5 is one octave higher.</p>
+      </div>
+    </div>
+    <div class="fun-fact">
+      <strong>💡 Fun fact:</strong> Around the year 1000, an Italian monk named <strong>Guido of Arezzo</strong> gave the notes singable syllables, taken from the first syllable of each line of a hymn: <em>Ut, Re, Mi, Fa, Sol, La</em>. "Ut" later became <strong>Do</strong> and <strong>Ti</strong> was added. That's where "Do Re Mi" comes from!
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 2. READING MUSIC -->
+  <section id="reading" class="mb-5">
+    <h2 class="section-title">2. Reading Music: Staff, Note Lengths &amp; Beats</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <h5>2.1 — The staff</h5>
+        <p>Western music is usually <strong>written down</strong> on a <strong>staff</strong>: five lines with four spaces between them. The higher a note sits on the staff, the higher it sounds. Here is the C major scale written on a treble staff, starting from middle C (which needs its own little extra line, called a <em>ledger line</em>):</p>
+        <svg class="staff-svg" viewBox="0 0 520 140" role="img" aria-label="C major scale on a treble staff: C D E F G A B C">
+          <g stroke="#333" stroke-width="1.4">
+            <line x1="20" y1="40" x2="505" y2="40"/><line x1="20" y1="52" x2="505" y2="52"/>
+            <line x1="20" y1="64" x2="505" y2="64"/><line x1="20" y1="76" x2="505" y2="76"/>
+            <line x1="20" y1="88" x2="505" y2="88"/>
+            <line x1="20" y1="40" x2="20" y2="88"/><line x1="505" y1="40" x2="505" y2="88"/>
+            <line x1="48" y1="100" x2="80" y2="100"/>
+          </g>
+          <g fill="#0d6efd">
+            <ellipse cx="64"  cy="100" rx="7.5" ry="5.5" transform="rotate(-20 64 100)"/>
+            <ellipse cx="124" cy="94"  rx="7.5" ry="5.5" transform="rotate(-20 124 94)"/>
+            <ellipse cx="184" cy="88"  rx="7.5" ry="5.5" transform="rotate(-20 184 88)"/>
+            <ellipse cx="244" cy="82"  rx="7.5" ry="5.5" transform="rotate(-20 244 82)"/>
+            <ellipse cx="304" cy="76"  rx="7.5" ry="5.5" transform="rotate(-20 304 76)"/>
+            <ellipse cx="364" cy="70"  rx="7.5" ry="5.5" transform="rotate(-20 364 70)"/>
+            <ellipse cx="424" cy="64"  rx="7.5" ry="5.5" transform="rotate(-20 424 64)"/>
+            <ellipse cx="484" cy="58"  rx="7.5" ry="5.5" transform="rotate(-20 484 58)"/>
+          </g>
+          <g stroke="#0d6efd" stroke-width="1.6">
+            <line x1="71" y1="98" x2="71" y2="62"/><line x1="131" y1="92" x2="131" y2="56"/>
+            <line x1="191" y1="86" x2="191" y2="50"/><line x1="251" y1="80" x2="251" y2="44"/>
+            <line x1="311" y1="74" x2="311" y2="38"/><line x1="371" y1="68" x2="371" y2="32"/>
+            <line x1="417" y1="66" x2="417" y2="102"/><line x1="477" y1="60" x2="477" y2="96"/>
+          </g>
+          <g font-family="Segoe UI, Roboto, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#084298">
+            <text x="64" y="124">C</text><text x="124" y="124">D</text><text x="184" y="124">E</text><text x="244" y="124">F</text>
+            <text x="304" y="124">G</text><text x="364" y="124">A</text><text x="424" y="124">B</text><text x="484" y="124">C</text>
+          </g>
+          <g font-family="Segoe UI, Roboto, sans-serif" font-size="11" text-anchor="middle" fill="#e8730c" font-weight="700">
+            <text x="64" y="138">Sa</text><text x="124" y="138">Re</text><text x="184" y="138">Ga</text><text x="244" y="138">Ma</text>
+            <text x="304" y="138">Pa</text><text x="364" y="138">Dha</text><text x="424" y="138">Ni</text><text x="484" y="138">Sa</text>
+          </g>
+        </svg>
+        <div class="listen-row"><button class="btn btn-outline-primary btn-sm listen-btn" data-seq="60,62,64,65,67,69,71,72" data-beats="0.75">🔊 Play this scale</button></div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5>2.2 — Note lengths: how long each note lasts</h5>
+        <p>The shape of a written note tells you how many <strong>beats</strong> to hold it. The beat is the steady pulse you tap your foot to.</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-3">
+            <thead><tr><th>Note</th><th>Looks like</th><th>Beats (in 4/4 time)</th><th>Think of it as…</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Whole note</strong></td><td>Hollow oval, no stem</td><td>4</td><td>"Hoooold it"</td></tr>
+              <tr><td><strong>Half note</strong></td><td>Hollow oval with a stem</td><td>2</td><td>"Hold-it"</td></tr>
+              <tr><td><strong>Quarter note</strong> ♩</td><td>Filled oval with a stem</td><td>1</td><td>"Walk"</td></tr>
+              <tr><td><strong>Eighth note</strong> ♪</td><td>Filled, stem with a flag</td><td>½</td><td>"Run-ning"</td></tr>
+              <tr><td><strong>Rest</strong></td><td>Special symbols</td><td>Any length</td><td>Silence! Silence is part of music too</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-0">A <strong>dot</strong> after a note makes it 1½ times as long, so a dotted quarter note lasts 1½ beats.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>2.3 — Time signatures, tempo &amp; dynamics</h5>
+        <ul class="mb-0">
+          <li><strong>Time signature</strong>: beats are grouped into <strong>bars</strong> (measures). <strong>4/4</strong> means 4 beats per bar ("ONE two three four"), used in most pop songs. <strong>3/4</strong> means 3 beats per bar ("ONE two three"), the waltz feel.</li>
+          <li><strong>Tempo</strong>: speed, measured in <strong>BPM</strong> (beats per minute). Musicians often use Italian words: <em>Largo</em> (very slow), <em>Andante</em> (walking pace), <em>Allegro</em> (fast and lively), <em>Presto</em> (very fast).</li>
+          <li><strong>Dynamics</strong>: loudness. <em>p</em> = piano (soft), <em>f</em> = forte (loud), <em>crescendo</em> = getting louder.</li>
+        </ul>
+        <div class="listen-row">
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-clicks="4" data-bpm="100">🔊 Count 4/4: ONE two three four</button>
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-clicks="3" data-bpm="120">🔊 Count 3/4: ONE two three</button>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 3. SCALES & CHORDS -->
+  <section id="scales" class="mb-5">
+    <h2 class="section-title">3. Scales, Chords &amp; Harmony</h2>
+    <div class="card shadow-sm accent-blue mb-4">
+      <div class="card-body">
+        <h5>3.1 — Scales: a recipe of steps</h5>
+        <p>A <strong>scale</strong> is a set of notes, played in order, that a piece of music is built from. Scales are recipes of <strong>whole steps (W = 2 semitones)</strong> and <strong>half steps (H = 1 semitone)</strong>:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-2">
+            <thead><tr><th>Scale</th><th>Recipe</th><th>Starting on C / A</th><th>Mood</th><th>Listen</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Major</strong></td><td>W W H W W W H</td><td>C D E F G A B C</td><td>Bright, happy 😀</td><td><button class="btn btn-outline-primary btn-sm listen-btn" data-seq="60,62,64,65,67,69,71,72" data-beats="0.6">🔊</button></td></tr>
+              <tr><td><strong>Natural minor</strong></td><td>W H W W H W W</td><td>A B C D E F G A</td><td>Sad, serious 😔</td><td><button class="btn btn-outline-primary btn-sm listen-btn" data-seq="57,59,60,62,64,65,67,69" data-beats="0.6">🔊</button></td></tr>
+              <tr><td><strong>Pentatonic</strong></td><td>5 notes only</td><td>C D E G A C</td><td>Open, folk-like</td><td><button class="btn btn-outline-primary btn-sm listen-btn" data-seq="60,62,64,67,69,72" data-beats="0.6">🔊</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-0 small text-muted">Because the recipe is what matters, you can start a major scale on any of the 12 notes and it will still sound "major."</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5>3.2 — Chords: notes stacked together</h5>
+        <p>A <strong>chord</strong> is three or more notes played at the <strong>same time</strong>. The most common is a <strong>triad</strong>: take a scale's 1st, 3rd and 5th notes. C major = <strong>C + E + G</strong>. Lower the middle note by one semitone and it becomes C <strong>minor</strong> = C + E♭ + G, which sounds instantly sadder.</p>
+        <div class="listen-row">
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-chord="60,64,67">🔊 C major chord 😀</button>
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-chord="60,63,67">🔊 C minor chord 😔</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>3.3 — Harmony &amp; chord progressions</h5>
+        <p>Western music's special strength is <strong>harmony</strong>: chords moving under the melody. A <strong>chord progression</strong> is a series of chords. The <strong>I – IV – V – I</strong> progression (in C: C – F – G – C) appears in thousands of songs, from folk and blues to rock and pop. The final "V → I" step sounds like coming home.</p>
+        <div class="listen-row">
+          <button class="btn btn-outline-primary btn-sm listen-btn" data-progression="60,64,67|65,69,72|67,71,74|60,64,67,72">🔊 I – IV – V – I (C – F – G – C)</button>
+        </div>
+        <div class="fun-fact mt-2"><strong>💡 Fun fact:</strong> A symphony orchestra can have 80–100 musicians, all reading their own written part and following a <strong>conductor</strong>. That's only possible because Western music is carefully written down.</div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <h3 class="part-title indian mb-4">Part B · Indian Classical Music</h3>
+
+  <!-- 4. TRADITIONS -->
+  <section id="traditions" class="mb-5">
+    <h2 class="section-title">4. Two Great Traditions: Hindustani &amp; Carnatic</h2>
+    <div class="card shadow-sm accent-saffron mb-4">
+      <div class="card-body">
+        <p>Indian classical music is thousands of years old. Its roots go back to the <strong>Sama Veda</strong>, ancient hymns that were chanted to melodies, and to the <strong>Natya Shastra</strong>, an ancient book on music, dance and drama attributed to the sage Bharata. Over centuries it grew into two main branches:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-0">
+            <thead><tr><th></th><th>🎼 Hindustani</th><th>🎼 Carnatic</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Where</strong></td><td>Mostly North India (also Pakistan, Bangladesh, Nepal)</td><td>Mostly South India (also Sri Lanka)</td></tr>
+              <tr><td><strong>Influences</strong></td><td>Also shaped by Persian music at royal courts</td><td>Closely tied to temple and devotional traditions</td></tr>
+              <tr><td><strong>Scale system</strong></td><td>10 <strong>thaats</strong> (parent scales)</td><td>72 <strong>melakartas</strong> (parent scales)</td></tr>
+              <tr><td><strong>Style</strong></td><td>Long, slow, step-by-step unfolding of the raga; lots of improvisation</td><td>Built around composed songs (<em>kritis</em>), richly ornamented with <em>gamakas</em></td></tr>
+              <tr><td><strong>Famous composers / musicians</strong></td><td>Tansen, Pt. Ravi Shankar (sitar), Ustad Zakir Hussain (tabla), Pt. Bhimsen Joshi (vocal)</td><td>Tyagaraja, Muthuswami Dikshitar and Syama Sastri (the "Trinity"), M. S. Subbulakshmi (vocal)</td></tr>
+              <tr><td><strong>Signature instruments</strong></td><td>Sitar, sarod, tabla, bansuri, sarangi, santoor, harmonium</td><td>Veena, mridangam, violin, ghatam, kanjira, nadaswaram</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="fun-fact">
+      <strong>💡 Guru–shishya parampara:</strong> Indian classical music has mostly been passed down <strong>orally</strong>, from teacher (<em>guru</em>) to student (<em>shishya</em>), through years of listening and copying. Notation exists, but the real music lives in what you learn by ear.
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 5. SWARAS -->
+  <section id="swaras" class="mb-5">
+    <h2 class="section-title">5. Swaras &amp; Saptak: The Notes</h2>
+    <div class="card shadow-sm accent-saffron mb-4">
+      <div class="card-body">
+        <h5>5.1 — The seven swaras</h5>
+        <p>Indian music calls its notes <strong>swaras</strong>. There are seven, sung as <strong>Sa Re Ga Ma Pa Dha Ni</strong> (this singing is called <strong>sargam</strong>):</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-2">
+            <thead><tr><th>Short</th><th>Full name</th><th>If Sa = C</th><th>Western solfège</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Sa</strong></td><td>Shadja</td><td>C</td><td>Do</td></tr>
+              <tr><td><strong>Re</strong> (Ri in Carnatic)</td><td>Rishabh</td><td>D</td><td>Re</td></tr>
+              <tr><td><strong>Ga</strong></td><td>Gandhar</td><td>E</td><td>Mi</td></tr>
+              <tr><td><strong>Ma</strong></td><td>Madhyam</td><td>F</td><td>Fa</td></tr>
+              <tr><td><strong>Pa</strong></td><td>Pancham</td><td>G</td><td>Sol</td></tr>
+              <tr><td><strong>Dha</strong></td><td>Dhaivat</td><td>A</td><td>La</td></tr>
+              <tr><td><strong>Ni</strong></td><td>Nishad</td><td>B</td><td>Ti</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="listen-row"><button class="btn btn-outline-warning btn-sm listen-btn" data-seq="60,62,64,65,67,69,71,72" data-beats="0.75" data-drone="1">🔊 Sa Re Ga Ma Pa Dha Ni Sa (with tanpura drone)</button></div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5>5.2 — Movable Sa, and the 12 swaras</h5>
+        <ul>
+          <li><strong>Sa is movable.</strong> There is no fixed "440 Hz" in Indian music. Each singer or player chooses the pitch of Sa that suits their voice or instrument, and everything else is measured from it. (In this article and the app we use Sa = C.)</li>
+          <li><strong>Sa and Pa never change.</strong> They are called <em>achal</em> (immovable) swaras.</li>
+          <li><strong>Re, Ga, Dha and Ni</strong> can be lowered by a semitone. The lowered note is called <strong>komal</strong> ("soft"), like a Western flat, and is written <span class="komal">underlined</span>: <span class="komal">Re</span>.</li>
+          <li><strong>Ma</strong> can be raised by a semitone. That's called <strong>tivra</strong> ("sharp"), written with a line on top: <span class="tivra">Ma</span>.</li>
+        </ul>
+        <p class="mb-0">7 natural (<em>shuddha</em>) + 4 komal + 1 tivra = <strong>12 swaras</strong>, the same 12 notes as the 12 piano keys in an octave!</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5>5.3 — Saptak: the three octaves</h5>
+        <p>An octave is a <strong>saptak</strong>. A dot shows which one a note belongs to:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-0">
+            <thead><tr><th>Saptak</th><th>Meaning</th><th>Written as</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Mandra</strong></td><td>Low octave</td><td>dot below: <span class="mandra">Pa</span> <span class="mandra">Dha</span> <span class="mandra">Ni</span></td></tr>
+              <tr><td><strong>Madhya</strong></td><td>Middle octave</td><td>no dot: Sa Re Ga</td></tr>
+              <tr><td><strong>Taar</strong></td><td>High octave</td><td>dot above: <span class="taar">Sa</span> <span class="taar">Re</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="watchout">
+      <strong>🔬 Going deeper: shrutis and gamakas.</strong> Indian theory describes <strong>22 shrutis</strong>, tiny pitch steps finer than the 12 piano keys. Singers also <strong>slide</strong> between notes (<em>meend</em>) and <strong>shake</strong> them in special ways (<em>gamaka</em>). That's why a piano can only roughly imitate a raga: the "spaces between the keys" really matter in Indian music!
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 6. RAGA -->
+  <section id="raga" class="mb-5">
+    <h2 class="section-title">6. Raga: The Soul of Indian Music</h2>
+    <div class="card shadow-sm accent-saffron mb-4">
+      <div class="card-body">
+        <p>A <strong>raga</strong> is much more than a scale. It's a melodic <em>personality</em>, a set of rules for how to move between notes so that a special mood comes alive. The word comes from Sanskrit, roughly "that which colors the mind." A raga has:</p>
+        <ul class="mb-0">
+          <li><strong>Its own set of notes</strong>: usually 5, 6 or 7 swaras chosen from the 12.</li>
+          <li><strong>Aaroh &amp; avroh</strong>: the way to go <em>up</em> and the way to come <em>down</em>. These can be different!</li>
+          <li><strong>Vadi &amp; samvadi</strong>: the most important note (the "king") and the second most important (the "minister").</li>
+          <li><strong>Pakad / chalan</strong>: a short "catch phrase" that instantly identifies the raga, like a musical signature.</li>
+          <li><strong>A time and a mood (rasa)</strong>: in Hindustani tradition, many ragas belong to a time of day or a season, such as morning calm or evening romance.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5>🎧 Meet four ragas (Sa = C)</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-0">
+            <thead><tr><th>Raga</th><th>Notes</th><th>Time / mood</th><th>Listen (aaroh &amp; avroh)</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Yaman</strong></td><td>Sa Re Ga <span class="tivra">Ma</span> Pa Dha Ni (tivra Ma)</td><td>Early night · peaceful, devotional</td><td><button class="btn btn-outline-warning btn-sm listen-btn" data-seq="59,62,64,66,69,71,72,71,69,67,66,64,62,60" data-beats="0.6" data-drone="1">🔊 Yaman</button></td></tr>
+              <tr><td><strong>Bhupali</strong> (≈ Mohanam in Carnatic)</td><td>Sa Re Ga Pa Dha (5 notes, no Ma or Ni)</td><td>Evening · calm, joyful</td><td><button class="btn btn-outline-warning btn-sm listen-btn" data-seq="60,62,64,67,69,72,69,67,64,62,60" data-beats="0.6" data-drone="1">🔊 Bhupali</button></td></tr>
+              <tr><td><strong>Bhairav</strong> (same notes as Mayamalavagowla)</td><td>Sa <span class="komal">Re</span> Ga Ma Pa <span class="komal">Dha</span> Ni</td><td>Early morning · serious, prayerful</td><td><button class="btn btn-outline-warning btn-sm listen-btn" data-seq="60,61,64,65,67,68,71,72,71,68,67,65,64,61,60" data-beats="0.6" data-drone="1">🔊 Bhairav</button></td></tr>
+              <tr><td><strong>Kafi</strong></td><td>Sa Re <span class="komal">Ga</span> Ma Pa Dha <span class="komal">Ni</span></td><td>Late evening · springtime, folk feel</td><td><button class="btn btn-outline-warning btn-sm listen-btn" data-seq="60,62,63,65,67,69,70,72,70,69,67,65,63,62,60" data-beats="0.6" data-drone="1">🔊 Kafi</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm accent-yellow">
+      <div class="card-body">
+        <h5>🧩 Parent scales: thaat and melakarta</h5>
+        <p class="mb-0">To organize hundreds of ragas, Hindustani music groups them under <strong>10 thaats</strong> (parent scales), such as Bilawal, Kalyan, Khamaj, Bhairav, Poorvi, Marwa, Kafi, Asavari, Bhairavi and Todi. <strong>Bilawal</strong> has the same notes as the Western C major scale. Carnatic music uses a beautifully mathematical system of <strong>72 melakartas</strong>, which covers every possible combination of the variable notes. Beginners in Carnatic music often start with exercises called <em>sarali varisai</em> in raga <strong>Mayamalavagowla</strong>.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 7. TALA -->
+  <section id="tala" class="mb-5">
+    <h2 class="section-title">7. Tala: The Rhythm Cycle</h2>
+    <div class="card shadow-sm accent-saffron mb-4">
+      <div class="card-body">
+        <p>Western music counts beats in <strong>bars</strong> that simply repeat. Indian music thinks of rhythm as a <strong>cycle</strong> (<em>avartan</em>) that keeps coming back around, like a clock. This cycle is called a <strong>tala</strong>, and each beat is a <strong>matra</strong>. The first beat, <strong>sam</strong>, is the most important: musicians improvise freely and then land together exactly on sam, often to a big "wow!" from the audience.</p>
+        <h5 class="mt-3">⏱️ Teentaal: the most popular Hindustani tala (16 beats = 4 × 4)</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle text-center mb-2 small">
+            <thead><tr><th>Beat</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Bol (tabla)</strong></td><td>Dha</td><td>Dhin</td><td>Dhin</td><td>Dha</td><td>Dha</td><td>Dhin</td><td>Dhin</td><td>Dha</td><td>Dha</td><td>Tin</td><td>Tin</td><td>Ta</td><td>Ta</td><td>Dhin</td><td>Dhin</td><td>Dha</td></tr>
+              <tr><td><strong>Hand</strong></td><td class="table-warning"><strong>X</strong><br>clap (sam)</td><td></td><td></td><td></td><td><strong>2</strong><br>clap</td><td></td><td></td><td></td><td class="table-secondary"><strong>0</strong><br>wave (khali)</td><td></td><td></td><td></td><td><strong>3</strong><br>clap</td><td></td><td></td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small text-muted">Clap on beats 1, 5 and 13. On beat 9 (<em>khali</em>, "empty") you wave your hand instead, so listeners always know where they are in the cycle.</p>
+        <div class="listen-row"><button class="btn btn-outline-warning btn-sm listen-btn" data-tala="1">🔊 Hear one cycle of Teentaal (accent on sam)</button></div>
+        <h5 class="mt-3">Other talas</h5>
+        <ul class="mb-0">
+          <li><strong>Dadra</strong>: 6 beats (3 + 3), light and swinging</li>
+          <li><strong>Keherwa</strong>: 8 beats (4 + 4), very common in folk and film music</li>
+          <li><strong>Rupak</strong>: 7 beats (3 + 2 + 2), and its cycle starts on a <em>khali</em>!</li>
+          <li><strong>Adi tala</strong> (Carnatic): 8 beats, the most common Carnatic tala</li>
+        </ul>
+      </div>
+    </div>
+    <div class="fun-fact"><strong>💡 Fun fact:</strong> Tabla players learn rhythms as spoken syllables called <strong>bols</strong> ("Dha Dhin Dhin Dha"), and Carnatic musicians use <strong>konnakol</strong> ("Ta Ki Ta Dhi Mi"). They can "speak" an entire drum solo before playing it!</div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <h3 class="part-title mb-4">Part C · Both Together</h3>
+
+  <!-- 8. INSTRUMENTS -->
+  <section id="instruments" class="mb-5">
+    <h2 class="section-title">8. Instruments of Both Worlds</h2>
+    <div class="card shadow-sm accent-purple">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-0">
+            <thead><tr><th>Family</th><th>How it makes sound</th><th>🎻 Western examples</th><th>🪕 Indian examples</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Plucked strings</strong></td><td>Pluck a stretched string</td><td>Guitar, harp</td><td>Sitar, sarod, veena, tanpura</td></tr>
+              <tr><td><strong>Bowed strings</strong></td><td>Rub a string with a bow</td><td>Violin, viola, cello, double bass</td><td>Sarangi, violin (central in Carnatic music)</td></tr>
+              <tr><td><strong>Struck strings</strong></td><td>Hit strings with hammers</td><td>Piano</td><td>Santoor</td></tr>
+              <tr><td><strong>Wind</strong></td><td>Blow air through a tube</td><td>Flute, clarinet, trumpet, saxophone</td><td>Bansuri (bamboo flute), shehnai, nadaswaram</td></tr>
+              <tr><td><strong>Drums</strong></td><td>Strike a stretched skin</td><td>Drum kit, timpani, snare</td><td>Tabla, mridangam, pakhawaj, dholak, kanjira</td></tr>
+              <tr><td><strong>Other percussion</strong></td><td>Strike a solid body</td><td>Xylophone, cymbals, triangle</td><td>Ghatam (clay pot), manjira (small cymbals)</td></tr>
+              <tr><td><strong>Reed / keyboard</strong></td><td>Air vibrates metal reeds</td><td>Accordion, harmonica</td><td>Harmonium (hugely popular in India)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="fun-fact mt-3"><strong>💡 Fun fact:</strong> A sitar has <strong>sympathetic strings</strong> under the main ones. Nobody plucks them; they vibrate on their own when a matching note is played, giving the sitar its shimmering sound. In the 1960s, Pt. Ravi Shankar's friendship with George Harrison of The Beatles brought the sitar to rock music.</div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 9. COMPARE -->
+  <section id="compare" class="mb-5">
+    <h2 class="section-title">9. Western vs. Indian: Side by Side</h2>
+    <div class="card shadow-sm accent-purple mb-4">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-0">
+            <thead><tr><th style="width:18%"></th><th>🎼 Western classical</th><th>🪔 Indian classical</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Note names</strong></td><td>C D E F G A B / Do Re Mi…</td><td>Sa Re Ga Ma Pa Dha Ni</td></tr>
+              <tr><td><strong>Pitch</strong></td><td>Fixed (A = 440 Hz)</td><td>Movable: performer chooses Sa</td></tr>
+              <tr><td><strong>Main focus</strong></td><td><strong>Harmony</strong>: many notes together, chords, many instruments</td><td><strong>Melody</strong>: one melodic line over a steady drone, with deep ornamentation</td></tr>
+              <tr><td><strong>Melodic framework</strong></td><td>Scales &amp; keys (major, minor)</td><td>Ragas, with rules for movement, mood and time of day</td></tr>
+              <tr><td><strong>Rhythm</strong></td><td>Bars with time signatures (4/4, 3/4)</td><td>Talas: repeating cycles (Teentaal 16, Adi 8)</td></tr>
+              <tr><td><strong>Composed or improvised?</strong></td><td>Mostly composed and written down in full</td><td>A short composition plus lots of improvisation (<em>alaap</em>, <em>taan</em>, <em>kalpana swaram</em>)</td></tr>
+              <tr><td><strong>Learning</strong></td><td>Reading sheet music</td><td>Mainly by ear, from guru to shishya</td></tr>
+              <tr><td><strong>Tuning</strong></td><td>Equal temperament: all 12 semitones exactly equal</td><td>Natural tuning relative to Sa, with microtones (shrutis)</td></tr>
+              <tr><td><strong>Performance</strong></td><td>Orchestra with a conductor, or a soloist</td><td>Soloist + drum accompanist + drone, often for hours</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm accent-green">
+      <div class="card-body">
+        <h5>🤝 What they share</h5>
+        <p class="mb-0">Both divide the octave into <strong>12 notes</strong> and pick <strong>7</strong> for a scale. Both use the <strong>octave</strong>, a strong "home" note (the <em>tonic</em> / Sa), and steady beats. That's why the two traditions mix so well in fusion music, film soundtracks and jazz. You'll see it yourself in the app below: the same keyboard can be read as <strong>C D E</strong> or as <strong>Sa Re Ga</strong>.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 10. COMPOSER APP -->
+  <section id="composer" class="mb-5">
+    <h2 class="section-title">10. 🎹 Compose Your Own Music!</h2>
+    <div class="card shadow-sm accent-yellow mb-3">
+      <div class="card-body">
+        <p class="mb-0"><strong>How it works:</strong> <span class="badge bg-primary">1</span> Choose note names (Western or Sargam) and, if you like, a scale or raga to guide you. Its notes glow green on the keyboard. <span class="badge bg-primary">2</span> Pick a note length, then tap piano keys (or use your computer keyboard: <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>H</kbd> <kbd>J</kbd> <kbd>K</kbd> for the white keys, <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> for the black ones) to add notes to your song. <span class="badge bg-primary">3</span> Press <strong>▶ Play my music</strong>!</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm composer">
+      <div class="card-body">
+
+        <div class="composer-prompt mb-3" id="prompt" aria-live="polite">🎼 Let's compose! Tap a key on the piano below to add your first note.</div>
+
+        <!-- Step 1 controls -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-3 col-6">
+            <label class="ctrl-label" for="notation">Note names</label>
+            <select id="notation" class="form-select form-select-sm">
+              <option value="western">Western (C D E)</option>
+              <option value="indian">Indian sargam (Sa Re Ga)</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
+          <div class="col-md-4 col-6">
+            <label class="ctrl-label" for="scale">Guide scale / raga</label>
+            <select id="scale" class="form-select form-select-sm"></select>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="ctrl-label" for="instrument">Instrument sound</label>
+            <select id="instrument" class="form-select form-select-sm">
+              <option value="piano">🎹 Piano</option>
+              <option value="guitar">🎸 Guitar</option>
+              <option value="flute">🪈 Flute / Bansuri</option>
+              <option value="sitar">🪕 Sitar-style pluck</option>
+              <option value="organ">🎛️ Organ / Harmonium</option>
+            </select>
+          </div>
+          <div class="col-md-2 col-6">
+            <label class="ctrl-label" for="cycle">Rhythm</label>
+            <select id="cycle" class="form-select form-select-sm">
+              <option value="4/4">4/4 (Western)</option>
+              <option value="3/4">3/4 waltz</option>
+              <option value="teentaal">Teentaal 16</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Step 2: duration -->
+        <div class="d-flex flex-wrap align-items-end gap-3 mb-2">
+          <div>
+            <span class="ctrl-label">Note length</span>
+            <div class="btn-group btn-group-sm dur-group flex-wrap" role="group" aria-label="Note length" id="durGroup">
+              <button type="button" class="btn btn-outline-primary" data-beats="4">Whole · 4</button>
+              <button type="button" class="btn btn-outline-primary" data-beats="2">Half · 2</button>
+              <button type="button" class="btn btn-outline-primary" data-beats="1.5">Dotted · 1½</button>
+              <button type="button" class="btn btn-outline-primary active" data-beats="1">Quarter · 1</button>
+              <button type="button" class="btn btn-outline-primary" data-beats="0.5">Eighth · ½</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="restBtn">🤫 Add rest (silence)</button>
+        </div>
+
+        <!-- Keyboard -->
+        <!-- Instrument view switch -->
+        <ul class="nav nav-pills view-tabs mb-2" id="viewTabs" role="tablist">
+          <li class="nav-item"><button type="button" class="nav-link active" data-view="piano" role="tab">🎹 Piano keyboard</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-view="guitar" role="tab">🎸 Guitar fretboard &amp; tab</button></li>
+        </ul>
+
+        <!-- Piano view -->
+        <div id="pianoView">
+          <div class="kb-wrap mb-3"><div class="keyboard" id="keyboard" aria-label="Piano keyboard"></div></div>
+        </div>
+
+        <!-- Guitar view -->
+        <div id="guitarView" hidden>
+          <div class="d-flex flex-wrap align-items-end gap-3 mb-2">
+            <div>
+              <span class="ctrl-label">Technique for the next note</span>
+              <div class="btn-group btn-group-sm" role="group" aria-label="Technique" id="techGroup">
+                <button type="button" class="btn btn-outline-dark active" data-tech="pick">✋ Pick</button>
+                <button type="button" class="btn btn-outline-dark" data-tech="slide">↗ Slide into it</button>
+                <button type="button" class="btn btn-outline-dark" data-tech="legato">H/P Hammer-on / pull-off</button>
+              </div>
+            </div>
+            <div class="form-check mb-1">
+              <input class="form-check-input" type="checkbox" id="dsMode">
+              <label class="form-check-label small" for="dsMode">Double stop: also play the string below at the same fret</label>
+            </div>
+          </div>
+          <div class="fb-wrap mb-2"><div class="fretboard" id="fretboard" aria-label="Guitar fretboard"></div></div>
+          <p class="small text-muted mb-2">Click a string at any fret to add that note. Strings top to bottom are <strong>e B G D A E</strong> (high to low), the same way guitar tab is written. Green dots show the notes of the guide scale.</p>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="ctrl-label mb-0">🎼 Live guitar tab</span>
+            <span class="small text-muted">/ = slide up · \ = slide down · h = hammer-on · p = pull-off</span>
+          </div>
+          <div class="tab-wrap mb-3" id="tabView"></div>
+        </div>
+
+        <!-- Song -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+          <h5 class="mb-0">🎵 My song</h5>
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="stat-pill" id="statNotes">0 notes</span>
+            <span class="stat-pill" id="statBeats">0 beats</span>
+            <span class="stat-pill" id="statTime">0.0 s</span>
+          </div>
+        </div>
+        <div class="song-area mb-3" id="song"><div class="song-empty">Your notes will appear here…</div></div>
+        <p class="small text-muted mb-3">Tip: click a note in your song to hear it again. Hover over it (or tap it) and press the red × to delete it.</p>
+
+        <!-- Step 3: play -->
+        <div class="row g-3 align-items-end mb-3">
+          <div class="col-md-4">
+            <label class="ctrl-label" for="tempo">Tempo: <span id="tempoVal">100</span> BPM</label>
+            <input type="range" class="form-range" id="tempo" min="40" max="200" value="100">
+          </div>
+          <div class="col-md-4 d-flex flex-wrap gap-3">
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="drone"><label class="form-check-label small" for="drone">Tanpura drone (Sa–Pa)</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="clicks"><label class="form-check-label small" for="clicks">Beat clicks</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="loop"><label class="form-check-label small" for="loop">Loop</label></div>
+            <div class="form-check" id="recWrap" hidden><input class="form-check-input" type="checkbox" id="useRec" checked><label class="form-check-label small fw-bold" for="useRec">🎧 Play the original recording</label></div>
+          </div>
+          <div class="col-md-4 d-flex gap-2 justify-content-md-end">
+            <button type="button" class="btn btn-success big-play" id="playBtn">▶ Play my music</button>
+            <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled>■ Stop</button>
+          </div>
+        </div>
+
+        <!-- Edit tools -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="undoBtn">↶ Undo last note</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" id="clearBtn">🗑️ Clear song</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="challengeBtn">🎲 Give me a challenge</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="saveBtn">💾 Save</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="loadBtn">📂 Load saved</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="codeBtn">🔗 Song code</button>
+        </div>
+
+        <div id="codeBox" class="mb-3" hidden>
+          <label class="ctrl-label" for="codeText">Song code: copy it to share, or paste one and press Load</label>
+          <textarea id="codeText" class="form-control form-control-sm mb-2" rows="2" style="font-family:Consolas,monospace"></textarea>
+          <button type="button" class="btn btn-sm btn-primary" id="codeLoadBtn">Load from code</button>
+        </div>
+
+        <!-- Examples -->
+        <div>
+          <span class="ctrl-label">Or start from an example</span>
+          <div class="d-flex flex-wrap gap-2" id="presets"></div>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 11. GLOSSARY -->
+  <section id="glossary" class="mb-5">
+    <h2 class="section-title">11. Mini Glossary</h2>
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-0">
+            <thead><tr><th style="width:22%">Word</th><th>What it means</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Octave</strong> / <strong>Saptak</strong></td><td>The span from one note to the same note at double the frequency.</td></tr>
+              <tr><td><strong>Semitone</strong></td><td>The smallest step on a piano: from one key to the very next.</td></tr>
+              <tr><td><strong>Sharp ♯ / Flat ♭</strong></td><td>A note raised / lowered by one semitone.</td></tr>
+              <tr><td><strong>Scale</strong></td><td>An ordered set of notes that music is built from.</td></tr>
+              <tr><td><strong>Chord</strong></td><td>Three or more notes played at the same time.</td></tr>
+              <tr><td><strong>Time signature</strong></td><td>How many beats are in each bar (e.g. 4/4).</td></tr>
+              <tr><td><strong>BPM</strong></td><td>Beats per minute: the tempo.</td></tr>
+              <tr><td><strong>Swara</strong></td><td>A note in Indian music (Sa, Re, Ga…).</td></tr>
+              <tr><td><strong>Komal / Tivra</strong></td><td>A lowered swara (Re, Ga, Dha, Ni) / the raised Ma.</td></tr>
+              <tr><td><strong>Raga</strong></td><td>A melodic framework with its own notes, movements, mood and time.</td></tr>
+              <tr><td><strong>Aaroh / Avroh</strong></td><td>The ascending / descending pattern of a raga.</td></tr>
+              <tr><td><strong>Tala</strong></td><td>A repeating rhythm cycle (e.g. Teentaal = 16 beats).</td></tr>
+              <tr><td><strong>Sam / Khali</strong></td><td>The first, strongest beat of a tala / the "empty" beat marked with a wave.</td></tr>
+              <tr><td><strong>Tanpura</strong></td><td>A drone instrument that plays Sa and Pa continuously, giving a tonal "floor."</td></tr>
+              <tr><td><strong>Gamaka / Meend</strong></td><td>Ornaments: shaking a note / sliding smoothly between notes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 12. TAKEAWAYS -->
+  <section id="takeaways" class="mb-5">
+    <h2 class="section-title">12. Key Takeaways</h2>
+    <div class="card shadow-sm accent-green">
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Music is organized vibration: <strong>pitch</strong>, <strong>rhythm</strong>, <strong>melody</strong>, <strong>harmony</strong>, <strong>tempo</strong> and <strong>timbre</strong>.</li>
+          <li><strong>Western music</strong> uses 12 notes (C to B with sharps/flats), writes music on a <strong>staff</strong>, builds <strong>scales</strong> from W/H step recipes, and loves <strong>chords and harmony</strong>.</li>
+          <li><strong>Indian music</strong> uses 7 swaras (Sa Re Ga Ma Pa Dha Ni) with komal and tivra variants (12 in total), a <strong>movable Sa</strong>, and a <strong>drone</strong>.</li>
+          <li>A <strong>raga</strong> is more than a scale: it has rules, a catch phrase, a mood and often a time of day. A <strong>tala</strong> is a rhythm cycle that always returns to <strong>sam</strong>.</li>
+          <li>Hindustani (North) and Carnatic (South) are the two great branches of Indian classical music.</li>
+          <li>Both traditions share the octave, the 12 notes and the 7-note scale, so <strong>C D E = Sa Re Ga</strong> when Sa = C. Now go compose something! 🎶</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">
+    Agentic AI Blog &middot; <a href="contactus.html" class="text-white text-decoration-underline">Contact Us</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ============ AUDIO ENGINE (Web Audio API, no files needed) ============ */
+  let ctx = null, master = null, playBus = null;
+  function ensureCtx(){
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC){ alert('Sorry, your browser does not support Web Audio.'); return false; }
+      ctx = new AC();
+      const comp = ctx.createDynamicsCompressor();
+      master = ctx.createGain(); master.gain.value = 0.7;
+      master.connect(comp); comp.connect(ctx.destination);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return true;
+  }
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  let liveOscs = [];
+  let SLIDE = null;   // {ratio, dur}: set by tone() so every oscillator of a note glides in from the previous pitch
+  function makeOsc(type, freq, t, stopAt){
+    const o = ctx.createOscillator();
+    o.type = type;
+    if(SLIDE){
+      o.frequency.setValueAtTime(freq * SLIDE.ratio, t);
+      o.frequency.exponentialRampToValueAtTime(freq, t + SLIDE.dur);
+    } else o.frequency.setValueAtTime(freq, t);
+    o.start(t); o.stop(stopAt);
+    liveOscs.push(o);
+    o.onended = () => { const i = liveOscs.indexOf(o); if(i >= 0) liveOscs.splice(i, 1); };
+    return o;
+  }
+
+  /* Karplus-Strong plucked string: a burst of noise circulates in a delay line one period long;
+     averaging neighbouring samples on each pass softens the tone, exactly like a real string losing its brightness.
+     An all-pass filter adds the fractional part of the period so every note is in tune. */
+  const KS_SECONDS = 2.6, ksCache = {};
+  function ksBuffer(m, soft){
+    const key = m + (soft ? 's' : 'p');
+    if(ksCache[key]) return ksCache[key];
+    const sr = ctx.sampleRate, len = Math.floor(sr * KS_SECONDS);
+    const buf = ctx.createBuffer(1, len, sr), out = buf.getChannelData(0);
+    const P = sr / mtof(m);
+    const N = Math.max(2, Math.floor(P - 0.5 - 0.1));
+    const dfrac = P - 0.5 - N, C = (1 - dfrac) / (1 + dfrac);
+    const line = new Float32Array(N);
+    // Pick excitation: noise, low-passed (softer for legato notes), DC removed
+    const bright = soft ? 0.22 : 0.65; let lp = 0, mean = 0;
+    for(let i = 0; i < N; i++){ lp += bright * ((Math.random() * 2 - 1) - lp); line[i] = lp; mean += lp; }
+    mean /= N; let peakAbs = 0;
+    for(let i = 0; i < N; i++){ line[i] -= mean; peakAbs = Math.max(peakAbs, Math.abs(line[i])); }
+    const norm = peakAbs > 0 ? 0.6 / peakAbs : 1;
+    for(let i = 0; i < N; i++) line[i] *= norm;
+    const loss = 0.996 - Math.min(0.004, mtof(m) / 400000);   // high notes die away a little faster
+    let idx = 0, apX = 0, apY = 0;
+    for(let n = 0; n < len; n++){
+      const x = line[idx], nxt = idx + 1 === N ? 0 : idx + 1;
+      const avg = loss * 0.5 * (x + line[nxt]);
+      const y = C * avg + apX - C * apY; apX = avg; apY = y;
+      line[idx] = y; out[n] = x; idx = nxt;
+    }
+    return (ksCache[key] = buf);
+  }
+
+  /* Play one note: midi number m, start time t, duration d (seconds).
+     opts: {from: midi to slide in from, soft: legato attack (slide / hammer-on / pull-off), tie: next note is legato, so cut cleanly} */
+  function tone(m, t, d, inst, dest, opts){
+    opts = opts || {};
+    SLIDE = (opts.from != null && opts.from !== m) ? {ratio: mtof(opts.from) / mtof(m), dur: Math.min(0.11, d * 0.5)} : null;
+    try{ toneInner(m, t, d, inst, dest, opts); } finally { SLIDE = null; }
+  }
+  function toneInner(m, t, d, inst, dest, opts){
+    const f = mtof(m), end = t + d;
+    const g = ctx.createGain(); g.connect(dest); g.gain.setValueAtTime(0, t);
+    if(inst === 'piano'){
+      const stopAt = end + 0.6;
+      const o1 = makeOsc('triangle', f, t, stopAt), o2 = makeOsc('sine', f * 2, t, stopAt);
+      const g2 = ctx.createGain(); g2.gain.value = 0.25;
+      o1.connect(g); o2.connect(g2); g2.connect(g);
+      g.gain.linearRampToValueAtTime(0.55, t + 0.01);
+      g.gain.setTargetAtTime(0.12, t + 0.01, 0.35);
+      g.gain.setTargetAtTime(0, end, 0.08);
+    } else if(inst === 'guitar'){
+      // A real plucked string, simulated with the Karplus-Strong algorithm (see ksBuffer), through a small "guitar body" EQ
+      const src = ctx.createBufferSource();
+      src.buffer = ksBuffer(m, !!opts.soft);
+      if(SLIDE){                                   // slide: glide the string's pitch, no new pluck
+        src.playbackRate.setValueAtTime(SLIDE.ratio, t);
+        src.playbackRate.exponentialRampToValueAtTime(1, t + SLIDE.dur);
+      }
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 70;
+      const body = ctx.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 180; body.Q.value = 1.2; body.gain.value = 4;
+      const air = ctx.createBiquadFilter(); air.type = 'peaking'; air.frequency.value = 2800; air.Q.value = 0.9; air.gain.value = 3;
+      src.connect(hp); hp.connect(body); body.connect(air); air.connect(g);
+      // Legato notes (slides, hammer-ons, pull-offs) aren't re-picked, so they come in softer
+      const peak = opts.soft ? 0.5 : 0.85;
+      g.gain.linearRampToValueAtTime(peak, t + 0.002);
+      if(opts.tie) g.gain.setTargetAtTime(0, end, 0.012);      // hand over smoothly to the next legato note
+      else g.gain.setTargetAtTime(0, end + 0.08, 0.09);         // let it ring a moment, like a lifted finger
+      src.start(t); src.stop(Math.min(t + KS_SECONDS, end + 0.8));
+      liveOscs.push(src);
+      src.onended = () => { const i = liveOscs.indexOf(src); if(i >= 0) liveOscs.splice(i, 1); };
+    } else if(inst === 'flute'){
+      const stopAt = end + 0.4;
+      const o = makeOsc('sine', f, t, stopAt);
+      const lfo = makeOsc('sine', 5.2, t, stopAt), lg = ctx.createGain();
+      lg.gain.value = f * 0.006; lfo.connect(lg); lg.connect(o.frequency);
+      const breath = makeOsc('triangle', f, t, stopAt), bg = ctx.createGain(); bg.gain.value = 0.08;
+      breath.connect(bg); bg.connect(g); o.connect(g);
+      const atk = Math.min(0.08, d * 0.4);
+      g.gain.linearRampToValueAtTime(0.4, t + atk);
+      g.gain.setValueAtTime(0.4, Math.max(t + atk, end - 0.04));
+      g.gain.linearRampToValueAtTime(0, end + 0.08);
+    } else if(inst === 'sitar'){
+      const stopAt = end + 1.2;
+      const o = makeOsc('sawtooth', f * 0.97, t, stopAt);
+      o.frequency.exponentialRampToValueAtTime(f, t + 0.06);   // a tiny "meend" slide into the note
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 6;
+      lp.frequency.setValueAtTime(5000, t); lp.frequency.exponentialRampToValueAtTime(900, t + 0.5);
+      o.connect(lp); lp.connect(g);
+      g.gain.linearRampToValueAtTime(0.4, t + 0.004);
+      g.gain.setTargetAtTime(0.02, t + 0.004, 0.45);
+      g.gain.setTargetAtTime(0, end + 0.2, 0.15);
+    } else { // organ / harmonium
+      const stopAt = end + 0.3;
+      const o1 = makeOsc('square', f, t, stopAt), o2 = makeOsc('sine', f * 2, t, stopAt), o3 = makeOsc('sine', f / 2, t, stopAt);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200;
+      const a = ctx.createGain(); a.gain.value = 0.35;
+      const b = ctx.createGain(); b.gain.value = 0.3;
+      const c = ctx.createGain(); c.gain.value = 0.3;
+      o1.connect(a); o2.connect(b); o3.connect(c); a.connect(lp); b.connect(lp); c.connect(lp); lp.connect(g);
+      g.gain.linearRampToValueAtTime(0.32, t + 0.03);
+      g.gain.setValueAtTime(0.32, Math.max(t + 0.03, end - 0.03));
+      g.gain.linearRampToValueAtTime(0, end + 0.06);
+    }
+  }
+
+  function tanpuraPluck(m, t, dest){
+    const f = mtof(m);
+    const o = makeOsc('sawtooth', f, t, t + 3.2);
+    const o2 = makeOsc('sawtooth', f * 1.003, t, t + 3.2);  // slight detune = shimmering "jawari" buzz
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1600; lp.Q.value = 3;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.07, t + 0.02); g.gain.setTargetAtTime(0, t + 0.02, 1.0);
+    o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(dest);
+  }
+  function scheduleDrone(start, total, dest){
+    const pattern = [55, 60, 60, 48];     // Pa (low) · Sa · Sa · Sa (low): the classic tanpura cycle
+    const gap = 0.7; let t = start, i = 0;
+    while(t < start + total + 0.5){ tanpuraPluck(pattern[i % 4], t, dest); t += gap; i++; }
+  }
+  function click(t, accent, dest){
+    const o = makeOsc('sine', accent ? 1800 : 1100, t, t + 0.06);
+    const g = ctx.createGain(); g.gain.setValueAtTime(accent ? 0.35 : 0.18, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.connect(g); g.connect(dest);
+  }
+
+  /* A fresh bus per playback so Stop can fade everything out cleanly */
+  function newBus(){
+    if(playBus){ killBus(); }
+    playBus = ctx.createGain(); playBus.gain.value = 1; playBus.connect(master);
+    return playBus;
+  }
+  function killBus(){
+    if(!playBus) return;
+    const b = playBus; playBus = null;
+    const now = ctx.currentTime;
+    b.gain.cancelScheduledValues(now); b.gain.setValueAtTime(b.gain.value, now); b.gain.linearRampToValueAtTime(0, now + 0.05);
+    setTimeout(() => { try{ b.disconnect(); }catch(e){} }, 120);
+    liveOscs.slice().forEach(o => { try{ o.stop(now + 0.06); }catch(e){} });
+  }
+
+  /* ============ "LISTEN" DEMO BUTTONS IN THE ARTICLE ============ */
+  document.querySelectorAll('.listen-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(!ensureCtx()) return;
+      stopSong();
+      const bus = newBus(); const t0 = ctx.currentTime + 0.05;
+      let total = 0;
+      if(btn.dataset.seq){
+        const notes = btn.dataset.seq.split(',').map(Number);
+        const d = parseFloat(btn.dataset.beats || '0.75') * 0.6;
+        notes.forEach((m, i) => tone(m, t0 + i * d, d * 0.95, btn.dataset.drone ? 'sitar' : 'piano', bus));
+        total = notes.length * d;
+        if(btn.dataset.drone) scheduleDrone(t0, total, bus);
+      } else if(btn.dataset.chord){
+        btn.dataset.chord.split(',').map(Number).forEach(m => tone(m, t0, 1.8, 'piano', bus));
+        total = 1.8;
+      } else if(btn.dataset.progression){
+        btn.dataset.progression.split('|').forEach((ch, i) => {
+          ch.split(',').map(Number).forEach(m => tone(m, t0 + i * 0.9, i === 3 ? 1.8 : 0.85, 'organ', bus));
+        });
+        total = 4.5;
+      } else if(btn.dataset.clicks){
+        const per = parseInt(btn.dataset.clicks, 10), spb = 60 / parseFloat(btn.dataset.bpm || '100');
+        for(let i = 0; i < per * 2; i++) click(t0 + i * spb, i % per === 0, bus);
+        total = per * 2 * spb;
+      } else if(btn.dataset.tala){
+        const spb = 0.42;
+        for(let i = 0; i < 16; i++){
+          const accent = (i === 0);
+          if(i === 8) { tone(72, t0 + i * spb, 0.12, 'sitar', bus); }          // khali: a soft, different sound
+          else click(t0 + i * spb, accent || i === 4 || i === 12, bus);
+          if(accent) tone(48, t0, 0.5, 'piano', bus);
+        }
+        click(t0 + 16 * spb, true, bus); tone(48, t0 + 16 * spb, 0.5, 'piano', bus); // back to sam!
+        total = 17 * spb;
+      }
+    });
+  });
+
+  /* ============ COMPOSER APP ============ */
+  const LOW = 55, HIGH = 84;           // G3 … C6
+  const W_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const CODE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const SWARA = [
+    {n:'Sa'},{n:'Re',k:1},{n:'Re'},{n:'Ga',k:1},{n:'Ga'},{n:'Ma'},{n:'Ma',t:1},
+    {n:'Pa'},{n:'Dha',k:1},{n:'Dha'},{n:'Ni',k:1},{n:'Ni'}
+  ];
+  const isBlack = m => [1,3,6,8,10].includes(m % 12);
+  const westName = m => W_NAMES[m % 12] + (Math.floor(m / 12) - 1);
+  function indName(m){
+    const s = SWARA[m % 12];
+    let h = s.k ? `<span class="komal">${s.n}</span>` : s.t ? `<span class="tivra">${s.n}</span>` : s.n;
+    const oct = Math.floor(m / 12) - 5;        // 60–71 = madhya
+    if(oct < 0) h = `<span class="mandra">${h}</span>`;
+    else if(oct === 1) h = `<span class="taar">${h}</span>`;
+    else if(oct >= 2) h = `<span class="atitaar">${h}</span>`;
+    return h;
+  }
+  function indPlain(m){
+    const s = SWARA[m % 12];
+    return s.n + (s.k ? ' (komal)' : s.t ? ' (tivra)' : '');
+  }
+  function noteHTML(m){
+    const mode = $('notation').value;
+    if(mode === 'western') return westName(m);
+    if(mode === 'indian') return indName(m);
+    return `${westName(m)}<br><span style="color:#e8730c">${indName(m)}</span>`;
+  }
+
+  const SCALES = {
+    none:    {label:'— none (all notes) —', pcs:null},
+    cmaj:    {label:'Western: C major', pcs:[0,2,4,5,7,9,11], tip:'C major sounds bright and happy. Try ending on C!'},
+    amin:    {label:'Western: A natural minor', pcs:[9,11,0,2,4,5,7], tip:'A minor sounds sad or mysterious. Start and end on A.'},
+    fmin:    {label:'Western: F minor', pcs:[5,7,8,10,0,1,3], tip:'F minor: F G A♭(G♯) B♭ C D♭ E♭(D♯). Moody and dramatic.'},
+    emin:    {label:'Western: E minor', pcs:[4,6,7,9,11,0,2], tip:'E minor: E F♯ G A B C D. Lots of guitar songs live here, because the open strings fit it so well.'},
+    cpent:   {label:'Western: C major pentatonic', pcs:[0,2,4,7,9], tip:'Pentatonic is hard to get wrong. Every note sounds good together!'},
+    bilawal: {label:'Indian: Thaat Bilawal', pcs:[0,2,4,5,7,9,11], tip:'Bilawal = all shuddha (natural) swaras, same as C major.'},
+    yaman:   {label:'Indian: Raga Yaman (evening)', pcs:[0,2,4,6,7,9,11], tip:'Yaman uses tivra Ma. Try the phrase Ni Re Ga, then come back to Sa.'},
+    bhupali: {label:'Indian: Raga Bhupali (evening)', pcs:[0,2,4,7,9], tip:'Bhupali has only 5 swaras: Sa Re Ga Pa Dha. Ga is its most important note.'},
+    bhairav: {label:'Indian: Raga Bhairav / Mayamalavagowla (morning)', pcs:[0,1,4,5,7,8,11], tip:'Bhairav uses komal Re and komal Dha. It sounds serious, like early morning.'},
+    kafi:    {label:'Indian: Raga Kafi', pcs:[0,2,3,5,7,9,10], tip:'Kafi uses komal Ga and komal Ni, with a folk feel. Great with a drone!'}
+  };
+
+  /* Guitar tab helper: a double stop at one fret on the high-E (E4 = 64) and B (B3 = 59) strings.
+     how: '~' = slide into it, '^' = hammer-on / pull-off into it */
+  // Attach the time (in seconds) at which a note starts in a preset's recording
+  function at(t, n){ n.t = t; return n; }
+
+  function ds(fret, beats, how){
+    const n = {m:64 + fret, h:[59 + fret], b:beats || 0.5, pos:[[0, fret], [1, fret]]};
+    if(how === '~') n.sl = true;
+    if(how === '^') n.lg = true;
+    return n;
+  }
+
+  const PRESETS = [
+    {label:'⭐ Twinkle Twinkle Little Star', scale:'cmaj', notation:'western', tempo:110,
+      song:[[60,1],[60,1],[67,1],[67,1],[69,1],[69,1],[67,2],[65,1],[65,1],[64,1],[64,1],[62,1],[62,1],[60,2]]},
+    {label:'🎻 Ode to Joy (Beethoven)', scale:'cmaj', notation:'western', tempo:120,
+      song:[[64,1],[64,1],[65,1],[67,1],[67,1],[65,1],[64,1],[62,1],[60,1],[60,1],[62,1],[64,1],[64,1.5],[62,0.5],[62,2]]},
+    {label:'🪔 Sa Re Ga Ma scale (Bilawal)', scale:'bilawal', notation:'indian', tempo:90, drone:true,
+      song:[[60,1],[62,1],[64,1],[65,1],[67,1],[69,1],[71,1],[72,2],[71,1],[69,1],[67,1],[65,1],[64,1],[62,1],[60,2]]},
+    {label:'🌙 Raga Yaman aaroh–avroh', scale:'yaman', notation:'indian', tempo:80, drone:true, inst:'sitar',
+      song:[[59,1],[62,1],[64,1],[66,1],[69,1],[71,1],[72,2],[72,1],[71,1],[69,1],[67,1],[66,1],[64,1],[62,1],[60,2]]},
+    {label:'🌅 Raga Bhupali aaroh–avroh', scale:'bhupali', notation:'indian', tempo:85, drone:true, inst:'flute',
+      song:[[60,1],[62,1],[64,1],[67,1],[69,1],[72,2],[72,1],[69,1],[67,1],[64,1],[62,1],[60,2]]},
+    /* Guitar intro in E minor (for personal learning). Plays YOUR recording audio/inteha-ho-gayi-start-v2.wav,
+       and the yellow highlight follows the note start times measured from that recording (at(seconds, note)).
+       Notes come from pitch analysis of the clip, cleaned up with the 5-bar tab (the backing music adds noise).
+       Most notes are double stops: the same fret on the high-E (E4 = 64) and B (B3 = 59) strings.
+       ~ = slide in, ^ = hammer-on / pull-off. Tempo 154 makes the synth version as long as the clip (~22 s). */
+    {label:'🎸 Inteha Ho Gayi: guitar intro (Sharaabi)', scale:'emin', notation:'western', tempo:154, inst:'guitar', autoplay:true,
+      audio:'audio/inteha-ho-gayi-start-v2.wav',
+      song:[
+        at(0.61, {m:64, h:[59,55,52,47,40], b:2, lbl:'E minor chord', pos:[[0,0],[1,0],[2,0],[3,2],[4,2],[5,0]]}),
+        at(1.43, ds(7)), at(1.62, ds(7, 1)), at(2.10, ds(12, 1, '~')), at(2.46, ds(12)), at(2.71, ds(12, 1)), at(3.01, ds(12, 3.5)),
+        at(4.45, ds(10)), at(4.72, ds(12)), at(4.95, ds(12)), at(5.11, ds(12, 1)), at(5.51, ds(15)), at(5.79, ds(12)),
+        at(6.01, ds(15)), at(6.19, ds(12)), at(6.35, ds(12, 1)), at(6.68, ds(12, 1)), at(7.13, ds(10)), at(7.30, ds(10)),
+        at(7.49, ds(12, 0.5, '~')), at(7.72, ds(12)), at(7.92, ds(10, 0.5, '~')), at(8.10, ds(10)), at(8.32, ds(7, 0.5, '~')), at(8.51, ds(7, 4)),
+        at(10.16, {m:67, b:0.5, pos:[[2,12]]}), at(10.31, {m:71, b:1, pos:[[1,12]]}), at(10.63, {m:76, b:1.5, pos:[[0,12]]}), at(11.23, ds(7)), at(11.53, ds(10)), at(11.78, ds(10)),
+        at(11.92, ds(12)), at(12.18, ds(12)), at(12.37, ds(10, 0.5, '~')), at(12.54, ds(10)), at(12.69, ds(7)), at(12.95, ds(7)),
+        at(13.13, ds(7)), at(13.35, ds(7, 1)), at(13.79, ds(7, 1)), at(14.10, ds(5, 0.5, '~')), at(14.21, ds(5, 1)), at(14.52, ds(5)),
+        at(14.76, ds(5, 1)), at(15.24, ds(5, 3)),
+        at(16.45, ds(5)), at(16.68, ds(5)), at(16.86, ds(5)), at(17.03, ds(7, 1)), at(17.36, ds(7)), at(17.58, ds(10)),
+        at(17.78, ds(10)), at(17.95, ds(10)), at(18.09, ds(12)), at(18.29, ds(12)), at(18.48, ds(12)), at(18.66, ds(10, 0.5, '~')),
+        at(18.79, ds(10)), at(18.95, ds(10)), at(19.12, ds(7, 0.5, '~')), at(19.24, ds(7)), at(19.41, ds(7)), at(19.58, ds(5, 0.5, '~')),
+        at(19.69, ds(5)), at(19.88, ds(5)), at(20.02, ds(7, 1.5)), at(20.70, ds(0, 0.5, '^')), at(20.84, ds(0, 3))
+      ]},
+    /* Piano melody, F minor feel: FFF-G-F-D#-C (×3), then FF-G#G#-G.
+       Notes written together (FFF) are quick ½ beats; a dash means 1 beat; each phrase ends on a held note. */
+    {label:'🎹 Tip Tip Barsa Paani (piano)', scale:'fmin', notation:'western', tempo:110, inst:'piano', autoplay:true,
+      song:[
+        [65,0.5],[65,0.5],[65,1],[67,1],[65,1],[63,1],[60,2],     // F F F – G – F – D# – C
+        [65,0.5],[65,0.5],[65,1],[67,1],[65,1],[63,1],[60,2],     // F F F – G – F – D# – C
+        [65,0.5],[65,0.5],[65,1],[67,1],[65,1],[63,1],[60,2],     // F F F – G – F – D# – C
+        [65,0.5],[65,1],[68,0.5],[68,1],[67,2]                    // F F – G# G# – G
+      ]},
+    {label:'🎶 Carnatic Sarali Varisai 1', scale:'bhairav', notation:'indian', tempo:90, drone:true, inst:'flute',
+      song:[[60,1],[61,1],[64,1],[65,1],[67,1],[68,1],[71,1],[72,1],[72,1],[71,1],[68,1],[67,1],[65,1],[64,1],[61,1],[60,1]]}
+  ];
+
+  const CHALLENGES = [
+    {text:'Compose a 2-bar tune (8 beats) in <strong>C major</strong> that starts and ends on <strong>C</strong>.', scale:'cmaj', notation:'western'},
+    {text:'Write a 4-bar melody (16 beats) using only the 5 notes of <strong>Raga Bhupali</strong>. End on <strong>Sa</strong>, and turn on the tanpura drone!', scale:'bhupali', notation:'indian'},
+    {text:'Make a <strong>sad</strong> tune using the <strong>A minor</strong> scale. Use at least one half note (2 beats).', scale:'amin', notation:'western'},
+    {text:'Fill one full <strong>Teentaal</strong> cycle (16 beats) with <strong>Raga Yaman</strong>. Hint: use tivra Ma and land on Sa at the end.', scale:'yaman', notation:'indian', cycle:'teentaal'},
+    {text:'Write a <strong>waltz</strong>: set Rhythm to 3/4 and compose 4 bars (12 beats). Make the first note of each bar a long one.', scale:'cmaj', notation:'western', cycle:'3/4'},
+    {text:'Create a <strong>morning</strong> melody in <strong>Raga Bhairav</strong> that uses komal Re and komal Dha. Try the sitar sound!', scale:'bhairav', notation:'indian'},
+    {text:'Use <strong>rests</strong>! Make a tune where every bar has at least one silence. Rhythm is about the gaps too.', scale:'cpent', notation:'western'},
+    {text:'Mix both worlds: name the notes in <strong>Both</strong> mode and compose a tune in <strong>Raga Kafi</strong> with the organ sound.', scale:'kafi', notation:'both'}
+  ];
+
+  const $ = id => document.getElementById(id);
+  let song = [];               // [{m: midi or null for rest, b: beats}]
+  let curBeats = 1;
+  let playing = false, uiTimers = [];
+  const keyEls = {};
+
+  // Scale select
+  Object.entries(SCALES).forEach(([k, v]) => { const o = document.createElement('option'); o.value = k; o.textContent = v.label; $('scale').appendChild(o); });
+
+  // Keyboard hints
+  const KEYMAP = {a:60,w:61,s:62,e:63,d:64,f:65,t:66,g:67,y:68,h:69,u:70,j:71,k:72,o:73,l:74,p:75,';':76};
+  const HINT = {}; Object.entries(KEYMAP).forEach(([k, m]) => HINT[m] = k.toUpperCase());
+
+  function buildKeyboard(){
+    const kb = $('keyboard'); kb.innerHTML = '';
+    let lastWhite = null;
+    for(let m = LOW; m <= HIGH; m++){
+      const el = document.createElement('div');
+      el.className = 'key ' + (isBlack(m) ? 'black' : 'white');
+      el.dataset.m = m;
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', westName(m) + ' / ' + indPlain(m));
+      el.innerHTML = `<span class="kname"></span>${HINT[m] ? `<span class="khint">${HINT[m]}</span>` : ''}`;
+      el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); pressKey(m); });
+      if(isBlack(m)){ if(lastWhite) lastWhite.appendChild(el); }
+      else { kb.appendChild(el); lastWhite = el; }
+      keyEls[m] = el;
+    }
+    refreshKeys();
+  }
+  function refreshKeys(){
+    const sc = SCALES[$('scale').value];
+    for(let m = LOW; m <= HIGH; m++){
+      const el = keyEls[m];
+      el.querySelector('.kname').innerHTML = noteHTML(m);
+      el.classList.toggle('in-scale', !!(sc.pcs && sc.pcs.includes(m % 12)));
+      el.classList.toggle('tonic', !!(sc.pcs && m % 12 === sc.pcs[0] && !isBlack(m)));
+    }
+    if(fbCells.length) refreshFretboard();
+  }
+
+  function flashKey(m, ms){
+    const el = keyEls[m]; if(!el) return;
+    el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), ms || 180);
+  }
+  function previewNote(m){
+    if(!ensureCtx()) return;
+    tone(m, ctx.currentTime + 0.01, 0.35, $('instrument').value, master);
+  }
+  function pressKey(m){
+    previewNote(m); flashKey(m);
+    if(playing) return;
+    song.push({m, b:curBeats}); markEdited(); renderSong(true);
+  }
+  // Hear every note of one song entry (double stops and chords included)
+  function previewEntry(n){
+    if(n.m === null || !ensureCtx()) return;
+    const all = [n.m].concat(n.h || []), t = ctx.currentTime + 0.01, inst = $('instrument').value;
+    all.slice().sort((a, b) => a - b).forEach((m, k) => tone(m, t + (all.length >= 3 ? k * 0.03 : 0), 0.45, inst, master));
+    all.forEach(m => flashKey(m));
+    positions(n).forEach(([s, f]) => flashFret(s, f));
+  }
+
+  /* ============ GUITAR: fretboard + live tab ============ */
+  const STRINGS = [{n:'e', open:64}, {n:'B', open:59}, {n:'G', open:55}, {n:'D', open:50}, {n:'A', open:45}, {n:'E', open:40}];
+  const FRETS = 15;
+  const fbCells = [];
+  let tech = 'pick', view = 'piano';
+
+  // Where each note of an entry sits on the neck: [stringIndex, fret]. Uses the tab's own position when known,
+  // otherwise the lowest fret on a free string.
+  function positions(n){
+    if(n.m === null) return [];
+    const notes = [n.m].concat(n.h || []);
+    if(Array.isArray(n.pos) && n.pos.length === notes.length) return n.pos;
+    const used = new Set(), out = [];
+    notes.forEach(m => {
+      let best = null;
+      STRINGS.forEach((s, si) => { const f = m - s.open; if(f >= 0 && f <= 22 && !used.has(si) && (!best || f < best[1])) best = [si, f]; });
+      if(best){ used.add(best[0]); out.push(best); }
+    });
+    return out;
+  }
+
+  function buildFretboard(){
+    const fb = $('fretboard'); fb.innerHTML = '';
+    const head = document.createElement('div'); head.className = 'fb-head';
+    head.innerHTML = '<div>string</div><div>open</div>' + Array.from({length:FRETS}, (_, i) => `<div>${i + 1}</div>`).join('');
+    fb.appendChild(head);
+    STRINGS.forEach((s, si) => {
+      const row = document.createElement('div'); row.className = 'fb-row';
+      row.style.setProperty('--sw', (1.2 + si * 0.5).toFixed(1) + 'px');   // low strings are thicker
+      const nm = document.createElement('div'); nm.className = 'fb-name'; nm.textContent = s.n; row.appendChild(nm);
+      fbCells[si] = [];
+      for(let f = 0; f <= FRETS; f++){
+        const c = document.createElement('div');
+        c.className = 'fb-cell' + (f === 0 ? ' open' : '');
+        c.setAttribute('role', 'button');
+        c.setAttribute('aria-label', `${s.n} string, ${f === 0 ? 'open' : 'fret ' + f}: ${westName(s.open + f)}`);
+        c.innerHTML = '<span class="fb-dot"></span>';
+        // Fret-position inlay dots, as on a real guitar neck
+        if([3, 5, 7, 9, 15].includes(f) && si === 2) c.insertAdjacentHTML('beforeend', '<span class="fb-inlay" style="left:50%;top:100%"></span>');
+        if(f === 12 && (si === 1 || si === 3)) c.insertAdjacentHTML('beforeend', '<span class="fb-inlay" style="left:50%;top:100%"></span>');
+        c.addEventListener('pointerdown', e => { e.preventDefault(); pressFret(si, f); });
+        row.appendChild(c); fbCells[si][f] = c;
+      }
+      fb.appendChild(row);
+    });
+    refreshFretboard();
+  }
+  function refreshFretboard(){
+    const sc = SCALES[$('scale').value], mode = $('notation').value;
+    STRINGS.forEach((s, si) => {
+      for(let f = 0; f <= FRETS; f++){
+        const m = s.open + f, c = fbCells[si][f];
+        c.querySelector('.fb-dot').innerHTML = mode === 'indian' ? indName(m) : westName(m);
+        c.classList.toggle('in-scale', !!(sc.pcs && sc.pcs.includes(m % 12)));
+        c.classList.toggle('tonic', !!(sc.pcs && m % 12 === sc.pcs[0]));
+      }
+    });
+  }
+  function flashFret(si, f){
+    const c = fbCells[si] && fbCells[si][f]; if(!c) return;
+    c.classList.add('pressed'); setTimeout(() => c.classList.remove('pressed'), 220);
+  }
+  function pressFret(si, f){
+    const n = {m:STRINGS[si].open + f, b:curBeats, pos:[[si, f]]};
+    if($('dsMode').checked && si < STRINGS.length - 1){ n.h = [STRINGS[si + 1].open + f]; n.pos.push([si + 1, f]); }
+    if(tech === 'slide') n.sl = true;
+    if(tech === 'legato') n.lg = true;
+    previewEntry(n);
+    if(playing) return;
+    song.push(n); markEdited(); renderSong(true);
+  }
+  $('techGroup').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    $('techGroup').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); tech = b.dataset.tech;
+  });
+
+  function renderTab(){
+    const wrap = $('tabView'); wrap.innerHTML = '';
+    if(!song.length){ wrap.innerHTML = '<div class="tab-empty">Your guitar tab will appear here as you add notes…</div>'; return; }
+    const strip = document.createElement('div'); strip.className = 'tab-strip';
+    strip.innerHTML = '<div class="tab-names">' + STRINGS.map(s => `<div>${s.n}</div>`).join('') + '</div>';
+    const ci = cycleInfo(); let cum = 0;
+    song.forEach((n, i) => {
+      const col = document.createElement('div'); col.className = 'tab-col'; col.dataset.i = i;
+      col.style.minWidth = (24 + n.b * 18) + 'px';
+      const prev = song[i - 1];
+      let mark = '';
+      if(n.m === null) mark = '𝄽';
+      else if(n.lbl) mark = 'chord';
+      else if(prev && prev.m !== null && (n.sl || n.lg)){
+        const up = n.m > prev.m;
+        mark = n.sl ? (up ? '/' : '\\') : (up ? 'h' : 'p');
+      }
+      const frets = {}; positions(n).forEach(([s, f]) => frets[s] = f);
+      col.innerHTML = `<div class="tt">${mark}</div>` + STRINGS.map((s, si) => `<div class="tc">${frets[si] !== undefined ? `<span>${frets[si]}</span>` : ''}</div>`).join('');
+      col.addEventListener('click', () => previewEntry(n));
+      strip.appendChild(col);
+      cum += n.b;
+      if(Math.abs(cum / ci.bar - Math.round(cum / ci.bar)) < 1e-6 && i < song.length - 1){
+        const bl = document.createElement('div'); bl.className = 'tab-bar'; strip.appendChild(bl);
+      }
+    });
+    wrap.appendChild(strip);
+    wrap.scrollLeft = wrap.scrollWidth;
+  }
+
+  function setView(v){
+    view = v;
+    $('pianoView').hidden = v !== 'piano';
+    $('guitarView').hidden = v !== 'guitar';
+    $('viewTabs').querySelectorAll('.nav-link').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+    if(!playing) updatePrompt();
+  }
+  $('viewTabs').addEventListener('click', e => {
+    const b = e.target.closest('.nav-link'); if(!b) return;
+    const v = b.dataset.view;
+    if(v === 'guitar') $('instrument').value = 'guitar';
+    else if($('instrument').value === 'guitar') $('instrument').value = 'piano';
+    setView(v);
+  });
+  $('instrument').addEventListener('change', () => setView($('instrument').value === 'guitar' ? 'guitar' : 'piano'));
+
+  // Durations
+  $('durGroup').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    $('durGroup').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); curBeats = parseFloat(b.dataset.beats);
+  });
+  $('restBtn').addEventListener('click', () => { if(playing) return; song.push({m:null, b:curBeats}); markEdited(); renderSong(true); });
+
+  function cycleInfo(){
+    const v = $('cycle').value;
+    if(v === '3/4') return {bar:3, cycle:3, name:'bar'};
+    if(v === 'teentaal') return {bar:4, cycle:16, name:'cycle'};
+    return {bar:4, cycle:4, name:'bar'};
+  }
+  const totalBeats = () => song.reduce((s, n) => s + n.b, 0);
+
+  function renderSong(scrollEnd){
+    const area = $('song'); area.innerHTML = '';
+    if(!song.length){ area.innerHTML = '<div class="song-empty">Your notes will appear here…</div>'; }
+    const ci = cycleInfo(); let cum = 0;
+    song.forEach((n, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (n.m === null ? ' rest' : '');
+      chip.style.minWidth = (40 + n.b * 14) + 'px';
+      chip.dataset.i = i; chip.tabIndex = 0;
+      const prevM = (song[i - 1] && song[i - 1].m !== null) ? song[i - 1].m : null;
+      let tech = '';
+      if(n.m !== null && prevM !== null && (n.sl || n.lg)){
+        const up = n.m > prevM;
+        tech = n.sl ? `<span class="ctech" title="slide">${up ? '↗' : '↘'}</span>` : `<span class="ctech" title="${up ? 'hammer-on' : 'pull-off'}">${up ? 'H' : 'P'}</span>`;
+      }
+      const harm = (n.m !== null && n.h && n.h.length)
+        ? `<div class="charm">${n.lbl ? n.lbl : n.h.map(m => noteHTML(m).replace(/<br>.*/, '')).join(' ')}</div>` : '';
+      chip.innerHTML = `${tech}<div class="cname">${n.m === null ? '𝄽 rest' : noteHTML(n.m)}</div>${harm}<div class="cbeats">${fmtBeats(n.b)}</div><button class="cdel" aria-label="Delete note" title="Delete">×</button>`;
+      chip.addEventListener('click', e => {
+        if(e.target.classList.contains('cdel')){ if(!playing){ song.splice(i, 1); markEdited(); renderSong(); } return; }
+        previewEntry(n);
+      });
+      area.appendChild(chip);
+      cum += n.b;
+      if(Math.abs(cum / ci.bar - Math.round(cum / ci.bar)) < 1e-6 && i < song.length - 1){
+        const bl = document.createElement('div');
+        bl.className = 'barline' + (Math.abs(cum / ci.cycle - Math.round(cum / ci.cycle)) < 1e-6 && ci.cycle !== ci.bar ? ' cycle' : '');
+        area.appendChild(bl);
+      }
+    });
+    const notes = song.filter(n => n.m !== null).length, beats = totalBeats();
+    $('statNotes').textContent = notes + (notes === 1 ? ' note' : ' notes');
+    $('statBeats').textContent = fmtNum(beats) + ' beats';
+    $('statTime').textContent = (beats * 60 / tempo()).toFixed(1) + ' s';
+    updatePrompt();
+    renderTab();
+    if(scrollEnd && view === 'piano' && area.lastElementChild) area.lastElementChild.scrollIntoView({block:'nearest', inline:'nearest'});
+  }
+  const fmtNum = x => (Math.round(x * 100) / 100).toString();
+  const fmtBeats = b => (b === 0.5 ? '½' : b === 1.5 ? '1½' : fmtNum(b)) + (b === 1 ? ' beat' : ' beats');
+
+  let currentChallenge = null;
+  function updatePrompt(){
+    const p = $('prompt');
+    if(playing){ p.innerHTML = '🎧 Playing your music… listen closely!'; return; }
+    const n = song.length, beats = totalBeats(), ci = cycleInfo();
+    const challengeLine = currentChallenge ? `<div class="small mt-1">🎲 Challenge: ${currentChallenge.text}</div>` : '';
+    let msg;
+    if(n === 0){
+      msg = currentChallenge ? '🎼 Ready for your challenge? Tap the first note!' : `🎼 Let's compose! ${view === 'guitar' ? 'Click a string on the fretboard' : 'Tap a key on the piano'} below to add your first note.`;
+    } else {
+      const rem = (ci.cycle - (beats % ci.cycle)) % ci.cycle;
+      const where = ci.cycle === 16 ? 'Teentaal cycle' : 'bar';
+      const sc = SCALES[$('scale').value];
+      const last = [...song].reverse().find(x => x.m !== null);
+      const homeHint = (sc.pcs && last && last.m % 12 === sc.pcs[0]) ? ' You ended on the home note: that sounds finished. 🏠' : '';
+      if(n < 4) msg = `🎵 Nice start: ${n} note${n > 1 ? 's' : ''} so far. Keep going! Add a few more notes to make a melody.`;
+      else if(rem > 0) msg = `🎶 ${fmtNum(beats)} beats. Add ${fmtNum(rem)} more beat${rem === 1 ? '' : 's'} to fill the ${where}, or press <strong>▶ Play my music</strong> any time.${homeHint}`;
+      else msg = `✅ Your ${where}s are complete (${fmtNum(beats)} beats). Press <strong>▶ Play my music</strong> to hear it, or keep composing!${homeHint}`;
+      if(sc.tip && n >= 2 && n < 6) msg += `<div class="small mt-1">💡 ${sc.tip}</div>`;
+    }
+    p.innerHTML = msg + challengeLine;
+  }
+
+  // Play / stop
+  const tempo = () => parseInt($('tempo').value, 10);
+  $('tempo').addEventListener('input', () => { $('tempoVal').textContent = tempo(); renderSong(); });
+
+  function playSong(){
+    if(!song.length){ $('prompt').innerHTML = '🙂 Your song is empty! Tap some piano keys first, or pick an example below.'; return; }
+    if(songAudio && $('useRec').checked){ playRecording(); return; }
+    if(!ensureCtx()) return;
+    stopSong(true);
+    playing = true; $('playBtn').disabled = true; $('stopBtn').disabled = false;
+    const bus = newBus(); const spb = 60 / tempo(); const inst = $('instrument').value;
+    const start = ctx.currentTime + 0.12; let t = start;
+    const chips = $('song').querySelectorAll('.chip');
+    const tabCols = $('tabView').querySelectorAll('.tab-col');
+    song.forEach((n, i) => {
+      const d = n.b * spb;
+      const prev = song[i - 1], next = song[i + 1];
+      const tie = !!(next && next.m !== null && (next.sl || next.lg));
+      if(n.m !== null){
+        const opts = {soft: !!(n.sl || n.lg) && prev && prev.m !== null, tie};
+        if(n.sl && prev && prev.m !== null) opts.from = prev.m;
+        const all = [n.m].concat(n.h || []);
+        if(all.length >= 3){
+          // Strum a chord: lowest string first, a few milliseconds apart
+          all.slice().sort((a, b) => a - b).forEach((m, k) => tone(m, t + k * 0.03, d * 0.97, inst, bus, {}));
+        } else {
+          const ratio = opts.from != null ? opts.from - n.m : 0;   // double stops slide by the same number of frets
+          all.forEach(m => tone(m, t, d * 0.97, inst, bus, Object.assign({}, opts, opts.from != null ? {from: m + ratio} : {})));
+        }
+      }
+      const keys = n.m === null ? [] : [n.m].concat(n.h || []).filter(m => keyEls[m]);
+      const frets = positions(n).map(([s, f]) => fbCells[s] && fbCells[s][f]).filter(Boolean);
+      const tcol = tabCols[i];
+      const onAt = (t - ctx.currentTime) * 1000, offAt = onAt + d * 1000;
+      uiTimers.push(setTimeout(() => {
+        if(chips[i]){
+          chips[i].classList.add('playing');
+          const r = chips[i].getBoundingClientRect();                 // keep the highlighted note on screen
+          if(view === 'piano' && (r.top < 80 || r.bottom > window.innerHeight)) chips[i].scrollIntoView({block:'center', behavior:'smooth'});
+        }
+        keys.forEach(m => keyEls[m].classList.add('playing'));
+        frets.forEach(c => c.classList.add('playing'));
+        if(tcol){
+          tcol.classList.add('playing');
+          const w = $('tabView');                                         // keep the tab's highlight in view (horizontal only)
+          const left = tcol.offsetLeft, right = left + tcol.offsetWidth;
+          if(left < w.scrollLeft + 40 || right > w.scrollLeft + w.clientWidth - 40) w.scrollLeft = left - w.clientWidth / 3;
+        }
+      }, onAt));
+      uiTimers.push(setTimeout(() => {
+        chips[i] && chips[i].classList.remove('playing');
+        keys.forEach(m => keyEls[m].classList.remove('playing'));
+        frets.forEach(c => c.classList.remove('playing'));
+        tcol && tcol.classList.remove('playing');
+      }, offAt - 15));
+      t += d;
+    });
+    const total = t - start;
+    if($('drone').checked) scheduleDrone(start, total, bus);
+    if($('clicks').checked){
+      const ci = cycleInfo(); const nBeats = Math.ceil(totalBeats() - 1e-6);
+      for(let b = 0; b < nBeats; b++) click(start + b * spb, b % ci.cycle === 0, bus);
+    }
+    updatePrompt();
+    uiTimers.push(setTimeout(() => {
+      if($('loop').checked && playing){ playSong(); }
+      else finishSong();
+    }, (t - ctx.currentTime) * 1000 + 250));
+  }
+  function clearUI(){
+    uiTimers.forEach(clearTimeout); uiTimers = [];
+    document.querySelectorAll('.chip.playing, .key.playing, .fb-cell.playing, .tab-col.playing').forEach(el => el.classList.remove('playing'));
+  }
+  function finishSong(){
+    playing = false; clearUI();
+    $('playBtn').disabled = false; $('stopBtn').disabled = true;
+    $('prompt').innerHTML = '👏 Bravo, composer! Press Play again, change the instrument or tempo, or keep adding notes.' +
+      (currentChallenge ? `<div class="small mt-1">🎲 Challenge: ${currentChallenge.text}</div>` : '');
+  }
+  function stopSong(silent){
+    if(recEl){ const a = recEl; recEl = null; a.pause(); cancelAnimationFrame(recRAF); }
+    clearUI();
+    if(ctx) killBus();
+    const was = playing; playing = false;
+    $('playBtn').disabled = false; $('stopBtn').disabled = true;
+    if(was && !silent) updatePrompt();
+  }
+  /* ============ PLAYING A PRESET'S ORIGINAL RECORDING ============ */
+  // While the song is exactly a preset that comes with a recording, Play can play that audio file instead of the synth.
+  // The yellow highlight then follows the note start times (n.t, in seconds) measured from the recording.
+  let songAudio = null, recEl = null, recRAF = 0;
+  function updateRecUI(){ $('recWrap').hidden = !songAudio; }
+  function markEdited(){ if(songAudio){ songAudio = null; updateRecUI(); } }   // any edit = no longer the recorded song
+  function highlighter(){
+    const chips = $('song').querySelectorAll('.chip'), tabCols = $('tabView').querySelectorAll('.tab-col');
+    const els = i => {
+      const n = song[i]; if(!n) return [];
+      const out = [chips[i], tabCols[i]];
+      if(n.m !== null){
+        [n.m].concat(n.h || []).forEach(m => keyEls[m] && out.push(keyEls[m]));
+        positions(n).forEach(([s, f]) => fbCells[s] && fbCells[s][f] && out.push(fbCells[s][f]));
+      }
+      return out.filter(Boolean);
+    };
+    return {
+      on(i){
+        els(i).forEach(e => e.classList.add('playing'));
+        const chip = chips[i];
+        if(chip && view === 'piano'){ const r = chip.getBoundingClientRect(); if(r.top < 80 || r.bottom > window.innerHeight) chip.scrollIntoView({block:'center', behavior:'smooth'}); }
+        const tcol = tabCols[i];
+        if(tcol){ const w = $('tabView'), left = tcol.offsetLeft, right = left + tcol.offsetWidth;
+          if(left < w.scrollLeft + 40 || right > w.scrollLeft + w.clientWidth - 40) w.scrollLeft = left - w.clientWidth / 3; }
+      },
+      off(i){ els(i).forEach(e => e.classList.remove('playing')); }
+    };
+  }
+  function playRecording(){
+    stopSong(true);
+    playing = true; $('playBtn').disabled = true; $('stopBtn').disabled = false;
+    const hl = highlighter(), times = song.map(n => n.t);
+    const audio = new Audio(songAudio.src); recEl = audio;
+    let cur = -1;
+    const tick = () => {
+      if(recEl !== audio) return;
+      const now = audio.currentTime;
+      let i = cur;
+      while(i + 1 < times.length && times[i + 1] != null && times[i + 1] <= now) i++;
+      if(i !== cur){ if(cur >= 0) hl.off(cur); if(i >= 0) hl.on(i); cur = i; }
+      recRAF = requestAnimationFrame(tick);
+    };
+    audio.addEventListener('ended', () => {
+      if(recEl !== audio) return;
+      cancelAnimationFrame(recRAF); if(cur >= 0) hl.off(cur);
+      if($('loop').checked && playing) playRecording();
+      else { recEl = null; finishSong(); }
+    });
+    audio.play().then(() => { updatePrompt(); recRAF = requestAnimationFrame(tick); }).catch(() => {
+      const src = songAudio.src;
+      recEl = null; playing = false; $('playBtn').disabled = false; $('stopBtn').disabled = true;
+      $('useRec').checked = false;
+      playSong();
+      $('prompt').innerHTML = `⚠️ Couldn't play <code style="color:#fff">${src}</code>. The recording is only on your own computer (in the <strong>audio</strong> folder next to this page), so you're hearing the synthesized guitar instead.`;
+    });
+  }
+
+  $('playBtn').addEventListener('click', playSong);
+  $('stopBtn').addEventListener('click', () => stopSong());
+
+  // Edit tools
+  $('undoBtn').addEventListener('click', () => { if(playing) return; song.pop(); markEdited(); renderSong(); });
+  $('clearBtn').addEventListener('click', () => { if(playing || !song.length) return; if(confirm('Clear your whole song?')){ song = []; markEdited(); renderSong(); } });
+  $('challengeBtn').addEventListener('click', () => {
+    let c; do { c = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)]; } while(CHALLENGES.length > 1 && c === currentChallenge);
+    currentChallenge = c;
+    $('scale').value = c.scale; $('notation').value = c.notation; if(c.cycle) $('cycle').value = c.cycle;
+    refreshKeys(); renderSong();
+  });
+
+  ['notation','scale','cycle'].forEach(id => $(id).addEventListener('change', () => { refreshKeys(); renderSong(); }));
+
+  // Save / load (browser storage; may be unavailable in private windows)
+  const STORE_KEY = 'music-basics-song-v1';
+  function snapshot(){ return {song, tempo:tempo(), inst:$('instrument').value, notation:$('notation').value, scale:$('scale').value, cycle:$('cycle').value, drone:$('drone').checked}; }
+  function applySnapshot(s){
+    if(!s || !Array.isArray(s.song)) return false;
+    markEdited();
+    song = s.song.filter(n => n && (n.m === null || (n.m >= LOW && n.m <= HIGH)) && n.b > 0).map(n => {
+      const o = {m:n.m, b:n.b};
+      if(n.m !== null && Array.isArray(n.h) && n.h.length) o.h = n.h.filter(x => x >= 21 && x <= 108);
+      if(n.sl) o.sl = true;
+      if(n.lg) o.lg = true;
+      if(n.lbl) o.lbl = String(n.lbl);
+      if(typeof n.t === 'number') o.t = n.t;
+      if(Array.isArray(n.pos) && n.pos.every(p => Array.isArray(p) && p[0] >= 0 && p[0] < 6 && p[1] >= 0 && p[1] <= 24)) o.pos = n.pos.map(p => [p[0], p[1]]);
+      return o;
+    });
+    if(s.tempo) { $('tempo').value = s.tempo; $('tempoVal').textContent = s.tempo; }
+    if(s.inst) $('instrument').value = s.inst;
+    if(s.notation) $('notation').value = s.notation;
+    if(s.scale && SCALES[s.scale]) $('scale').value = s.scale;
+    if(s.cycle) $('cycle').value = s.cycle;
+    $('drone').checked = !!s.drone;
+    setView($('instrument').value === 'guitar' ? 'guitar' : 'piano');
+    refreshKeys(); renderSong(); return true;
+  }
+  $('saveBtn').addEventListener('click', () => {
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(snapshot())); $('prompt').innerHTML = '💾 Saved in this browser! Press "Load saved" any time to get it back.'; }
+    catch(e){ $('prompt').innerHTML = '⚠️ Saving isn\'t available here (maybe a private window). Use "Song code" to copy your song instead.'; }
+  });
+  $('loadBtn').addEventListener('click', () => {
+    if(playing) return;
+    let s = null;
+    try{ s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); }catch(e){ s = null; }
+    if(!applySnapshot(s)) $('prompt').innerHTML = '📂 No saved song found yet. Compose something and press 💾 Save first.';
+    else $('prompt').innerHTML = '📂 Loaded your saved song. Press ▶ Play my music!';
+  });
+
+  // Song code (shareable text): e.g. "C4:1 D4:0.5 R:2 E5+B4:0.5 ~G5+D5:1 ^E5+B4:1"
+  //   "+" joins notes played together · "~" = slide in · "^" = hammer-on / pull-off
+  const codeName = m => CODE_NAMES[m % 12] + (Math.floor(m / 12) - 1);
+  function toCode(){
+    return song.map(n => n.m === null ? 'R:' + n.b
+      : (n.sl ? '~' : n.lg ? '^' : '') + [n.m].concat(n.h || []).map(codeName).join('+') + ':' + n.b).join(' ');
+  }
+  function parseNote(txt, tok){
+    const mt = txt.match(/^([A-Ga-g])(#?)(-?\d)$/);
+    if(!mt) throw new Error('Could not read "' + tok + '"');
+    const pc = CODE_NAMES.indexOf(mt[1].toUpperCase() + mt[2]);
+    return (parseInt(mt[3], 10) + 1) * 12 + pc;
+  }
+  function fromCode(str){
+    const out = [];
+    for(const tok of str.trim().split(/\s+/)){
+      if(!tok) continue;
+      const r = tok.match(/^R:(\d*\.?\d+)$/i);
+      if(r){ out.push({m:null, b:parseFloat(r[1])}); continue; }
+      const mt = tok.match(/^([~^]?)([A-Ga-g#\-\d+]+):(\d*\.?\d+)$/);
+      if(!mt) throw new Error('Could not read "' + tok + '"');
+      const notes = mt[2].split('+').map(x => parseNote(x, tok));
+      const m = notes[0];
+      if(m < LOW || m > HIGH) throw new Error('"' + tok + '" starts outside the keyboard (G3 to C6)');
+      const n = {m, b:parseFloat(mt[3])};
+      if(notes.length > 1) n.h = notes.slice(1);
+      if(mt[1] === '~') n.sl = true;
+      if(mt[1] === '^') n.lg = true;
+      out.push(n);
+    }
+    return out;
+  }
+  $('codeBtn').addEventListener('click', () => { const box = $('codeBox'); box.hidden = !box.hidden; $('codeText').value = toCode(); });
+  $('codeLoadBtn').addEventListener('click', () => {
+    if(playing) return;
+    try{ const s = fromCode($('codeText').value); if(!s.length) throw new Error('The code is empty'); song = s; markEdited(); renderSong(); $('prompt').innerHTML = '🔗 Song loaded from code. Press ▶ Play my music!'; }
+    catch(e){ $('prompt').innerHTML = '⚠️ ' + e.message + '. Use the format <code style="color:#fff">C4:1 D#4:0.5 R:1</code>.'; }
+  });
+
+  // Presets
+  PRESETS.forEach(p => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-sm btn-outline-secondary'; b.textContent = p.label;
+    b.addEventListener('click', () => {
+      if(playing) stopSong(true);
+      currentChallenge = null;
+      applySnapshot({song:p.song.map(x => Array.isArray(x) ? {m:x[0], b:x[1]} : x), tempo:p.tempo, inst:p.inst || 'piano', notation:p.notation, scale:p.scale, cycle:'4/4', drone:!!p.drone});
+      songAudio = p.audio ? {src:p.audio} : null; updateRecUI();
+      if(songAudio) $('useRec').checked = true;
+      $('prompt').innerHTML = `🎼 Loaded "${p.label.replace(/^\S+\s/, '')}". Press <strong>▶ Play my music</strong>, then try changing some notes to make it your own!` +
+        (songAudio ? '<div class="small mt-1">🎧 This plays your original recording. Untick "Play the original recording" to hear the synthesized guitar.</div>' : '');
+      if(p.autoplay){ $('song').scrollIntoView({block:'center'}); playSong(); }
+    });
+    $('presets').appendChild(b);
+  });
+
+  // Computer keyboard input
+  const held = new Set();
+  document.addEventListener('keydown', e => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if(['input','textarea','select'].includes(tag) || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if(k === ' ' && document.activeElement === document.body){ e.preventDefault(); playing ? stopSong() : playSong(); return; }
+    if(k === 'backspace' && !playing && song.length && document.activeElement === document.body){ e.preventDefault(); song.pop(); markEdited(); renderSong(); return; }
+    if(KEYMAP[k] !== undefined && !held.has(k)){
+      const rect = $('composer').getBoundingClientRect();
+      if(rect.bottom < 0 || rect.top > window.innerHeight) return;   // only when the app is on screen
+      held.add(k); pressKey(KEYMAP[k]);
+    }
+  });
+  document.addEventListener('keyup', e => held.delete(e.key.toLowerCase()));
+
+  buildKeyboard();
+  buildFretboard();
+  renderSong();
+})();
+</script>
+</body>
+</html>

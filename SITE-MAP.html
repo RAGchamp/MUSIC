@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Map</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{ --biz-yellow:#ffc107; --nav-blue:#04264d; --nav-yellow:#ffd60a; }
+  body{ background:#f7f8fa; margin:0; }
+  .topnav{
+    position:sticky; top:0; z-index:1030; background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{ font-weight:600; font-size:1.05rem; color:var(--nav-yellow); letter-spacing:.15em; word-spacing:.6em; font-style:italic; }
+  @media (max-width:576px){
+    .topnav{ padding:.5rem 1rem; }
+    .topnav .brand-logo{ height:32px; }
+    .topnav .tagline{ font-size:.75rem; letter-spacing:.06em; word-spacing:.25em; }
+  }
+  main{ max-width:980px; }
+  .page-title{ font-weight:800; color:var(--nav-blue); }
+  .group-title{ font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#6c757d; margin:2rem 0 .7rem; }
+  .map-card{ display:block; height:100%; background:#fff; border:2px solid #c9d3e3; border-radius:.7rem; padding:.9rem 1rem;
+    text-decoration:none; color:#212529; transition:border-color .12s, transform .12s; }
+  .map-card:hover, .map-card:focus{ border-color:var(--nav-blue); transform:translateY(-2px); color:#212529; }
+  .map-card b{ display:block; color:var(--nav-blue); font-size:1.05rem; }
+  .map-card .path{ display:block; font-family:Consolas,Monaco,monospace; font-size:.78rem; color:#6c757d; margin:.15rem 0 .35rem; word-break:break-all; }
+  .map-card .desc{ font-size:.9rem; color:#3d4450; }
+  .map-card.local{ border-style:dashed; background:#fbfbfc; }
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+  <h1 class="page-title h3 mb-1">🗺️ Site Map</h1>
+  <p class="text-muted mb-0">Every page of the Music Practice App, grouped by what it is for.</p>
+
+  <div class="group-title">🎶 Play and practise</div>
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="index.html"><b>🎶 Song Practice</b><span class="path">index.html</span><span class="desc">The main app: pick a song and its original recording plays while the notes light up on the keyboard or fretboard.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="piano.html"><b>🎹 Piano player demo</b><span class="path">piano.html</span><span class="desc">Für Elise or Pehla Nasha played with two animated hands, falling notes and a scrolling score.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="mini-piano.html"><b>🎹 Mini Piano</b><span class="path">mini-piano.html</span><span class="desc">One octave of big keys for phones: play by hand with highlighted keys, or let it play a tune from a table.</span></a></div>
+  </div>
+
+  <div class="group-title">📚 Learn</div>
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="MUSIC-THEORY/MUSIC-BASICS.html"><b>🎼 Music Basics</b><span class="path">MUSIC-THEORY/MUSIC-BASICS.html</span><span class="desc">Western and Indian music basics, a composer, and 39 short theory lessons from the staff to Neapolitan chords.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="INFO/HOW-MUSIC-APP-WORKS.html"><b>💡 How the Music Practice App works</b><span class="path">INFO/HOW-MUSIC-APP-WORKS.html</span><span class="desc">The recorder, note analysis, AI's role, the practice screen and the highlight.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="INFO/HOW-PIANO-NOTES-PLAYER-WORKS.html"><b>💡 How the Piano Notes Player works</b><span class="path">INFO/HOW-PIANO-NOTES-PLAYER-WORKS.html</span><span class="desc">Hands, fingering and sound, and how sheet music became a notes file.</span></a></div>
+  </div>
+
+  <div class="group-title">🧪 Tools for making and checking notes</div>
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="NOTES-TESTER/Piano-notes.html"><b>🙌 Piano Notes Player</b><span class="path">NOTES-TESTER/Piano-notes.html</span><span class="desc">Load any notes file: hear it, watch the fingers press the keys, loop a range of bars.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="NOTES-TESTER/index.html"><b>🧪 Notes Tester</b><span class="path">NOTES-TESTER/index.html</span><span class="desc">Plays a song's notes as audio and compares them with the original recording, line by line.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="NOTES-TESTER/WAV-VISUALIZER.html"><b>📊 WAV Visualizer</b><span class="path">NOTES-TESTER/WAV-VISUALIZER.html</span><span class="desc">The notes found in two WAV files, drawn side by side as coloured boxes, with the differences outlined.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="NOTES-TESTER/Piano-tester.html"><b>⌨️ Piano Capture</b><span class="path">NOTES-TESTER/Piano-tester.html</span><span class="desc">An 88-key piano that turns your key presses (or a WAV) into timed note lines.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="recorder.html"><b>🎙️ Audio Recorder</b><span class="path">recorder.html</span><span class="desc">Record another browser tab's audio to a WAV file, or trim a WAV.</span></a></div>
+  </div>
+
+  <div class="group-title">👋 About</div>
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="contactus.html"><b>✉️ Contact Us</b><span class="path">contactus.html</span><span class="desc">Who made the app and why, how it was built with Claude Code, and how to get in touch.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card" href="CONTEXT-AS-OF-NOV-14-2026.html"><b>🧠 Claude's context, Nov 14 2026</b><span class="path">CONTEXT-AS-OF-NOV-14-2026.html</span><span class="desc">What was in Claude's context while building the Music Practice App.</span></a></div>
+  </div>
+
+  <div class="group-title">🗂️ Local copies (not committed, so not on the live site)</div>
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4"><a class="map-card local" href="MUSIC-BASICS.html"><b>Music Basics (old copy)</b><span class="path">MUSIC-BASICS.html</span><span class="desc">An earlier copy of Music Basics at the top folder; the current page is in MUSIC-THEORY.</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="map-card local" href="NOTES-TESTER/index%20-%20Copy.html"><b>Notes Tester (old copy)</b><span class="path">NOTES-TESTER/index - Copy.html</span><span class="desc">A copy of the Notes Tester from before the sheet-music option was removed.</span></a></div>
+  </div>
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">Music Practice App · for personal practice · <a href="index.html">🎶 Song Practice</a> · <a href="contactus.html">✉️ Contact Us</a></div>
+</footer>
+
+</body>
+</html>

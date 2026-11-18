@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notes Tester</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-red:#dc3545;
+    --biz-green:#198754;
+    --biz-purple:#6f42c1;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav: same as the blog and the practice page */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+  }
+
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.9rem; height:1.9rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.95rem; margin-right:.55rem; flex:none;
+  }
+  .step-title{ display:flex; align-items:center; font-weight:700; font-size:1.1rem; margin-bottom:.75rem; }
+  .step-card{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
+
+  .song-meta{ font-size:.85rem; color:#6c757d; }
+  .stat-pill{ background:#eef3fb; border-radius:2rem; padding:.2rem .7rem; font-size:.8rem; font-weight:600; }
+  .stat-pill.ok{ background:#d1e7dd; color:#0f5132; }
+  .stat-pill.bad{ background:#ffe5d0; color:#8a3b00; }
+
+  .prompt{
+    background:linear-gradient(120deg,var(--biz-blue-dark),var(--biz-blue)); color:#fff;
+    border-radius:.6rem; padding:.9rem 1.1rem; font-size:1.05rem; min-height:3.2rem;
+  }
+  .prompt code{ color:#fff; }
+  .now-card{ background:#fff; border:2px solid #c79100; background:#fff8e1; border-radius:.6rem; padding:.6rem .9rem; }
+  .now-card .lbl{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; }
+  .now-card .val{ font-size:1.5rem; font-weight:800; line-height:1.2; min-height:1.8rem; }
+  .big-play{ font-size:1.15rem; font-weight:700; padding:.6rem 1.8rem; }
+  .progress{ height:.5rem; }
+
+  /* The note list (read-only; click a row to hear it) */
+  .note-list{
+    background:#fff; border:1px solid #dde3ec; border-radius:.5rem; max-height:340px; overflow-y:auto;
+    font-family:Consolas,Monaco,monospace; font-size:.85rem;
+  }
+  .nrow{ display:flex; gap:.7rem; padding:.22rem .6rem; border-bottom:1px solid #f0f2f6; cursor:pointer; align-items:center; white-space:nowrap; }
+  .nrow:hover{ background:#eef3fb; }
+  .nrow .num{ color:#6c757d; width:2.4rem; text-align:right; flex:none; }
+  .nrow .tm{ width:3.6rem; text-align:right; flex:none; }
+  .nrow .nt{ font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .nrow .bt{ color:#6c757d; flex:none; }
+  .nrow .lb{ color:var(--biz-purple); font-weight:700; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .nrow .vb{ margin-left:auto; flex:none; }
+  .nrow.playing{ background:var(--biz-yellow); }
+  .nrow.done{ opacity:.6; }
+  .vbadge{ font-family:system-ui,sans-serif; font-size:.68rem; font-weight:800; padding:.08rem .5rem; border-radius:1rem; }
+  .v-ok{ background:#d1e7dd; color:#0f5132; }
+  .v-bad{ background:#ffe5d0; color:#8a3b00; }
+
+  .report{
+    font-family:Consolas,Monaco,monospace; font-size:.78rem; white-space:pre; overflow:auto;
+    background:#fff; min-height:22rem;
+  }
+  .pick-box{ background:#fff8e1; border:2px dashed #c79100; border-radius:.6rem; padding:.7rem .9rem; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+
+  /* Pink "how it works" box under the top nav */
+  .about-box{ background:#fde2ec; border:2px solid #f5a3c0; border-radius:.6rem; padding:.9rem 1.1rem; }
+  .about-box h2{ font-size:1.05rem; font-weight:700; color:#8a1f4a; margin-bottom:.4rem; }
+  .about-box p{ font-size:.92rem; color:#3b2a31; }
+  .about-box a{ color:#b0185a; font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+
+  <!-- What this page does (pink box) -->
+  <div class="about-box mb-4">
+    <h2>What does the Notes Tester do?</h2>
+    <p class="mb-1">It checks the notes written for a song. <strong>Test notes</strong> plays a version made only from the notes (in the song list, or in a sheet music page in <code>MUSIC-NOTES</code>), never the original recording, and you can download it as a WAV file. <strong>Compare audio files</strong> then listens to the original recording at the time of every note: is the written note really the one playing there, does it start at the right moment, and are notes missing? The result goes in a text box you can copy and paste into Claude Code to fix the notes. The comparison is plain signal processing; no AI runs in this page.</p>
+    <a href="../index.html">← Back to Song Practice</a>
+  </div>
+
+  <h1 class="h3 fw-bold mb-1">🧪 Notes Tester</h1>
+  <p class="text-muted mb-4">Pick a song, hear its notes, then compare them with the original recording.</p>
+
+  <!-- STEP 1: song -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">1</span>Choose a song</div>
+      <div class="row g-2 align-items-center">
+        <div class="col-md-8">
+          <select id="songSel" class="form-select" aria-label="Song"></select>
+        </div>
+        <div class="col-md-4">
+          <select id="srcSel" class="form-select" aria-label="Where the notes come from" disabled>
+            <option value="lib">Notes from: song list</option>
+            <option value="sheet">Notes from: sheet music</option>
+            <option value="txt">Notes from: text file</option>
+          </select>
+        </div>
+      </div>
+      <div class="song-meta mt-2" id="songMeta"></div>
+      <div class="small mt-2" id="sheetMsg" aria-live="polite"></div>
+      <div class="pick-box mt-2" id="sheetBox" hidden>
+        <label class="form-label small fw-bold mb-1" for="sheetFile">This page was opened from disk, so it can't read the sheet music page by itself.
+          Choose <code id="sheetName"></code> from the <code>MUSIC-NOTES</code> folder:</label>
+        <input type="file" class="form-control form-control-sm" id="sheetFile" accept=".html,.htm,text/html">
+      </div>
+      <div class="pick-box mt-2" id="txtBox" hidden>
+        <label class="form-label small fw-bold mb-1" for="txtFile">Choose a text file of note lines (e.g. from <code>REFERENCE-AUDIO-FILES</code>).
+          Each line is <code>time  notes  beats  label</code> as in song-library.js (quotes, commas and <code>//</code> comments are fine);
+          use <code>-</code> as the time to build the timeline from the beats. Optional lines <code>// tempo: 112</code> and
+          <code>// start: 0.41</code> (the second in the recording where the first note starts).</label>
+        <input type="file" class="form-control form-control-sm" id="txtFile" accept=".txt,.js,text/plain">
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: test notes -->
+  <div class="card shadow-sm step-card mb-3" id="step2" hidden>
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">2</span>Test notes</div>
+
+      <div class="prompt mb-3" id="prompt" aria-live="polite"></div>
+
+      <div class="row g-3 align-items-center mb-3">
+        <div class="col-lg-7 d-flex gap-2 flex-wrap">
+          <button type="button" class="btn btn-success big-play" id="testBtn">▶ Test notes</button>
+          <button type="button" class="btn btn-outline-danger" id="stopBtn" disabled>■ Stop</button>
+          <button type="button" class="btn btn-outline-primary" id="dlBtn" disabled>⬇ Download WAV</button>
+        </div>
+        <div class="col-lg-5">
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" id="tuneBox">
+            <label class="form-check-label small" for="tuneBox">Match the recording's tuning (old recordings are often a few cents flat)</label>
+          </div>
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" id="realBox" checked>
+            <label class="form-check-label small" for="realBox">Real instrument sound (recorded samples; untick for the simple synth)</label>
+          </div>
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" id="bandBox">
+            <label class="form-check-label small" for="bandBox">Add a soft band: bass and chords measured from the recording</label>
+          </div>
+        </div>
+      </div>
+      <div class="small text-muted mb-2" id="saveInfo"></div>
+      <div class="small mb-2" id="bandInfo" hidden></div>
+      <div class="progress mb-3" role="progressbar" aria-label="Playback progress"><div class="progress-bar bg-warning" id="progBar" style="width:0%"></div></div>
+
+      <div class="now-card mb-3"><div class="lbl">Now playing</div><div class="val" id="nowVal">–</div></div>
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+        <span class="ctrl-label mb-0" id="listLabel">🎵 Notes in the song list</span>
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="stat-pill" id="statNotes"></span>
+          <span class="stat-pill" id="statTime"></span>
+        </div>
+      </div>
+      <div class="note-list" id="noteList"></div>
+      <p class="small text-muted mt-2 mb-0">Tip: click a row to hear that note on its own. Press <kbd>Space</kbd> to play or stop.</p>
+    </div>
+  </div>
+
+  <!-- STEP 3: compare -->
+  <div class="card shadow-sm step-card mb-3" id="step3" hidden>
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">3</span>Compare audio files</div>
+      <p class="small text-muted">Compares the audio made from the notes with the original recording <code id="origName"></code>, note by note.</p>
+
+      <div class="d-flex gap-2 flex-wrap mb-3">
+        <button type="button" class="btn btn-primary fw-bold" id="cmpBtn">🔍 Compare audio files</button>
+        <button type="button" class="btn btn-outline-secondary" id="copyBtn" disabled>📋 Copy report</button>
+        <a class="btn btn-outline-primary" href="WAV-VISUALIZER.html">🔬 Open the WAV Visualizer</a>
+      </div>
+
+      <div class="pick-box mb-3" id="pickBox" hidden>
+        <label class="form-label small fw-bold mb-1" for="pickFile">This page was opened from disk, so it can't load the recording by itself.
+          Choose the original file <code id="pickName"></code> from the <code>REFERENCE-AUDIO-FILES</code> folder:</label>
+        <input type="file" class="form-control form-control-sm" id="pickFile" accept=".wav,.mp3,audio/*">
+      </div>
+
+      <div class="small mb-1" id="cmpStatus" aria-live="polite"></div>
+      <div class="progress mb-3" role="progressbar" aria-label="Comparison progress"><div class="progress-bar" id="cmpBar" style="width:0%"></div></div>
+
+      <div class="d-flex gap-2 flex-wrap mb-2" id="pills"></div>
+      <textarea class="form-control report" id="report" rows="20" wrap="off" readonly aria-label="Comparison report"
+        placeholder="Press 🔍 Compare audio files. The result for every note line appears here."></textarea>
+    </div>
+  </div>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">Music Practice App · for personal practice · <a href="../index.html">🎶 Song Practice</a> · <a href="../recorder.html" target="_blank" rel="noopener">🎙️ Record or trim a song</a> · <a href="WAV-VISUALIZER.html">🔬 WAV Visualizer</a> · <a href="Piano.html">🎹 Piano Capture</a>
+    <div class="mt-1 opacity-75">Instrument samples: FluidR3_GM SoundFont by Frank Wen (CC BY 3.0), via <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a></div></div>
+</footer>
+
+<script src="../REFERENCE-AUDIO-FILES/song-library.js"></script>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const AUDIO_DIR = '../REFERENCE-AUDIO-FILES/';
+
+  /* ================= SETTINGS (thresholds for the comparison) ================= */
+  const CFG = {
+    TOP_N: 3,          // a line's pitch is OK when one of its notes is among the N strongest heard
+    TIME_OK: 0.080,    // a line's start is OK when an onset in the recording is within this many seconds
+    TIME_MAX: 0.250,   // an onset further away than this doesn't count as this line's start
+    WIN_FROM: 0.03,    // listen from 0.03 s after the note starts (skip the noisy attack) ...
+    WIN_SPAN: 0.15,    // ... for 0.15 s (less if the next note comes sooner)
+    MISS_ONSET: 0.15,  // an unlisted onset is reported as MISSING when its flux strength is at least this (0..1) ...
+    MISS_SAL: 0.6,     // ... and its strongest note is at least this x the median strength of the listed notes
+    ONSET_DELTA: 0.06, // onset peak picking: height above the local median
+    ONSET_GAP: 0.07,   // onset peak picking: minimum seconds between onsets
+    SR: 22050,         // analysis sample rate
+    OUT_SR: 48000      // sample rate of the generated WAV (same as the recordings)
+  };
+
+  /* ================= SOUND (same voices as the practice page) ================= */
+  let tuneCents = 0;                       // the synth is shifted by this many cents
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12 + tuneCents / 1200);
+  // Seeded random numbers, so the same notes always give exactly the same audio
+  function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  function osc(c, type, freq, t, stopAt, slide){
+    const o = c.createOscillator(); o.type = type;
+    if(slide){ o.frequency.setValueAtTime(freq * slide.ratio, t); o.frequency.exponentialRampToValueAtTime(freq, t + slide.dur); }
+    else o.frequency.setValueAtTime(freq, t);
+    o.start(t); o.stop(stopAt); return o;
+  }
+
+  // Plucked string: noise circulating in a one-period delay line, softened on every pass (Karplus-Strong)
+  const KS_SECONDS = 2.6, ksCache = new Map();
+  function ksBuffer(c, m, soft){
+    const sr = c.sampleRate, key = [sr, m, soft ? 1 : 0, tuneCents].join('|');
+    if(ksCache.has(key)) return ksCache.get(key);
+    const rand = mulberry32(m * 131 + (soft ? 7 : 0));
+    const len = Math.floor(sr * KS_SECONDS);
+    const buf = c.createBuffer(1, len, sr), out = buf.getChannelData(0);
+    const P = sr / mtof(m), N = Math.max(2, Math.floor(P - 0.6));
+    const dfrac = P - 0.5 - N, C = (1 - dfrac) / (1 + dfrac);
+    const line = new Float32Array(N), bright = soft ? 0.22 : 0.65;
+    let lp = 0, mean = 0, peak = 0;
+    for(let i = 0; i < N; i++){ lp += bright * ((rand() * 2 - 1) - lp); line[i] = lp; mean += lp; }
+    mean /= N;
+    for(let i = 0; i < N; i++){ line[i] -= mean; peak = Math.max(peak, Math.abs(line[i])); }
+    for(let i = 0; i < N; i++) line[i] *= peak > 0 ? 0.6 / peak : 1;
+    const loss = 0.996 - Math.min(0.004, mtof(m) / 400000);
+    let idx = 0, apX = 0, apY = 0;
+    for(let n = 0; n < len; n++){
+      const x = line[idx], nxt = idx + 1 === N ? 0 : idx + 1;
+      const avg = loss * 0.5 * (x + line[nxt]);
+      const y = C * avg + apX - C * apY; apX = avg; apY = y;
+      line[idx] = y; out[n] = x; idx = nxt;
+    }
+    ksCache.set(key, buf);
+    return buf;
+  }
+
+  /* Real instrument sound: one recorded MP3 per note (FluidR3_GM SoundFont) in SAMPLES/<inst>.js.
+     The file is added as a <script> only when needed (works on file:// too). Each note is decoded
+     once, the MP3 encoder's silent lead-in is cut (so onsets stay on time) and the peak is set to 0.6. */
+  const sampleSets = {}, sampleBufs = new Map();     // inst -> Promise<base64 map>; inst|midi -> AudioBuffer
+  function loadSampleSet(name){
+    if(!sampleSets[name]) sampleSets[name] = new Promise((res, rej) => {
+      if(window.NT_SAMPLES && window.NT_SAMPLES[name]) return res(window.NT_SAMPLES[name]);
+      const s = document.createElement('script'); s.src = 'SAMPLES/' + name + '.js';
+      s.onload = () => (window.NT_SAMPLES && window.NT_SAMPLES[name]) ? res(window.NT_SAMPLES[name]) : rej(new Error('empty sample file'));
+      s.onerror = () => { delete sampleSets[name]; rej(new Error('SAMPLES/' + name + '.js not found')); };
+      document.head.appendChild(s);
+    });
+    return sampleSets[name];
+  }
+  async function prepareSamples(name, midis){
+    const set = await loadSampleSet(name);
+    await Promise.all([...new Set(midis)].map(async m => {
+      const key = name + '|' + m;
+      if(sampleBufs.has(key) || !set[m]) return;
+      const bin = atob(set[m]), ab = new Uint8Array(bin.length);
+      for(let i = 0; i < bin.length; i++) ab[i] = bin.charCodeAt(i);
+      const b = await decode(ab.buffer), x = b.getChannelData(0);
+      let peak = 0; for(let i = 0; i < x.length; i++) if(Math.abs(x[i]) > peak) peak = Math.abs(x[i]);
+      let s0 = 0; while(s0 < x.length && Math.abs(x[s0]) < peak * 0.02) s0++;
+      s0 = Math.max(0, s0 - Math.round(b.sampleRate * 0.002));
+      const out = new AudioBuffer({numberOfChannels: 1, length: x.length - s0, sampleRate: b.sampleRate});
+      const y = out.getChannelData(0), g = peak > 0 ? 0.6 / peak : 1;
+      for(let i = 0; i < y.length; i++) y[i] = x[i + s0] * g;
+      sampleBufs.set(key, out);
+    }));
+  }
+  let useSamples = false;                             // set while rendering / hearing with real sound
+  function sampleVoice(c, buf, m, t, d, inst, g, slide, opts){
+    const end = t + d;
+    const src = c.createBufferSource(); src.buffer = buf; src.detune.value = tuneCents;
+    if(slide){ src.playbackRate.setValueAtTime(slide.ratio, t); src.playbackRate.exponentialRampToValueAtTime(1, t + slide.dur); }
+    src.connect(g);
+    const lvl = opts.soft ? 0.6 : 0.9;
+    g.gain.linearRampToValueAtTime(lvl, t + 0.003);
+    const rel = opts.tie ? 0.015 : inst === 'piano' ? 0.12 : inst === 'guitar' ? 0.1 : 0.05;
+    g.gain.setTargetAtTime(0, end + (opts.tie || inst === 'accordion' ? 0 : 0.05), rel);
+    src.start(t); src.stop(Math.min(t + buf.duration, end + 0.8));
+  }
+
+  // One note on context c. opts: {from: midi to slide in from, soft: legato attack, tie: next note is legato}
+  function tone(c, m, t, d, inst, dest, opts){
+    opts = opts || {};
+    const f = mtof(m), end = t + d;
+    const slide = (opts.from != null && opts.from !== m) ? {ratio: mtof(opts.from) / f, dur: Math.min(0.11, d * 0.5)} : null;
+    const g = c.createGain(); g.connect(dest); g.gain.setValueAtTime(0, t);
+    const sbuf = useSamples && sampleBufs.get(inst + '|' + m);
+    if(sbuf){
+      sampleVoice(c, sbuf, m, t, d, inst, g, slide, opts);
+    } else if(inst === 'guitar'){
+      const src = c.createBufferSource(); src.buffer = ksBuffer(c, m, !!opts.soft);
+      if(slide){ src.playbackRate.setValueAtTime(slide.ratio, t); src.playbackRate.exponentialRampToValueAtTime(1, t + slide.dur); }
+      const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 70;
+      const body = c.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 180; body.Q.value = 1.2; body.gain.value = 4;
+      const air = c.createBiquadFilter(); air.type = 'peaking'; air.frequency.value = 2800; air.Q.value = 0.9; air.gain.value = 3;
+      src.connect(hp); hp.connect(body); body.connect(air); air.connect(g);
+      g.gain.linearRampToValueAtTime(opts.soft ? 0.5 : 0.85, t + 0.002);
+      if(opts.tie) g.gain.setTargetAtTime(0, end, 0.012); else g.gain.setTargetAtTime(0, end + 0.08, 0.09);
+      src.start(t); src.stop(Math.min(t + KS_SECONDS, end + 0.8));
+    } else if(inst === 'accordion'){
+      // Reeds: two slightly detuned sawtooths (the "musette" beat) through a soft low-pass, with bellows swell.
+      const stopAt = end + 0.3;
+      const o1 = osc(c, 'sawtooth', f, t, stopAt, slide), o2 = osc(c, 'sawtooth', f * 1.004, t, stopAt, slide);
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(5000, f * 6); lp.Q.value = 0.7;
+      o1.connect(lp); o2.connect(lp); lp.connect(g);
+      g.gain.linearRampToValueAtTime(0.16, t + 0.04);
+      g.gain.setTargetAtTime(0.13, t + 0.04, 0.3);
+      g.gain.setTargetAtTime(0, end, 0.05);
+    } else {
+      const stopAt = end + 0.6;
+      const o1 = osc(c, 'triangle', f, t, stopAt, slide), o2 = osc(c, 'sine', f * 2, t, stopAt, slide);
+      const g2 = c.createGain(); g2.gain.value = 0.25;
+      o1.connect(g); o2.connect(g2); g2.connect(g);
+      g.gain.linearRampToValueAtTime(0.5, t + 0.01);
+      g.gain.setTargetAtTime(0.12, t + 0.01, 0.35);
+      g.gain.setTargetAtTime(0, end, 0.08);
+    }
+  }
+
+  // Live context: plays the rendered buffer and single notes
+  let ctx = null, master = null;
+  function ensureCtx(){
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC){ alert('Sorry, your browser does not support Web Audio.'); return false; }
+      ctx = new AC();
+      const comp = ctx.createDynamicsCompressor();
+      master = ctx.createGain(); master.gain.value = 0.9;
+      master.connect(comp); comp.connect(ctx.destination);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return true;
+  }
+
+  /* ================= NOTES ================= */
+  const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const noteName = m => NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+  function parseName(txt){
+    const mt = txt.match(/^([A-Ga-g])([#b♯♭]?)(-?\d)$/);
+    if(!mt) throw new Error('unknown note "' + txt + '"');
+    let pc = NAMES.indexOf(mt[1].toUpperCase());
+    if(mt[2] === '#' || mt[2] === '♯') pc++;
+    if(mt[2] === 'b' || mt[2] === '♭') pc--;
+    return (parseInt(mt[3], 10) + 1) * 12 + pc;
+  }
+  // One library line: 'time  notes  beats  label'
+  function parseLine(line){
+    const parts = String(line).trim().split(/\s+/);
+    const [tTxt, nTxt, bTxt] = parts;
+    const n = {raw: String(line), tok: nTxt, t: tTxt === '-' ? null : parseFloat(tTxt), b: parseFloat(bTxt) || 1, bTxt: bTxt || '1', lbl: parts.slice(3).join(' ') || ''};
+    let body = nTxt;
+    n.pre = '';
+    if(body[0] === '~'){ n.sl = true; n.pre = '~'; body = body.slice(1); }
+    else if(body[0] === '^'){ n.lg = true; n.pre = '^'; body = body.slice(1); }
+    n.ms = body.split('+').map(tok => parseName(tok.split('@')[0]));
+    return n;
+  }
+
+  /* ================= SONG LIST ================= */
+  let library = [];
+  let libError = '';
+  try{
+    library = (window.SONG_LIBRARY || []).map((s, i, all) => ({
+      title: s.title, key: s.key || '', inst: s.inst || '', tempo: s.tempo || 100,
+      audio: s.audio ? AUDIO_DIR + s.audio : null, file: s.audio || '', notes: (s.notes || []).map(parseLine),
+      // Entries that share a recording need their own WAV name: the entry's wavTag, or "entryN" for a later entry without one
+      wavTag: String(s.wavTag || '').replace(/[^\w-]+/g, '-') ||
+        (s.audio && all.slice(0, i).some(o => o.audio === s.audio) ? 'entry' + (all.slice(0, i).filter(o => o.audio === s.audio).length + 1) : '')
+    }));
+  }catch(e){ libError = e.message; }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  let songInst = {};
+  const songInstReady = fetch('../SONG-INSTRUMENT.json', { cache:'no-cache' })
+    .then(r => r.ok ? r.json() : [])
+    .then(list => { (Array.isArray(list) ? list : []).forEach(e => { if(e && e.audio && e.instrument) songInst[e.audio] = String(e.instrument).toLowerCase(); }); })
+    .catch(() => {});
+  function instrumentFor(s){
+    const v = songInst[s.file] || String(s.inst || '').toLowerCase();
+    return v === 'guitar' || v === 'accordion' ? v : 'piano';
+  }
+  const INST_LABEL = {piano: '🎹 Piano', guitar: '🎸 Guitar', accordion: '🪗 Accordion'};
+
+  function fillSongSelect(){
+    const sel = $('songSel');
+    sel.innerHTML = '<option value="">— Choose a song —</option>' +
+      library.map((s, i) => `<option value="${i}"${s.notes.length ? '' : ' disabled'}>🎵 ${esc(s.title)}${s.notes.length ? '' : ' (no notes)'}</option>`).join('');
+    if(libError) $('songMeta').innerHTML = '⚠️ Could not read <code>song-library.js</code>: ' + esc(libError);
+    else if(!library.length) $('songMeta').innerHTML = '⚠️ No songs found. Check that <code>REFERENCE-AUDIO-FILES/song-library.js</code> is next to this folder.';
+  }
+
+  /* ================= STATE ================= */
+  let cur = null, inst = null;
+  let times = [], durs = [], timed = true;  // timeline in seconds of the original file
+  // A text file of '-' lines is placed in the recording from its start: second and the tempo, so it can be compared too
+  const canCompare = () => timed || (cur && cur.src === 'txt');
+  let rows = [];
+  let synth = null;                         // {buf, cents, key}
+  const origCache = new Map();              // file -> {buf, mono, cents, name}
+  let playSrc = null, playStart = 0, raf = 0, idx = -1;
+  let lastReport = '';
+
+  let base = null;                          // the chosen library song; cur is it, or its sheet-music version
+  $('songSel').addEventListener('change', async () => {
+    stopPlay(true);
+    const v = $('songSel').value;
+    base = cur = v === '' ? null : library[+v];
+    inst = null; synth = null;
+    $('step2').hidden = $('step3').hidden = true;
+    $('sheetMsg').innerHTML = ''; $('sheetBox').hidden = true; $('txtBox').hidden = true; $('bandInfo').hidden = true;
+    $('srcSel').value = 'lib'; $('srcSel').disabled = !cur;
+    if(!cur){ $('songMeta').innerHTML = ''; return; }
+    await songInstReady;
+    if(cur !== library[+$('songSel').value]) return;
+    inst = instrumentFor(cur);
+    activate(cur);
+  });
+  $('srcSel').addEventListener('change', async () => {
+    if(!base) return;
+    stopPlay(true);
+    $('sheetMsg').innerHTML = ''; $('sheetBox').hidden = true; $('txtBox').hidden = true;
+    if($('srcSel').value === 'lib'){ activate(base); return; }
+    if($('srcSel').value === 'txt'){
+      const had = txtCache.get(base.file);
+      if(had){ useTxt(had); return; }
+      $('txtFile').value = ''; $('txtBox').hidden = false;
+      $('sheetMsg').innerHTML = 'Choose the text file below. Until then the song list notes are shown.';
+      activate(base); return;
+    }
+    const hit = sheetCache.get(base.file);
+    if(hit){ useSheet(hit); return; }
+    $('sheetMsg').innerHTML = '⏳ Reading the sheet music page…';
+    let text = null;
+    try{ const r = await fetch(SHEET_DIR + sheetFileFor(base), { cache:'no-cache' }); if(r.ok) text = await r.text(); }catch(e){}
+    if($('srcSel').value !== 'sheet') return;
+    if(text == null){
+      if(location.protocol === 'file:'){
+        $('sheetMsg').innerHTML = '';
+        $('sheetName').textContent = sheetFileFor(base); $('sheetFile').value = ''; $('sheetBox').hidden = false;
+      } else noSheet('There is no sheet music page <code>MUSIC-NOTES/' + esc(sheetFileFor(base)) + '</code> for this song.');
+      return;
+    }
+    useSheet(sheetSong(base, text, 'MUSIC-NOTES/' + sheetFileFor(base)));
+  });
+  $('sheetFile').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0];
+    if(!f || !base) return;
+    useSheet(sheetSong(base, await f.text(), 'MUSIC-NOTES/' + f.name));
+  });
+  $('txtFile').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0];
+    if(!f || !base) return;
+    useTxt(txtSong(base, await f.text(), f.name));
+  });
+  function useTxt(s){
+    if(s.error){ $('sheetMsg').innerHTML = '⚠️ ' + s.error + ' Showing the song list notes.'; activate(base); return; }
+    txtCache.set(base.file, s);
+    $('txtBox').hidden = true;
+    $('sheetMsg').innerHTML = `📄 Notes read from <code>${esc(s.srcFile)}</code>: ${s.notes.length} notes` +
+      (s.untimedAll ? `, timed from the beats at ${s.tempo} BPM starting at ${s.start.toFixed(2)} s` : ', with their own times') +
+      (s.skipped ? ` (${s.skipped} line${s.skipped > 1 ? 's' : ''} not understood and left out: ${s.skippedAt.join(', ')})` : '') +
+      `. <a href="#" id="txtAgain">Choose another file</a>`;
+    $('txtAgain').onclick = ev => { ev.preventDefault(); txtCache.delete(base.file); $('txtFile').value = ''; $('txtBox').hidden = false; };
+    activate(s);
+  }
+
+  /* ================= TEXT FILE OF NOTE LINES =================
+     Lines in song-library.js format ('time  notes  beats  label'); quotes, trailing commas and // comments
+     are ignored. "tempo: N" and "start: S" anywhere in the file (comments too) set the tempo and the second
+     in the recording where untimed ('-') lines begin. */
+  const txtCache = new Map();
+  function txtSong(b, text, name){
+    const num = re => { const m = text.match(re); return m ? parseFloat(m[1]) : null; };
+    const tempo = num(/\btempo\s*[:=]\s*(\d+(?:\.\d+)?)/i) || b.tempo || 100;
+    const start = num(/\bstart\s*[:=]\s*(\d+(?:\.\d+)?)/i) || 0;
+    const notes = [], skippedAt = [];
+    text.split(/\r?\n/).forEach((raw, k) => {
+      let line = raw.replace(/\/\/.*$/, '').trim().replace(/,\s*$/, '').trim();
+      if(!line) return;
+      line = line.replace(/^['"`]/, '').replace(/['"`]$/, '').trim();
+      if(!/^(-|\d+(?:\.\d+)?)\s+\S+/.test(line)) return;          // not a note line (e.g. "tempo: 112")
+      try{
+        const n = parseLine(line);
+        if(!n.ms.length || n.ms.some(m => !isFinite(m))) throw 0;
+        n.raw = raw; notes.push(n);
+      }catch(e){ skippedAt.push('line ' + (k + 1)); }
+    });
+    if(!notes.length) return {error: `<code>${esc(name)}</code> has no note lines (<code>time  notes  beats</code>).`};
+    const untimedAll = notes.every(n => n.t == null);
+    if(!untimedAll && notes.some(n => n.t == null)) return {error: `<code>${esc(name)}</code> mixes lines with times and lines with <code>-</code>; use one or the other.`};
+    return Object.assign({}, b, {notes, src: 'txt', srcFile: name, tempo, start, untimedAll, skipped: skippedAt.length, skippedAt});
+  }
+
+  function noSheet(msg){
+    $('sheetBox').hidden = true;
+    $('sheetMsg').innerHTML = '⚠️ ' + msg + ' Showing the song list notes.';
+    $('srcSel').value = 'lib'; activate(base);
+  }
+  function useSheet(s){
+    if(s.error){ noSheet(s.error); return; }
+    sheetCache.set(base.file, s);
+    $('sheetBox').hidden = true;
+    $('sheetMsg').innerHTML = `📄 Notes read from <code>${esc(s.srcFile)}</code>: ${s.notes.length} notes in ${s.bars} bars at ${s.tempo} BPM` +
+      (s.untimed ? ` (${s.untimed} note${s.untimed > 1 ? 's' : ''} without a recording time left out)` : '') + '.';
+    activate(s);
+  }
+
+  /* ================= SHEET MUSIC (MUSIC-NOTES/<song>-notes.html) =================
+     A sheet page keeps its notes in one of two lists, read as text and parsed as JSON (the page's own
+     code is never run):
+       const RAW = [ bars ];                              one array per bar, positions and lengths in sixteenths
+       const PARTS = [ {L, q, sec, raw: [ bars ]}, ... ]  parts with their own grid: L steps per bar,
+                                                          q = quarter-note beats per step, sec = seconds per step
+     Each bar item is [position, length, note, tie, seconds] or [position, length, 'r'] (a rest). */
+  const SHEET_DIR = '../MUSIC-NOTES/';
+  const sheetCache = new Map();
+  const sheetFileFor = s => (s.file || '').replace(/(-start)?\.[^.]+$/i, '') + '-notes.html';
+  // The bracketed list after "const NAME =", turned into JSON: comments and trailing commas removed,
+  // 'strings' to "strings", object keys quoted
+  function readList(html, name){
+    const at = html.search(new RegExp('const\\s+' + name + '\\s*='));
+    if(at < 0) return null;
+    let i = html.indexOf('[', at), depth = 0, j = i, q = null;
+    for(; j < html.length; j++){
+      const ch = html[j];
+      if(q){ if(ch === q) q = null; continue; }
+      if(ch === "'" || ch === '"') q = ch;
+      else if(ch === '[') depth++;
+      else if(ch === ']' && --depth === 0) break;
+    }
+    const text = html.slice(i, j + 1);
+    const txt = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
+      .replace(/'([^'\n]*)'/g, (m, x) => JSON.stringify(x))
+      .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
+      .replace(/,\s*([\]}])/g, '$1');
+    return {list: JSON.parse(txt), text};
+  }
+  function sheetSong(b, html, srcFile){
+    const fail = error => ({error});
+    let got, parts;
+    try{
+      if((got = readList(html, 'RAW'))) parts = [{raw: got.list, L: 16, q: 0.25}];
+      else if((got = readList(html, 'PARTS'))) parts = got.list.filter(p => p && Array.isArray(p.raw))
+        .map(p => ({raw: p.raw, lh: Array.isArray(p.lh) ? p.lh : null, L: +p.L || 16, q: +p.q || 0.25, sec: +p.sec || 0}));
+    }catch(e){ return fail(`Could not read the notes list in <code>${esc(srcFile)}</code> (${esc(e.message)}).`); }
+    if(!parts || !parts.length) return fail(`<code>${esc(srcFile)}</code> has no list of notes with recording times (it may be written as guitar tab), so it can't be lined up with the recording.`);
+    const bpm = +((html.match(/(\d+(?:\.\d+)?)\s*BPM/) || [])[1]) || b.tempo || 100;
+    const flats = /'[A-G]b\d/.test(got.text);
+    const notes = []; let untimed = 0, prev = null, barNo = 0;
+    parts.forEach(part => {
+      const stepSec = part.sec || 60 / bpm * part.q;
+      part.raw.forEach((bar, bi) => { barNo++; (bar || []).forEach(ev => {
+        const [p, d, n, tie, t] = ev;
+        if(n === 'r'){ if(prev) prev.restAfter = true; prev = null; return; }
+        if(tie){ if(prev) prev.len += d; return; }
+        if(t == null || !isFinite(t)){ untimed++; prev = null; return; }
+        let ms; try{ ms = String(n).split('+').map(parseName); }catch(e){ untimed++; prev = null; return; }
+        prev = {raw: JSON.stringify(ev), tok: String(n), t: +t, lbl: `bar ${barNo}`, pre: '', ms, bar: barNo, pos: p, len: d, q: part.q, L: part.L, stepSec};
+        notes.push(prev);
+      });
+      // left hand (PARTS with lh: [bars]): notes struck with a right-hand note join its line, others get their own line
+      ((part.lh || [])[bi] || []).forEach(ev => {
+        const [p, d, n, tie, t] = ev;
+        if(n === 'r' || tie || t == null || !isFinite(t)) return;
+        let ms; try{ ms = String(n).split('+').map(parseName); }catch(e){ untimed++; return; }
+        const with_ = notes.find(x => x.bar === barNo && x.pos === p);
+        if(with_){ ms.forEach(m => { if(!with_.ms.includes(m)) with_.ms.push(m); }); with_.tok += '+' + n; return; }
+        notes.push({raw: JSON.stringify(ev), tok: String(n), t: +t, lbl: `bar ${barNo}`, pre: '', ms, bar: barNo, pos: p, len: d, q: part.q, L: part.L, stepSec, lh: true});
+      });
+      });
+    });
+    if(!notes.length) return fail(`<code>${esc(srcFile)}</code> has no notes with recording times.`);
+    notes.sort((x, y) => x.t - y.t);
+    notes.forEach(n => { n.b = n.len * n.q; n.bTxt = String(+n.b.toFixed(3)); });
+    return Object.assign({}, b, {notes, src: 'sheet', srcFile, tempo: bpm, bars: barNo, untimed, flats});
+  }
+
+  function activate(s){
+    cur = s; synth = null;
+    const bits = [];
+    if(cur.key) bits.push('Key: <strong>' + esc(cur.key) + '</strong>');
+    bits.push(cur.notes.length + ' notes');
+    bits.push(INST_LABEL[inst]);
+    if(cur.file) bits.push('🎧 ' + esc(cur.file));
+    $('songMeta').innerHTML = bits.join(' · ');
+    $('listLabel').textContent = cur.src === 'sheet' ? '🎵 Notes in the sheet music' : cur.src === 'txt' ? '🎵 Notes in ' + cur.srcFile : '🎵 Notes in the song list';
+    $('bandInfo').hidden = true;
+    buildTimeline();
+    buildList();
+    resetCompare();
+    $('step2').hidden = false;
+    $('step3').hidden = false;
+    $('dlBtn').disabled = true;
+    $('testBtn').disabled = false; $('stopBtn').disabled = true;
+    $('prompt').innerHTML = `Press <strong>▶ Test notes</strong> to hear the ${cur.notes.length} notes of this song played on a ${INST_LABEL[inst].split(' ')[1].toLowerCase()} (recorded instrument samples, or the simple synth if you untick the box). The original recording is not played.`;
+  }
+
+  // Note i starts at times[i] (seconds in the original) and lasts durs[i]
+  function buildTimeline(){
+    const spb = 60 / (cur.tempo || 100);
+    timed = cur.notes.every(n => n.t != null && isFinite(n.t));
+    times = []; durs = [];
+    let acc = cur.start || 0;                 // a text file can say where its untimed notes start in the recording
+    cur.notes.forEach(n => { times.push(timed ? n.t : acc); acc += n.b * spb; });
+    cur.notes.forEach((n, i) => {
+      const own = n.b * spb;
+      let d = i + 1 < times.length ? Math.max(0.06, times[i + 1] - times[i]) : own;
+      if(n.restAfter) d = Math.max(0.06, Math.min(d, own));   // sheet music: a rest follows, so stop at the written length
+      durs.push(d);
+    });
+  }
+
+  function buildList(){
+    const box = $('noteList'); box.innerHTML = '';
+    rows = cur.notes.map((n, i) => {
+      const r = document.createElement('div'); r.className = 'nrow';
+      r.innerHTML = `<span class="num">#${i + 1}</span><span class="tm">${timed ? n.t.toFixed(2) : cur.src === 'txt' ? '(' + times[i].toFixed(2) + ')' : '-'}</span>` +
+        `<span class="nt">${esc(n.tok)}</span><span class="bt">${esc(n.bTxt)}</span><span class="lb">${esc(n.lbl)}</span><span class="vb"></span>`;
+      r.title = 'Click to hear this note';
+      r.addEventListener('click', () => hear(n.ms));
+      box.appendChild(r);
+      return r;
+    });
+    const end = times.length ? times[times.length - 1] + durs[durs.length - 1] : 0;
+    $('statNotes').textContent = cur.notes.length + ' notes';
+    $('statTime').textContent = timed ? `${times[0].toFixed(2)} s – ${end.toFixed(2)} s` : (cur.src === 'txt' ? `from the beats: ${times[0].toFixed(2)} s – ${end.toFixed(2)} s` : 'no times: built from beats');
+    $('nowVal').textContent = '–';
+    $('progBar').style.width = '0%';
+    idx = -1;
+  }
+
+  async function hear(ms){
+    if(!ensureCtx()) return;
+    const real = $('realBox').checked;
+    if(real){ try{ await prepareSamples(inst, ms); }catch(e){} }
+    const saved = tuneCents; tuneCents = synth ? synth.cents : 0; useSamples = real;
+    const t = ctx.currentTime + 0.01, sorted = ms.slice().sort((a, b) => a - b);
+    sorted.forEach((m, k) => tone(ctx, m, t + (ms.length >= 3 ? k * 0.03 : 0), 0.6, inst, master));
+    tuneCents = saved; useSamples = false;
+  }
+
+  /* ================= THE ORIGINAL RECORDING ================= */
+  // Its length (so the synth is as long as the original): from a decoded copy, or from an <audio> element's metadata
+  function originalDuration(){
+    const o = origCache.get(cur.file);
+    if(o) return Promise.resolve(o.buf.duration);
+    if(!cur.audio) return Promise.resolve(null);
+    return new Promise(res => {
+      const a = new Audio(); let done = false;
+      const fin = v => { if(!done){ done = true; res(v); } };
+      a.preload = 'metadata';
+      a.addEventListener('loadedmetadata', () => fin(isFinite(a.duration) ? a.duration : null));
+      a.addEventListener('error', () => fin(null));
+      setTimeout(() => fin(null), 4000);
+      a.src = cur.audio;
+    });
+  }
+  async function decode(ab){
+    const oc = new OfflineAudioContext(1, 1, CFG.OUT_SR);
+    return await new Promise((res, rej) => { const p = oc.decodeAudioData(ab, res, rej); if(p && p.catch) p.catch(rej); });
+  }
+  // Fetch works on GitHub Pages / a local server; on file:// it fails and we return null
+  async function fetchOriginal(){
+    const s = cur, hit = origCache.get(s.file);
+    if(hit) return hit;
+    if(!s.audio) return null;
+    try{
+      const r = await fetch(s.audio, { cache:'no-cache' });
+      if(!r.ok) return null;
+      const buf = await decode(await r.arrayBuffer());
+      const o = {buf, name: s.file};
+      origCache.set(s.file, o);
+      return o;
+    }catch(e){ return null; }
+  }
+  $('pickFile').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0];
+    if(!f || !cur) return;
+    status('Reading ' + f.name + ' …', 3);
+    try{
+      const buf = await decode(await f.arrayBuffer());
+      origCache.set(cur.file, {buf, name: f.name});
+      $('pickBox').hidden = true;
+      compare();
+    }catch(err){ status('⚠️ Could not read ' + esc(f.name) + ' as audio: ' + esc(err && err.message || err), 0); }
+  });
+
+  /* ================= RENDER THE NOTES (OfflineAudioContext) =================
+     The song is rendered in short chunks, each holding only the notes that sound in it: one big
+     context with every note's nodes connected from the start is many times slower.
+     Mixing is linear (no compressor), so the chunks join seamlessly; a soft clip and a
+     normalisation at the end keep chords from clipping. */
+  const CHUNK = 4;
+  function noteSpan(i){ return times[i] + 0.15 + Math.max(0.08, durs[i]) + 0.9; }   // when note i is surely silent
+  function scheduleNote(c, i, offset, bus){
+    const n = cur.notes[i], t = times[i] - offset, d = Math.max(0.08, durs[i]);
+    const prev = cur.notes[i - 1], nxt = cur.notes[i + 1];
+    const sorted = n.ms.slice().sort((a, b) => a - b);
+    sorted.forEach((m, k) => {
+      const opts = {soft: !!n.lg, tie: !!(nxt && (nxt.lg || nxt.sl))};
+      if(n.sl){ const from = prev ? m + (prev.ms[0] - n.ms[0]) : m - 2; opts.from = from === m ? m - 2 : from; }
+      tone(c, m, t + (n.ms.length >= 3 ? k * 0.03 : 0), d, inst, bus, opts);
+    });
+  }
+  /* ================= THE BAND (bass + chords measured from the recording) =================
+     One chord per beat: the recording's notes from C2 to B5 are folded into 12 pitch classes (low notes count
+     1.5×, the written melody notes half) and matched against the 24 major and minor triads; chords of the
+     song's key get a small bonus, and a Viterbi pass with a change penalty stops the chord flickering.
+     The band plays the chord root as a bass note on even beats and the triad on odd beats (oom-pah). */
+  const FLAT_NAMES = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+  function keyInfo(txt){
+    const m = String(txt || '').match(/^\s*([A-G])([#b♯♭]?)\s*(major|minor)?/i);
+    if(!m) return null;
+    let pc = NAMES.indexOf(m[1].toUpperCase()); if(m[2] === '#' || m[2] === '♯') pc++; if(m[2] === 'b' || m[2] === '♭') pc--;
+    pc = (pc + 12) % 12;
+    const minor = /minor/i.test(m[3] || '');
+    const rel = minor ? [[0,1],[3,0],[5,1],[7,1],[7,0],[8,0],[10,0]] : [[0,0],[2,1],[4,1],[5,0],[7,0],[9,1]];
+    const set = new Set(rel.map(([d, mi]) => ((pc + d) % 12) * 2 + mi));
+    // flat keys: any key written with a flat, F major, and D/G/C/F minor
+    const L = m[1].toUpperCase();
+    const flats = m[2] === 'b' || m[2] === '♭' || (!m[2] && (minor ? ['D','G','C','F'].includes(L) : L === 'F'));
+    return {pc, minor, set, flats};
+  }
+  function measureChords(o){
+    const A2 = o.chordA || (o.chordA = makeAnalysis(o.mono, 36, 83, o.cents));
+    const spb = 60 / (cur.tempo || 100), t0 = times[0], tEnd = times[times.length - 1] + durs[durs.length - 1];
+    const key = keyInfo(cur.key), flats = cur.flats != null ? cur.flats : (key ? key.flats : false);
+    const wins = [];
+    for(let t = t0; t < tEnd - 0.05; t += spb){
+      const v = A2.sal(t, t + spb), c = new Float64Array(12);
+      const mel = new Set(); cur.notes.forEach((n, i) => { if(times[i] < t + spb && times[i] + durs[i] > t) n.ms.forEach(m => mel.add(m)); });
+      let e = 0;
+      for(let m = 36; m <= 83; m++){ const x = v[m - 36] * (m < 55 ? 1.5 : 1) * (mel.has(m) ? 0.5 : 1); c[m % 12] += x; e += x; }
+      let bass = 0; for(let m = 37; m <= 54; m++) if(v[m - 36] > v[bass]) bass = m - 36;
+      wins.push({t, c, e, bass: (bass + 36) % 12});
+    }
+    if(!wins.length) return {segs: [], wins, spb, flats};
+    const eMed = median(wins.map(w => w.e));
+    const S = 25, score = w => {          // states 0..23 = root*2 + minor, 24 = no chord
+      const out = new Float64Array(S), cn = Math.sqrt(w.c.reduce((a, x) => a + x * x, 0)) || 1;
+      for(let s = 0; s < 24; s++){
+        const r = s >> 1, third = (r + ((s & 1) ? 3 : 4)) % 12, fifth = (r + 7) % 12;
+        const dot = w.c[r] + 0.8 * w.c[third] + 0.8 * w.c[fifth];
+        out[s] = dot / (cn * Math.sqrt(1 + 0.64 + 0.64)) + (key && key.set.has(s) ? 0.06 : 0) + (w.bass === r ? 0.05 : 0);
+      }
+      out[24] = w.e < 0.2 * eMed ? 2 : 0;
+      return out;
+    };
+    const PEN = 0.12, back = [];
+    let prev = score(wins[0]);
+    for(let k = 1; k < wins.length; k++){
+      const sc = score(wins[k]), nxt = new Float64Array(S), bp = new Int16Array(S);
+      for(let s = 0; s < S; s++){
+        let best = -1e9, arg = 0;
+        for(let q = 0; q < S; q++){ const v = prev[q] - (q === s ? 0 : PEN); if(v > best){ best = v; arg = q; } }
+        nxt[s] = best + sc[s]; bp[s] = arg;
+      }
+      back.push(bp); prev = nxt;
+    }
+    let s = 0; for(let q = 1; q < S; q++) if(prev[q] > prev[s]) s = q;
+    const path = new Array(wins.length); path[wins.length - 1] = s;
+    for(let k = wins.length - 1; k > 0; k--){ s = back[k - 1][s]; path[k - 1] = s; }
+    wins.forEach((w, k) => { w.state = path[k]; });
+    const nm = st => (flats ? FLAT_NAMES : NAMES)[st >> 1].replace('b', '♭').replace('#', '♯') + ((st & 1) ? 'm' : '');
+    const segs = [];
+    wins.forEach(w => {
+      const last = segs[segs.length - 1];
+      if(last && last.state === w.state) last.t1 = w.t + spb;
+      else segs.push({state: w.state, t0: w.t, t1: w.t + spb, name: w.state === 24 ? '–' : nm(w.state)});
+    });
+    return {segs, wins, spb};
+  }
+  function bandEvents(ch){
+    const ev = [], spb = ch.spb, bassLo = inst === 'guitar' ? 40 : 36;
+    ch.wins.forEach((w, k) => {
+      if(w.state === 24) return;
+      const r = w.state >> 1, tones = [r, (r + ((w.state & 1) ? 3 : 4)) % 12, (r + 7) % 12];
+      if(k % 2 === 0){
+        const m = bassLo + ((r - bassLo % 12) + 12) % 12;
+        ev.push({t: w.t, d: spb * (inst === 'accordion' ? 0.55 : 0.95), ms: [m]});
+      } else {
+        const ms = tones.map(pc => { let m = 53; while(m % 12 !== pc) m++; return m; }).sort((a, b) => a - b);
+        ev.push({t: w.t, d: spb * (inst === 'accordion' ? 0.5 : 0.9), ms, strum: inst === 'guitar'});
+      }
+    });
+    return ev;
+  }
+  // The band for the current song, or null with a reason
+  let bandCache = null;                     // {key, ch, ev}
+  async function wantedBand(){
+    if(!$('bandBox').checked) return {ev: null};
+    const o = origCache.get(cur.file) || await fetchOriginal();
+    if(!o) return {ev: null, why: 'The band needs the recording to measure its chords: press 🔍 Compare audio files once (and choose the WAV if it asks), then test again.'};
+    const key = cur.file + '|' + cur.src + '|' + cur.notes.length;
+    if(bandCache && bandCache.key === key) return bandCache;
+    o.mono = o.mono || await toMono(o.buf);
+    if(o.cents == null) o.cents = estimateTuning(o.mono);
+    const ch = measureChords(o);
+    bandCache = {key, ch, ev: bandEvents(ch)};
+    return bandCache;
+  }
+  function showBand(b){
+    const box = $('bandInfo');
+    if(!$('bandBox').checked){ box.hidden = true; return; }
+    box.hidden = false;
+    if(!b.ev){ box.innerHTML = '🥁 ' + esc(b.why || 'No band.'); return; }
+    box.innerHTML = '🥁 Band chords measured from the recording: ' + b.ch.segs.filter(s => s.state !== 24)
+      .map(s => `<strong>${s.name}</strong> <span class="text-muted">${s.t0.toFixed(1)}–${s.t1.toFixed(1)} s</span>`).join(' · ');
+  }
+
+  async function renderSynth(cents, bandEv){
+    let real = $('realBox').checked, sampleNote = '';
+    if(real){
+      try{ await prepareSamples(inst, cur.notes.flatMap(n => n.ms).concat(bandEv ? bandEv.flatMap(e => e.ms) : [])); }
+      catch(e){ real = false; sampleNote = 'Real instrument samples could not be loaded (' + (e.message || e) + '), so the simple synth was used.'; }
+    }
+    const key = cur.file + '|' + cur.title + '|' + (cur.src || 'lib') + '|' + cents.toFixed(1) + '|' + (real ? 'real' : 'synth') + '|' + (bandEv ? 'band' + bandEv.length : 'solo');
+    if(synth && synth.key === key) return synth;
+    if(renderCache.has(key)) return renderCache.get(key);
+    const lastEnd = times[times.length - 1] + durs[durs.length - 1];
+    let len = await originalDuration();
+    if(!len || len < lastEnd) len = (len ? Math.max(len, lastEnd + 0.5) : lastEnd + 1.5);
+    const sr = CFG.OUT_SR, total = Math.ceil(len * sr);
+    const mix = new Float32Array(total);
+    tuneCents = cents; useSamples = real;
+    try{
+      const jobs = [];
+      for(let c0 = 0; c0 < len; c0 += CHUNK){
+        const c1 = Math.min(len, c0 + CHUNK);
+        const ids = []; cur.notes.forEach((n, i) => { if(times[i] < c1 && noteSpan(i) > c0) ids.push(i); });
+        const bev = bandEv ? bandEv.filter(e => e.t < c1 && e.t + e.d + 0.95 > c0) : [];
+        if(!ids.length && !bev.length) continue;
+        const s0 = Math.floor(Math.max(0, Math.min(c0, ...ids.map(i => times[i]), ...bev.map(e => e.t))) * sr);   // chunk render start, on a sample
+        jobs.push({ids, bev, s0, a: Math.round(c0 * sr), b: Math.min(total, Math.round(c1 * sr))});
+      }
+      // all nodes are made here (tuneCents applies while they are made), then up to 3 chunks render at once
+      const ready = jobs.map(j => {
+        const oc = new OfflineAudioContext(1, j.b - j.s0, sr);
+        const bus = oc.createGain(); bus.gain.value = 0.5; bus.connect(oc.destination);
+        j.ids.forEach(i => scheduleNote(oc, i, j.s0 / sr, bus));
+        if(j.bev.length){
+          const band = oc.createGain(); band.gain.value = 0.17; band.connect(oc.destination);
+          j.bev.forEach(e => e.ms.forEach((m, k) => tone(oc, m, e.t - j.s0 / sr + (e.strum ? k * 0.018 : 0), e.d, inst, band, {})));
+        }
+        return {j, oc};
+      });
+      for(let q = 0; q < ready.length; q += 3){
+        await Promise.all(ready.slice(q, q + 3).map(async ({j, oc}) => {
+          const out = (await oc.startRendering()).getChannelData(0);
+          mix.set(out.subarray(j.a - j.s0, j.b - j.s0), j.a);
+        }));
+      }
+    } finally { tuneCents = 0; useSamples = false; }
+    let peak = 0;
+    for(let i = 0; i < total; i++){ const y = Math.tanh(mix[i]); mix[i] = y; if(Math.abs(y) > peak) peak = Math.abs(y); }
+    if(peak > 0){ const g = 0.89 / peak; for(let i = 0; i < total; i++) mix[i] *= g; }
+    const buf = new AudioBuffer({numberOfChannels: 2, length: total, sampleRate: sr});
+    buf.copyToChannel(mix, 0); buf.copyToChannel(mix, 1);
+    const r = {buf, cents, key, real, sampleNote, band: !!bandEv};
+    renderCache.set(key, r);
+    if(renderCache.size > 3) renderCache.delete(renderCache.keys().next().value);
+    return r;
+  }
+  const renderCache = new Map();
+  // Render what the boxes ask for (melody, maybe the band) and make it the WAV to download
+  async function renderWanted(cents){
+    const b = await wantedBand();
+    showBand(b);
+    const s = await renderSynth(cents, b.ev);
+    synth = s; $('dlBtn').disabled = false;
+    return s;
+  }
+  // The tuning to use for the synth: 0, or the recording's measured offset when the box is ticked
+  async function wantedCents(quiet){
+    if(!$('tuneBox').checked) return 0;
+    const o = origCache.get(cur.file) || await fetchOriginal();
+    if(!o){ if(!quiet) $('prompt').innerHTML += '<br><small>(The recording\'s tuning isn\'t known yet: press 🔍 Compare audio files once, then test again.)</small>'; return 0; }
+    if(o.cents == null){ o.mono = o.mono || await toMono(o.buf); o.cents = estimateTuning(o.mono); }
+    return o.cents;
+  }
+
+  /* ================= PLAY / STOP ================= */
+  async function testNotes(){
+    if(!cur || !ensureCtx()) return;
+    stopPlay(true);
+    $('testBtn').disabled = true;
+    $('prompt').innerHTML = '⏳ Making the audio from the notes…';
+    try{
+      const cents = await wantedCents(true);
+      const s = await renderWanted(cents);
+      $('prompt').innerHTML = `🎧 Playing the audio made from the notes${s.band ? ', with the band' : ''} (${s.buf.duration.toFixed(1)} s${s.cents ? ', tuned ' + (s.cents > 0 ? '+' : '') + s.cents.toFixed(0) + ' cents' : ''})… the current note is yellow.`;
+      if(s.sampleNote) $('prompt').innerHTML += '<br><small>⚠️ ' + esc(s.sampleNote) + '</small>';
+      if($('tuneBox').checked && !s.cents && !origCache.get(cur.file)) $('prompt').innerHTML += '<br><small>(The recording\'s tuning isn\'t known yet: press 🔍 Compare audio files once, then test again.)</small>';
+      const src = ctx.createBufferSource(); src.buffer = s.buf; src.connect(master);
+      playStart = ctx.currentTime + 0.05; src.start(playStart);
+      src.onended = () => { if(playSrc === src) finished(); };
+      playSrc = src;
+      $('stopBtn').disabled = false;
+      raf = requestAnimationFrame(tick);
+    }catch(e){
+      $('prompt').innerHTML = '⚠️ Could not make the audio: ' + esc(e.message || e);
+      $('testBtn').disabled = false;
+    }
+  }
+  function tick(){
+    if(!playSrc) return;
+    const now = ctx.currentTime - playStart;
+    let i = -1;
+    while(i + 1 < times.length && times[i + 1] <= now) i++;
+    highlight(i);
+    const len = playSrc.buffer.duration;
+    $('progBar').style.width = Math.max(0, Math.min(100, now / len * 100)) + '%';
+    raf = requestAnimationFrame(tick);
+  }
+  function highlight(i){
+    if(i === idx) return;
+    if(idx >= 0 && rows[idx]) rows[idx].classList.remove('playing');
+    rows.forEach((r, k) => r.classList.toggle('done', i >= 0 && k < i));
+    idx = i;
+    if(i < 0){ $('nowVal').textContent = '–'; return; }
+    const n = cur.notes[i];
+    $('nowVal').textContent = `#${i + 1}  ${n.lbl || n.ms.map(noteName).join(' + ')}`;
+    const r = rows[i]; r.classList.add('playing');
+    const box = $('noteList'), top = r.offsetTop - box.offsetTop;
+    if(top < box.scrollTop || top + r.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = top - box.clientHeight / 3;
+  }
+  function finished(){
+    stopPlay(true);
+    $('progBar').style.width = '100%';
+    $('prompt').innerHTML = '✅ Done. Press <strong>▶ Test notes</strong> to hear it again, <strong>⬇ Download WAV</strong> to save it, or compare it with the original in step 3.';
+  }
+  function stopPlay(silent){
+    const was = !!playSrc;
+    cancelAnimationFrame(raf);
+    if(playSrc){ const s = playSrc; playSrc = null; try{ s.stop(); }catch(e){} }
+    if(rows.length){ highlight(-1); rows.forEach(r => r.classList.remove('done')); }
+    $('testBtn').disabled = !cur; $('stopBtn').disabled = true;
+    if(was && !silent) $('prompt').innerHTML = '■ Stopped. Press <strong>▶ Test notes</strong> to start again from the beginning.';
+  }
+  $('testBtn').addEventListener('click', testNotes);
+  $('stopBtn').addEventListener('click', () => stopPlay());
+  $('tuneBox').addEventListener('change', () => { $('dlBtn').disabled = true; synth = null; });
+  $('realBox').addEventListener('change', () => { $('dlBtn').disabled = true; synth = null; });
+  $('bandBox').addEventListener('change', () => { $('dlBtn').disabled = true; synth = null; if(!$('bandBox').checked) $('bandInfo').hidden = true; });
+  document.addEventListener('keydown', e => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if(e.key !== ' ' || ['input','select','textarea','button'].includes(tag) || $('step2').hidden) return;
+    e.preventDefault(); playSrc ? stopPlay() : testNotes();
+  });
+
+  /* ================= DOWNLOAD WAV (16-bit PCM, stereo, 48 kHz) ================= */
+  function wavBlob(buf){
+    const ch = buf.numberOfChannels, sr = buf.sampleRate, n = buf.length, dataLen = n * ch * 2;
+    const ab = new ArrayBuffer(44 + dataLen), v = new DataView(ab);
+    const str = (o, s) => { for(let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + dataLen, true); str(8, 'WAVE');
+    str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, ch, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * ch * 2, true); v.setUint16(32, ch * 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, dataLen, true);
+    const chans = []; for(let c = 0; c < ch; c++) chans.push(buf.getChannelData(c));
+    let o = 44;
+    for(let i = 0; i < n; i++) for(let c = 0; c < ch; c++){
+      const s = Math.max(-1, Math.min(1, chans[c][i]));
+      v.setInt16(o, s < 0 ? s * 32768 : s * 32767, true); o += 2;
+    }
+    return new Blob([ab], {type: 'audio/wav'});
+  }
+  /* Saving: the first click asks for a folder (NOTES-TESTER/TEST-FILES) and the page remembers it in IndexedDB,
+     so later clicks save straight into it (File System Access API, as recorder.html does). Browsers without
+     the API (Firefox, Safari) get a normal download to the Downloads folder. */
+  const canPickFolder = 'showDirectoryPicker' in window;
+  const WANT_DIR = 'TEST-FILES';
+  let saveDir = null;
+  function idb(){ return new Promise((res, rej) => { const r = indexedDB.open('notes-tester', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+  async function idbGet(k){ try{ const db = await idb(); return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); }catch(e){ return null; } }
+  async function idbSet(k, v){ try{ const db = await idb(); db.transaction('kv', 'readwrite').objectStore('kv').put(v, k); }catch(e){} }
+  function showSaveInfo(){
+    if(!canPickFolder){ $('saveInfo').innerHTML = 'WAV files go to your browser\'s Downloads folder (this browser can\'t save into a chosen folder; use Chrome or Edge for that).'; return; }
+    $('saveInfo').innerHTML = (saveDir
+      ? `💾 WAV files are saved in the folder <strong>${esc(saveDir.name)}</strong>${saveDir.name === WANT_DIR ? '' : ' (not ' + WANT_DIR + '!)'}. `
+      : `💾 The first ⬇ Download WAV asks for a folder: choose <code>MUSIC\\NOTES-TESTER\\${WANT_DIR}</code>. `) +
+      `<a href="#" id="chgDir">${saveDir ? 'Change folder' : 'Choose it now'}</a>`;
+    $('chgDir').addEventListener('click', e => { e.preventDefault(); pickDir().catch(() => {}); });
+  }
+  async function pickDir(){
+    const d = await window.showDirectoryPicker({ id: 'notes-tester-wav', mode: 'readwrite', startIn: saveDir || 'documents' });
+    saveDir = d; idbSet('saveDir', d); showSaveInfo();
+    return d;
+  }
+  async function canWrite(h){
+    const o = { mode: 'readwrite' };
+    if(await h.queryPermission(o) === 'granted') return true;
+    return (await h.requestPermission(o)) === 'granted';
+  }
+  if(canPickFolder) idbGet('saveDir').then(h => { if(h){ saveDir = h; } showSaveInfo(); }); else showSaveInfo();
+
+  $('dlBtn').addEventListener('click', async () => {
+    if(!synth) return;
+    const base = (cur.file || cur.title.replace(/[^\w-]+/g, '-')).replace(/\.[^.]+$/, '');
+    const name = base + '-from-' + (cur.src === 'sheet' ? 'sheet' : cur.src === 'txt' ? 'text' : 'notes') + (cur.wavTag && !cur.src ? '-' + cur.wavTag : '')   /* a sheet page belongs to the recording, not to an entry */ + (synth.band ? '-band' : '') + (synth.cents ? '-tuned' : '') + '.wav';
+    const blob = wavBlob(synth.buf);
+    if(canPickFolder){
+      try{
+        let dir = saveDir;
+        if(!dir || !(await canWrite(dir))) dir = await pickDir();
+        const fh = await dir.getFileHandle(name, { create: true });
+        const w = await fh.createWritable(); await w.write(blob); await w.close();
+        $('prompt').innerHTML = `💾 Saved <code>${esc(name)}</code> (${(blob.size / 1048576).toFixed(1)} MB) in the folder <strong>${esc(dir.name)}</strong>.`;
+        return;
+      }catch(e){
+        if(e && e.name === 'AbortError'){ $('prompt').innerHTML = 'No folder chosen, so nothing was saved. Press <strong>⬇ Download WAV</strong> again and choose <code>' + WANT_DIR + '</code>.'; return; }
+        $('prompt').innerHTML = '⚠️ Could not save into the folder (' + esc(e.message || e) + '), so it was downloaded to your Downloads folder instead.';
+      }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  });
+
+  /* ================= SIGNAL PROCESSING (a JS port of SCRIPTS/musicdsp.py) ================= */
+  // Mix to mono and resample to 22 050 Hz with the browser's own resampler
+  async function toMono(buf){
+    const len = Math.max(1, Math.ceil(buf.duration * CFG.SR));
+    const oc = new OfflineAudioContext(1, len, CFG.SR);
+    const s = oc.createBufferSource(); s.buffer = buf; s.connect(oc.destination); s.start(0);
+    return (await oc.startRendering()).getChannelData(0);
+  }
+
+  // In-place radix-2 FFT
+  const plans = {};
+  function plan(n){
+    if(plans[n]) return plans[n];
+    const rev = new Uint32Array(n), bits = Math.log2(n);
+    for(let i = 0; i < n; i++){ let r = 0; for(let b = 0; b < bits; b++) r |= ((i >> b) & 1) << (bits - 1 - b); rev[i] = r; }
+    const cos = new Float64Array(n / 2), sin = new Float64Array(n / 2);
+    for(let i = 0; i < n / 2; i++){ cos[i] = Math.cos(2 * Math.PI * i / n); sin[i] = -Math.sin(2 * Math.PI * i / n); }
+    return (plans[n] = {n, rev, cos, sin, re: new Float64Array(n), im: new Float64Array(n)});
+  }
+  function fft(p){
+    const n = p.n, rev = p.rev, cos = p.cos, sin = p.sin, re = p.re, im = p.im;
+    for(let i = 0; i < n; i++){ const j = rev[i]; if(j > i){ let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+    for(let size = 2; size <= n; size <<= 1){
+      const half = size >> 1, step = (n / size) | 0;
+      for(let i = 0; i < n; i += size){
+        for(let k = 0; k < half; k++){
+          const wr = cos[k * step], wi = sin[k * step], a = i + k, b = a + half;
+          const br = re[b], bi = im[b], xr = br * wr - bi * wi, xi = br * wi + bi * wr;
+          re[b] = re[a] - xr; im[b] = im[a] - xi; re[a] += xr; im[a] += xi;
+        }
+      }
+    }
+  }
+  const hannCache = {};
+  function hann(n){ if(!hannCache[n]){ const w = new Float64Array(n); for(let i = 0; i < n; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / n); hannCache[n] = w; } return hannCache[n]; }
+  // Magnitude spectra of two frames at once (centred at samples cA and cB; window win, zero-padded to nfft,
+  // bins 0..kmax). Two real signals go in as the real and imaginary parts of one complex FFT and are
+  // separated afterwards, so it costs one FFT instead of two. cB may be -1 (no second frame).
+  function frameMag2(x, cA, cB, win, nfft, kmax, outA, outB){
+    const p = plan(nfft), w = hann(win), re = p.re, im = p.im, n = x.length;
+    re.fill(0); im.fill(0);
+    const sA = cA - win / 2, sB = cB - win / 2;
+    for(let i = 0; i < win; i++){
+      const a = sA + i; if(a >= 0 && a < n) re[i] = x[a] * w[i];
+      if(cB >= 0){ const b = sB + i; if(b >= 0 && b < n) im[i] = x[b] * w[i]; }
+    }
+    fft(p);
+    const scale = 0.5 / (win / 2);   // the 1/2 separates the two spectra; scipy's stft divides by the window's sum
+    for(let k = 0; k <= kmax; k++){
+      const nk = k === 0 ? 0 : nfft - k, zr = re[k], zi = im[k], cr = re[nk], ci = im[nk];
+      const ar = zr + cr, ai = zi - ci;
+      outA[k] = Math.sqrt(ar * ar + ai * ai) * scale;
+      if(outB){ const br = zi + ci, bi = zr - cr; outB[k] = Math.sqrt(br * br + bi * bi) * scale; }
+    }
+  }
+
+  // Pitch frames: 4096-sample window, 8192-point FFT, hop 256, up to 6 kHz
+  const P_WIN = 4096, P_NFFT = 8192, P_HOP = 256;
+  const P_DF = CFG.SR / P_NFFT, P_KMAX = Math.floor(6000 / P_DF);
+
+  // How many cents the recording is from A = 440 Hz (loudness-weighted circular mean of peak deviations)
+  function estimateTuning(x){
+    const kTop = Math.min(P_KMAX, Math.ceil(2000 / P_DF) + 2), magA = new Float64Array(kTop + 1), magB = new Float64Array(kTop + 1);
+    const k0 = Math.floor(100 / P_DF) + 1, k1 = Math.ceil(2000 / P_DF) - 1;
+    const nFrames = Math.floor(x.length / P_HOP) + 1, EVERY = 16;
+    let ss = 0, cs = 0;
+    const add = mag => {
+      let top = 0; for(let k = k0; k <= k1; k++) if(mag[k] > top) top = mag[k];
+      if(top < 1e-4) return;
+      for(let k = k0 + 1; k < k1; k++){
+        const b = mag[k];
+        if(b < top * 0.15 || !(b > mag[k - 1] && b > mag[k + 1])) continue;
+        const la = Math.log(mag[k - 1] + 1e-9), lb = Math.log(b + 1e-9), lc = Math.log(mag[k + 1] + 1e-9);
+        const den = la - 2 * lb + lc, d = den !== 0 ? 0.5 * (la - lc) / den : 0;
+        const f = (k + d) * P_DF; if(f <= 0) continue;
+        const dev = 1200 * Math.log2(f / 440), ang = 2 * Math.PI * dev / 100;
+        ss += b * Math.sin(ang); cs += b * Math.cos(ang);
+      }
+    };
+    for(let j = 0; j < nFrames; j += 2 * EVERY){
+      const j2 = j + EVERY < nFrames ? j + EVERY : -1;
+      frameMag2(x, j * P_HOP, j2 >= 0 ? j2 * P_HOP : -1, P_WIN, P_NFFT, kTop, magA, j2 >= 0 ? magB : null);
+      add(magA); if(j2 >= 0) add(magB);
+    }
+    return (ss === 0 && cs === 0) ? 0 : Math.atan2(ss, cs) * 100 / (2 * Math.PI);
+  }
+
+  // Spectral-flux onsets: 1024 window, hop 128, 30 Hz – 8 kHz, peaks above the local median + delta
+  function detectOnsets(x){
+    const win = 1024, hop = 128, df = CFG.SR / win;
+    const kA = Math.ceil(30 / df), kB = Math.floor(8000 / df);
+    const nFrames = Math.floor(x.length / hop) + 1;
+    const env = new Float64Array(nFrames), magA = new Float64Array(kB + 1), magB = new Float64Array(kB + 1);
+    let L = new Float64Array(kB - kA + 1), prev = new Float64Array(kB - kA + 1);
+    const step = (mag, j) => {
+      for(let k = kA; k <= kB; k++) L[k - kA] = Math.log1p(100 * mag[k]);
+      if(j > 0){ let s = 0; for(let k = 0; k < L.length; k++){ const dlt = L[k] - prev[k]; if(dlt > 0) s += dlt; } env[j] = s; }
+      const sw = prev; prev = L; L = sw;
+    };
+    for(let j = 0; j < nFrames; j += 2){
+      const two = j + 1 < nFrames;
+      frameMag2(x, j * hop, two ? (j + 1) * hop : -1, win, win, kB, magA, two ? magB : null);
+      step(magA, j); if(two) step(magB, j + 1);
+    }
+    let peak = 0; for(const v of env) if(v > peak) peak = v;
+    if(peak > 0) for(let j = 0; j < nFrames; j++) env[j] /= peak;
+    const hopS = hop / CFG.SR;
+    // local median (mode 'nearest' at the edges)
+    const size = Math.max(3, Math.floor(0.5 / hopS) | 1), h = size >> 1, base = new Float64Array(nFrames), tmp = new Float64Array(size);
+    for(let j = 0; j < nFrames; j++){
+      for(let q = -h; q <= h; q++) tmp[q + h] = env[Math.min(nFrames - 1, Math.max(0, j + q))];
+      tmp.sort(); base[j] = tmp[h];
+    }
+    // local maxima (plateaus count once, at their middle), as scipy's find_peaks does
+    const cand = [];
+    for(let i = 1; i < nFrames - 1; i++){
+      if(!(env[i - 1] < env[i])) continue;
+      let a = i + 1; while(a < nFrames - 1 && env[a] === env[i]) a++;
+      if(env[a] < env[i]){ const mid = (i + a - 1) >> 1; if(env[mid] >= base[mid] + CFG.ONSET_DELTA) cand.push(mid); i = a - 1; }
+    }
+    // keep the higher peak of any two closer than the minimum gap
+    const dist = Math.max(1, Math.floor(CFG.ONSET_GAP / hopS)), keep = new Set(cand);
+    cand.slice().sort((p, q) => env[q] - env[p]).forEach(p => {
+      if(!keep.has(p)) return;
+      cand.forEach(q => { if(q !== p && keep.has(q) && Math.abs(q - p) < dist && env[q] <= env[p]) keep.delete(q); });
+    });
+    return cand.filter(p => keep.has(p)).map(p => ({t: p * hopS, s: env[p]}));
+  }
+
+  // Everything about one signal that the comparison needs
+  function makeAnalysis(x, lo, hi, cents){
+    const r = Math.pow(2, 35 / 1200), N_HARM = 6, DECAY = 0.8;
+    const bins = [];   // per note: [[k0, k1, weight], ...]
+    for(let m = lo; m <= hi; m++){
+      const f0 = 440 * Math.pow(2, (m - 69) / 12 + cents / 1200), list = [];
+      for(let h = 1; h <= N_HARM; h++){
+        const fc = f0 * h;
+        if(fc * r > P_KMAX * P_DF) break;
+        const k0 = Math.ceil(fc / r / P_DF), k1 = Math.min(P_KMAX + 1, Math.max(Math.floor(fc * r / P_DF) + 1, k0 + 1));
+        list.push([k0, k1, Math.pow(DECAY, h - 1)]);
+      }
+      bins.push(list);
+    }
+    const cache = new Map(), magA = new Float64Array(P_KMAX + 1), magB = new Float64Array(P_KMAX + 1), nFrames = Math.floor(x.length / P_HOP) + 1;
+    function toSal(mag){
+      for(let k = 0; k <= P_KMAX; k++) mag[k] = Math.sqrt(mag[k]);
+      const v = new Float64Array(hi - lo + 1);
+      bins.forEach((list, i) => { let s = 0; list.forEach(([k0, k1, w]) => { let mx = 0; for(let k = k0; k < k1; k++) if(mag[k] > mx) mx = mag[k]; s += w * mx; }); v[i] = s; });
+      return v;
+    }
+    // salience of frames ja..jb, computing the missing ones two per FFT
+    function ensure(ja, jb){
+      const need = []; for(let j = ja; j <= jb; j++) if(!cache.has(j)) need.push(j);
+      for(let q = 0; q < need.length; q += 2){
+        const a = need[q], b = q + 1 < need.length ? need[q + 1] : -1;
+        frameMag2(x, a * P_HOP, b >= 0 ? b * P_HOP : -1, P_WIN, P_NFFT, P_KMAX, magA, b >= 0 ? magB : null);
+        cache.set(a, toSal(magA)); if(b >= 0) cache.set(b, toSal(magB));
+      }
+    }
+    const salFrame = j => cache.get(j);
+    // Mean salience of every note over the frames centred in [t0, t1]
+    function sal(t0, t1){
+      let ja = Math.ceil(t0 * CFG.SR / P_HOP), jb = Math.floor(t1 * CFG.SR / P_HOP);
+      if(jb < ja){ ja = jb = Math.round((t0 + t1) / 2 * CFG.SR / P_HOP); }
+      ja = Math.max(0, ja); jb = Math.min(nFrames - 1, jb);
+      const out = new Float64Array(hi - lo + 1);
+      if(jb < ja) return out;
+      ensure(ja, jb);
+      for(let j = ja; j <= jb; j++){ const v = salFrame(j); for(let i = 0; i < out.length; i++) out[i] += v[i]; }
+      for(let i = 0; i < out.length; i++) out[i] /= (jb - ja + 1);
+      return out;
+    }
+    return {x, lo, hi, cents, sal, onsets: detectOnsets(x), dur: x.length / CFG.SR};
+  }
+
+  const tick0 = () => new Promise(r => setTimeout(r, 0));
+  function status(html, pct){ $('cmpStatus').innerHTML = html; if(pct != null) $('cmpBar').style.width = pct + '%'; }
+
+  /* ================= COMPARE ================= */
+  function resetCompare(){
+    $('origName').textContent = cur.file ? 'REFERENCE-AUDIO-FILES/' + cur.file : '(this song has no recording)';
+    $('cmpBtn').disabled = !cur.audio || !canCompare();
+    $('copyBtn').disabled = true;
+    $('pickBox').hidden = true; $('pickFile').value = ''; $('pickName').textContent = cur.file;
+    $('pills').innerHTML = ''; $('report').value = ''; lastReport = '';
+    status(!cur.audio ? 'This song has no recording to compare with.' : (!canCompare() ? 'This song\'s notes have no times, so they can\'t be compared with the recording.' : ''), 0);
+    rows.forEach(r => { r.querySelector('.vb').innerHTML = ''; });
+  }
+
+  // Read one line against an analysis: rank of its notes, strongest notes, nearest onset
+  function readLine(A, i){
+    const n = cur.notes[i], t = times[i], next = i + 1 < times.length ? times[i + 1] : A.dur;
+    const t1 = Math.max(t + 0.07, Math.min(next - 0.01, t + CFG.WIN_FROM + CFG.WIN_SPAN));
+    const v = A.sal(t + CFG.WIN_FROM, t1);
+    const order = Array.from(v.keys()).sort((a, b) => v[b] - v[a]).map(k => A.lo + k);
+    const rank = Math.min(...n.ms.map(m => { const k = order.indexOf(m); return k < 0 ? 999 : k + 1; }));
+    let on = null;
+    A.onsets.forEach(o => { if(!on || Math.abs(o.t - t) < Math.abs(on.t - t)) on = o; });
+    const dt = on ? on.t - t : Infinity;
+    return {v, order, rank, on, dt, pitchOK: rank <= CFG.TOP_N, timeOK: Math.abs(dt) <= CFG.TIME_OK, hasOnset: Math.abs(dt) <= CFG.TIME_MAX};
+  }
+  const salOf = (A, v, m) => (m >= A.lo && m <= A.hi) ? v[m - A.lo] : 0;
+  // Best shift of the whole line (keeps the shape of a double stop or chord): the one whose notes are strongest
+  function bestShift(A, v, ms){
+    let best = 0, bestS = -1;
+    for(let d = -12; d <= 12; d++){
+      const s = ms.reduce((a, m) => a + salOf(A, v, m + d), 0);
+      if(s > bestS + 1e-12 || (Math.abs(s - bestS) <= 1e-12 && Math.abs(d) < Math.abs(best))){ bestS = s; best = d; }
+    }
+    return best;
+  }
+  const fmtT = t => t.toFixed(2).padStart(5);
+  function libLine(t, pre, notesTxt, beats, lbl){
+    return `'${fmtT(t)}  ${(pre + notesTxt).padEnd(24)} ${String(beats).padStart(4)}${lbl ? '  ' + lbl : ''}'`;
+  }
+  // A fix written as an item of the sheet page's RAW list: bar N: [position, length, 'note', tie, seconds]
+  const sheetName = (song, m) => (song.flats ? FLAT_NAMES : NAMES)[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+  function sheetItem(song, bar, pos, len16, ms, t, about){
+    return `bar ${bar}${about ? ' (about)' : ''}: [${pos},${len16},'${ms.map(m => sheetName(song, m)).join('+')}',0,${+t.toFixed(2)}]`;
+  }
+  const heardTxt = (A, r) => { const top = r.v[r.order[0] - A.lo] || 1; return r.order.slice(0, 3).map(m => noteName(m) + ' ' + (r.v[m - A.lo] / top).toFixed(2)).join(', '); };
+
+  async function compare(){
+    if(!cur || !cur.audio || !canCompare()) return;
+    const song = cur;
+    stopPlay(true);
+    $('cmpBtn').disabled = true; $('copyBtn').disabled = true;
+    $('pills').innerHTML = ''; $('report').value = '';
+    rows.forEach(r => { r.querySelector('.vb').innerHTML = ''; });
+    const t0 = performance.now();
+    try{
+      status('⏳ Loading the original recording…', 3);
+      const o = await fetchOriginal();
+      if(cur !== song) return;
+      if(!o){
+        $('pickBox').hidden = false;
+        status('📂 Choose the original WAV file above to continue.', 0);
+        return;
+      }
+      status('⏳ Measuring the original: tuning and note starts…', 10); await tick0();
+      o.mono = o.mono || await toMono(o.buf);
+      if(o.cents == null) o.cents = estimateTuning(o.mono);
+      const all = song.notes.flatMap(n => n.ms), lo = Math.min(...all) - 5, hi = Math.max(...all) + 5;
+      const A = makeAnalysis(o.mono, lo, hi, o.cents);
+      status('⏳ Making the audio from the notes…', 25); await tick0();
+      // the control is always the melody alone (a band would hide the notes being checked)
+      const s = await renderSynth($('tuneBox').checked ? o.cents : 0, null);
+      if(!$('bandBox').checked){ synth = s; $('dlBtn').disabled = false; }
+      const sm = await toMono(s.buf);
+      const sc = estimateTuning(sm);
+      const B = makeAnalysis(sm, lo, hi, sc);
+      if(cur !== song) return;
+
+      // ---- every line
+      const res = [];
+      let last = performance.now();
+      for(let i = 0; i < song.notes.length; i++){
+        const n = song.notes[i], r = readLine(A, i), c = readLine(B, i);
+        let verdict, shift = 0, newT = times[i];
+        if(r.pitchOK && r.timeOK) verdict = 'OK';
+        else if(r.pitchOK){ verdict = 'TIME?'; if(r.hasOnset) newT = r.on.t; }
+        else if(!r.hasOnset) verdict = 'EXTRA?';
+        else{
+          shift = bestShift(A, r.v, n.ms);
+          verdict = Math.abs(shift) === 12 ? 'OCTAVE?' : 'PITCH?';
+          if(!r.timeOK) newT = r.on.t;
+        }
+        // chroma similarity of synth vs original in this window
+        const ca = new Float64Array(12), cb = new Float64Array(12);
+        r.v.forEach((x, k) => { ca[(lo + k) % 12] += x; }); c.v.forEach((x, k) => { cb[(lo + k) % 12] += x; });
+        let dot = 0, na = 0, nb = 0; for(let k = 0; k < 12; k++){ dot += ca[k] * cb[k]; na += ca[k] * ca[k]; nb += cb[k] * cb[k]; }
+        const chroma = na && nb ? dot / Math.sqrt(na * nb) : 0;
+        let sugg = '-';
+        if(verdict === 'EXTRA?') sugg = 'remove this line? (no note start or matching pitch here)';
+        else if(verdict !== 'OK'){
+          if(shift){
+            const ms = n.ms.map(m => m + shift);
+            sugg = song.src === 'sheet' ? sheetItem(song, n.bar, n.pos, n.len, ms, newT) : libLine(newT, n.pre, ms.map(noteName).join('+'), n.bTxt, '');
+          } else if(newT !== times[i]){
+            sugg = song.src === 'sheet' ? sheetItem(song, n.bar, n.pos, n.len, n.ms, newT) : libLine(newT, '', n.tok, n.bTxt, n.lbl);
+          } else sugg = verdict === 'TIME?' ? '- (no clear note start found; listen)' : '- (listen: written note is the best fit but quiet here)';
+        }
+        res.push({i, n, r, c, verdict, sugg, chroma, ctrlOK: c.pitchOK && c.timeOK});
+        if(performance.now() - last > 40){ status(`⏳ Comparing note ${i + 1} of ${song.notes.length}…`, 30 + 60 * i / song.notes.length); await tick0(); last = performance.now(); if(cur !== song) return; }
+      }
+
+      // ---- onsets in the recording that no line covers
+      const tFirst = times[0] - 0.1, tLast = times[times.length - 1] + durs[durs.length - 1];
+      const medTop = median(res.map(x => x.r.v[x.r.order[0] - lo]));
+      const missing = [], restrikes = [];
+      A.onsets.forEach(on => {
+        if(on.t < tFirst || on.t > tLast || on.s < CFG.MISS_ONSET) return;
+        if(times.some(t => Math.abs(t - on.t) <= CFG.TIME_OK)) return;
+        const nextT = times.find(t => t > on.t) ?? A.dur;
+        const v = A.sal(on.t + CFG.WIN_FROM, Math.max(on.t + 0.07, Math.min(nextT - 0.01, on.t + CFG.WIN_FROM + CFG.WIN_SPAN)));
+        const order = Array.from(v.keys()).sort((a, b) => v[b] - v[a]).map(k => lo + k);
+        if(v[order[0] - lo] < CFG.MISS_SAL * medTop) return;
+        // the line sounding at that moment; hearing its own note again is a re-strike, not a missing line
+        let k = -1; while(k + 1 < times.length && times[k + 1] <= on.t) k++;
+        const shape = song.notes[Math.max(0, k)].ms;
+        if(k >= 0 && shape.some(m => (m - order[0]) % 12 === 0)){ restrikes.push(on.t); return; }   // same note, or an octave of it
+        // guess: that line's shape, moved to fit what is heard
+        const d = bestShift(A, v, shape.map(m => m - shape[0] + order[0])) ;
+        const ms = shape.map(m => m - shape[0] + order[0] + d);
+        const spb = 60 / (song.tempo || 100), beats = Math.max(0.5, Math.round((nextT - on.t) / spb * 2) / 2);
+        const top = v[order[0] - lo] || 1;
+        let sugg = libLine(on.t, '', ms.map(noteName).join('+'), beats, '');
+        if(song.src === 'sheet' && k >= 0){   // where it would go on the sheet: after line k, by the sheet's tempo
+          const ln = song.notes[k];
+          let pos = ln.pos + Math.max(1, Math.round((on.t - times[k]) / ln.stepSec)), bar = ln.bar;
+          while(pos >= ln.L){ pos -= ln.L; bar++; }
+          sugg = sheetItem(song, bar, pos, Math.max(1, Math.round(beats / ln.q)), ms, on.t, true);
+        }
+        missing.push({t: on.t, after: k, heard: order.slice(0, 3).map(m => noteName(m) + ' ' + (v[m - lo] / top).toFixed(2)).join(', '), sugg});
+      });
+
+      lastReport = buildReport(song, o, A, s, res, missing, restrikes, performance.now() - t0);
+      $('report').value = lastReport;
+      $('copyBtn').disabled = false;
+      // summary pills
+      const cnt = k => res.filter(x => x.verdict === k).length, okN = cnt('OK');
+      const pill = (txt, cls) => `<span class="stat-pill ${cls || ''}">${txt}</span>`;
+      $('pills').innerHTML = pill(`${okN}/${res.length} OK`, okN === res.length ? 'ok' : '') +
+        ['PITCH?', 'OCTAVE?', 'TIME?', 'EXTRA?'].map(k => cnt(k) ? pill(`${cnt(k)} ${k}`, 'bad') : '').join('') +
+        (missing.length ? pill(`${missing.length} MISSING`, 'bad') : '') +
+        pill('tuning ' + sign(A.cents) + ' cents');
+      // badges in the note list
+      res.forEach(x => { rows[x.i].querySelector('.vb').innerHTML = `<span class="vbadge ${x.verdict === 'OK' ? 'v-ok' : 'v-bad'}">${x.verdict}</span>`; });
+      status(`✅ Compared ${res.length} lines in ${((performance.now() - t0) / 1000).toFixed(1)} s. Copy the report and paste it into Claude Code to fix the notes.`, 100);
+    }catch(e){
+      console.error(e);
+      status('⚠️ The comparison failed: ' + esc(e.message || e), 0);
+    }finally{
+      if(cur === song) $('cmpBtn').disabled = false;
+    }
+  }
+  function median(a){ const s = a.slice().sort((p, q) => p - q); return s.length ? s[s.length >> 1] : 0; }
+  const sign = c => (c >= 0 ? '+' : '') + c.toFixed(0);
+
+  function buildReport(song, o, A, s, res, missing, restrikes, ms){
+    const count = k => res.filter(x => x.verdict === k).length;
+    const ok = count('OK'), ctrl = res.filter(x => x.ctrlOK).length;
+    const chroma = res.reduce((a, x) => a + x.chroma, 0) / (res.length || 1);
+    const tEnd = times[times.length - 1] + durs[durs.length - 1];
+    const L = [];
+    L.push('NOTES TESTER REPORT');
+    L.push('Song:         ' + song.title);
+    L.push('Notes from:   ' + (song.src === 'sheet' ? song.srcFile + ' (sheet music: ' + song.bars + ' bars at ' + song.tempo + ' BPM' + (song.untimed ? ', ' + song.untimed + ' notes without a time left out' : '') + ')' : song.src === 'txt' ? song.srcFile + ' (text file' + (song.untimedAll ? ', timed from the beats at ' + song.tempo + ' BPM from ' + song.start.toFixed(2) + ' s' : '') + ')' : 'REFERENCE-AUDIO-FILES/song-library.js (song list)'));
+    L.push('Audio file:   REFERENCE-AUDIO-FILES/' + song.file + (o.name && o.name !== song.file ? '   (compared with the chosen file "' + o.name + '": the names differ!)' : ''));
+    L.push('Instrument:   ' + inst + '      Tuning of recording: ' + sign(A.cents) + ' cents' + (s.cents ? '   (synth tuned to match)' : ''));
+    L.push(`Lines tested: all ${res.length} (${times[0].toFixed(2)} s – ${tEnd.toFixed(2)} s)`);
+    L.push(`Result:       ${ok} OK · ${count('PITCH?')} PITCH? · ${count('TIME?')} TIME? · ${count('OCTAVE?')} OCTAVE? · ${count('EXTRA?')} EXTRA? · ${missing.length} MISSING`);
+    L.push('Synth vs original chroma similarity: ' + chroma.toFixed(2) + '   (1.00 = the same pitch classes in every note window)');
+    L.push(`Control (synth read back): ${ctrl}/${res.length} OK` + (ctrl < 0.9 * res.length ? '   <- low: the analyser struggles with this song, so treat the flags below with care' : ''));
+    L.push(`Rules: OK = a written note is among the ${CFG.TOP_N} strongest notes heard ${CFG.WIN_FROM}-${(CFG.WIN_FROM + CFG.WIN_SPAN).toFixed(2)} s after the line's time, and a note start (onset) is within ±${CFG.TIME_OK * 1000} ms.`);
+    L.push('       Strengths are relative to the strongest note heard (1.00). Times are seconds in the original file.');
+    L.push('');
+    const wr = n => song.src === 'sheet' ? n.tok + ' (bar ' + n.bar + ')' : n.tok;
+    const W = Math.max(18, ...res.map(x => wr(x.n).length)) + 2;
+    L.push('#    time   ' + 'written'.padEnd(W) + 'verdict   ' + 'heard (strongest first)'.padEnd(30) + 'onset   suggested line');
+    const rowsOut = [];
+    res.forEach(x => rowsOut.push({t: times[x.i], txt:
+      String(x.i + 1).padEnd(5) + times[x.i].toFixed(2).padEnd(7) + wr(x.n).padEnd(W) + x.verdict.padEnd(10) +
+      heardTxt(A, x.r).padEnd(30) + (x.r.hasOnset ? x.r.on.t.toFixed(2) : '-').padEnd(8) + x.sugg}));
+    missing.forEach(m => rowsOut.push({t: m.t + 1e-6, txt:
+      '--'.padEnd(5) + m.t.toFixed(2).padEnd(7) + '(no line)'.padEnd(W) + 'MISSING'.padEnd(10) + m.heard.padEnd(30) + m.t.toFixed(2).padEnd(8) + m.sugg + '   (add after line ' + (m.after + 1) + ')'}));
+    rowsOut.sort((a, b) => a.t - b.t).forEach(r => L.push(r.txt));
+    L.push('');
+    const bad = res.filter(x => x.verdict !== 'OK');
+    L.push('Lines to fix: ' + (bad.length ? bad.map(x => x.i + 1 + ' (' + (song.src === 'sheet' ? 'bar ' + x.n.bar + ', ' : '') + x.verdict + ')').join(', ') : 'none'));
+    L.push('Missing notes at: ' + (missing.length ? missing.map(m => m.t.toFixed(2) + ' s').join(', ') : 'none'));
+    L.push(`Re-strikes not listed: ${restrikes.length}` + (restrikes.length ? ' (the note already sounding, or an octave of it, starts again; often tremolo or accompaniment, so not listed above): ' + restrikes.map(t => t.toFixed(2)).join(', ') : ''));
+    L.push('');
+    if(!bad.length && !missing.length) L.push('All lines match the recording. Nothing to change.');
+    else if(song.src === 'sheet'){
+      L.push('Notes for Claude Code: update these notes in the notes list (RAW or PARTS) of ' + song.srcFile + ' (song "' + song.title + '").');
+      L.push('Each suggestion is a bar item: bar N: [position, length, note, tie, seconds], position and length in the');
+      L.push('grid steps of that bar (sixteenths, or the steps of its part when the page has PARTS, e.g. eighths in 12/8).');
+      L.push('"(about)" means the position was worked out from the time and the tempo, so check the bar adds up.');
+      L.push('A flag is not always a mistake: confirm doubtful ones with SCRIPTS/inspect_time.py, then run the Notes Tester again.');
+    } else if(song.src === 'txt'){
+      L.push('Notes for Claude Code: these lines come from the text file ' + song.srcFile + ' (song "' + song.title + '"),');
+      L.push('not from song-library.js. The "time" column is where each line falls in the recording' + (song.untimedAll ? ' (worked out from the beats, so a' : ' (a'));
+      L.push('wrong beat count early on shifts every later line). A flag is not always a mistake: confirm doubtful ones');
+      L.push('with SCRIPTS/inspect_time.py at the listed times.');
+    } else{
+      L.push('Notes for Claude Code: update these lines in REFERENCE-AUDIO-FILES/song-library.js');
+      L.push('(song "' + song.title + '"), using the suggested lines as a starting point. A flag is not always');
+      L.push('a mistake: a quiet melody under loud accompaniment can be flagged, so confirm doubtful ones with');
+      L.push('SCRIPTS/inspect_time.py at the listed times, then run SCRIPTS/check_library.py and the Notes Tester again.');
+    }
+    L.push('');
+    L.push(`(Analysis: STFT 4096/8192 hop 256 at 22 050 Hz, harmonic salience over ${noteName(A.lo)}–${noteName(A.hi)}, ${A.onsets.length} onsets found, ${(ms / 1000).toFixed(1)} s.)`);
+    return L.join('\n');
+  }
+
+  $('cmpBtn').addEventListener('click', compare);
+  $('copyBtn').addEventListener('click', async () => {
+    try{ await navigator.clipboard.writeText(lastReport); }
+    catch(e){ const t = $('report'); t.focus(); t.select(); document.execCommand('copy'); }
+    const b = $('copyBtn'), was = b.textContent; b.textContent = '✅ Copied'; setTimeout(() => { b.textContent = was; }, 1500);
+  });
+
+  // For automated tests
+  window.__notesTester = { compare, testNotes, get report(){ return lastReport; }, get synth(){ return synth; }, wavBlob };
+
+  fillSongSelect();
+})();
+</script>
+</body>
+</html>
