@@ -231,6 +231,18 @@
   .mstaff .ms-label{ font-family:'Segoe UI',Roboto,sans-serif; fill:#084298; }
   .ms-cap{ font-size:.8rem; color:#6c757d; text-align:center; }
   .calc-box{ background:#fff8e1; border:2px solid var(--biz-yellow); border-radius:.6rem; padding:.8rem 1rem; }
+  /* Creativity showcase box (links to MUSIC-PROD/SONG.html) */
+  .create-box{
+    display:flex; gap:1.25rem; align-items:center; color:#fff;
+    background:radial-gradient(circle at 15% 50%, #2f9e5a 0, #0b3d22 35%, #04264d 100%);
+    border:2px solid #ffd60a; border-radius:.8rem; padding:1.25rem 1.5rem;
+    box-shadow:0 .3rem 1rem rgba(0,0,0,.25);
+  }
+  .create-box h4{ color:#ffd60a; }
+  .create-art{ font-size:2.6rem; line-height:1.2; flex:none; }
+  .create-btn{ background:#dc3545; color:#fff; border:2px solid #ffd60a; }
+  .create-btn:hover{ background:#b02a37; color:#fff; }
+  @media (max-width:576px){ .create-box{ flex-direction:column; text-align:center; } }
 </style>
 </head>
 <body>
@@ -1936,11 +1948,26 @@ I can go to any chord; the others tend to move to the right.</code></pre></div>
     <b>📝 Test yourself:</b> <a href="MUSIC-BASICS-TEST-1.html" class="fw-bold">Music Basics Test 1</a>, 25 questions on these lessons. Play every answer on a mini piano before you submit it.
   </div>
 
+  <!-- Creativity showcase: links to the owner's own song page -->
+  <div class="create-box mb-4">
+    <div class="create-art" aria-hidden="true">🎨🎤✨</div>
+    <div>
+      <h4 class="fw-bold mb-2">Be creative: turn what you learn into something of your own</h4>
+      <p class="mb-2">Theory is a starting point, not the finish line. Here is what one learner made with it:
+        <b>Dil Tera Pighla Doon</b>, an original Hindi song. The lyrics and music are by Daya, the voice is AI generated,
+        and the words carry the feeling of a well-known English song without translating it.</p>
+      <p class="mb-3">The page plays the song in a red jukebox. Coloured shapes dance to it, the shadow of a woman with
+        flowing hair blurs in on a green glow when the singing starts, and the lyrics light up as they are sung, with an
+        English translation underneath.</p>
+      <a href="../MUSIC-PROD/SONG.html" class="btn create-btn fw-bold">🎵 Listen to Dil Tera Pighla Doon →</a>
+    </div>
+  </div>
+
 </main>
 
 <footer class="text-white py-4 mt-5">
   <div class="container text-center small">
-    Music Practice App &middot; <a href="../index.html" class="text-white text-decoration-underline">🎶 Song Practice</a> &middot; <a href="MUSIC-BASICS-TEST-1.html" class="text-white text-decoration-underline">📝 Test 1</a> &middot; <a href="../contactus.html" class="text-white text-decoration-underline">Contact Us</a>
+    Music Practice App &middot; <a href="../index.html" class="text-white text-decoration-underline">🎶 Song Practice</a> &middot; <a href="MUSIC-BASICS-TEST-1.html" class="text-white text-decoration-underline">📝 Test 1</a> &middot; <a href="../MUSIC-PROD/SONG.html" class="text-white text-decoration-underline">🎵 Dil Tera Pighla Doon</a> &middot; <a href="../contactus.html" class="text-white text-decoration-underline">Contact Us</a>
   </div>
 </footer>
 

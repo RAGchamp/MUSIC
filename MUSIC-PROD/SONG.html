@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dil Tera Pighla Doon</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav: same as index.html */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+  }
+
+  /* Pink song box under the jukebox */
+  .song-box{
+    background:#fde4ec; border:2px solid #f5a3bf; border-radius:.75rem;
+    padding:1rem 1.25rem; color:#4a1730;
+  }
+  .song-box .song-name{ font-weight:800; font-size:1.3rem; }
+  .song-box .daya-link{ color:#b0124f; font-weight:700; }
+  /* Jukebox: red box on a blue background */
+  .juke-wrap{
+    background:linear-gradient(160deg,#0b3d91,#1565c0); border-radius:.75rem;
+    padding:1.5rem 1rem; display:flex; justify-content:center;
+  }
+  .jukebox{
+    width:100%; max-width:440px; background:linear-gradient(#e53935,#b71c1c);
+    border:4px solid #ffd60a; border-radius:1rem;
+    padding:1.2rem 1.4rem 1.4rem; text-align:center; color:#fff;
+    box-shadow:0 .5rem 1.2rem rgba(0,0,0,.45), inset 0 0 0 6px #c62828;
+  }
+  .juke-bar{ height:8px; background:#7f0000; border-radius:4px; cursor:pointer; overflow:hidden; }
+  .juke-bar > div{ height:100%; width:0; background:#ffd60a; }
+  .juke-time{ font-size:.85rem; margin-top:.35rem; color:#ffe0e0; }
+  .juke-btns{ display:flex; gap:.7rem; justify-content:center; margin-top:1rem; }
+  .juke-btns button{
+    width:78px; height:78px; border-radius:50%; border:3px solid #ffd60a;
+    background:#0d47a1; color:#fff; font-size:1.6rem; line-height:1;
+    box-shadow:0 .25rem .5rem rgba(0,0,0,.4); transition:transform .08s, background .15s;
+  }
+  .juke-btns button span{ display:block; font-size:.7rem; font-weight:700; margin-top:.2rem; letter-spacing:.05em; }
+  .juke-btns button:hover{ background:#1976d2; }
+  .juke-btns button:active{ transform:scale(.94); }
+  .juke-btns button.on{ background:#ffd60a; color:#000; }
+
+  /* Black animation box */
+  .anim-box{
+    background:#000; border-radius:.75rem; overflow:hidden;
+    box-shadow:0 .3rem 1rem rgba(0,0,0,.3);
+  }
+  .anim-box svg{ display:block; width:100%; height:420px; }
+  @media (max-width:576px){ .anim-box svg{ height:320px; } }
+
+  /* Light green lyrics box under the animation */
+  .lyrics-box{
+    background:#e6f6e6; border:2px solid #9fd79f; border-radius:.75rem;
+    padding:1rem 1.25rem; color:#1b4d1b;
+  }
+  .lyrics-box h2{ font-size:1.2rem; font-weight:800; margin-bottom:.75rem; }
+  .lyrics-box .part{ font-weight:700; color:#2e7d32; font-size:.85rem; text-transform:uppercase; letter-spacing:.06em; margin-top:.9rem; }
+  .lyrics-box .music{ font-style:italic; color:#558b55; margin-top:.9rem; }
+  .lyrics-box p{ margin:.15rem 0 0; font-size:1.05rem; line-height:1.6; }
+  .lyrics-box .tm{ font-weight:400; font-style:normal; text-transform:none; letter-spacing:0; color:#6b8f6b; font-size:.8rem; margin-left:.4rem; }
+  .lyrics-box .sect{ border-radius:.5rem; padding:0 .5rem .3rem; margin:0 -.5rem; transition:background .3s; }
+  .lyrics-box .sect.now{ background:#c8ecc8; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+
+  <audio id="player" src="Dil-Tera-Pighla-Doon-with-tabla.wav" preload="auto"></audio>
+
+  <div class="juke-wrap">
+    <div class="jukebox">
+      <div class="juke-bar" id="jBar"><div id="jFill"></div></div>
+      <div class="juke-time" id="jTime">0:00 / 0:00</div>
+      <div class="juke-btns">
+        <button id="bPlay" title="Play">&#9654;&#xFE0E;<span>PLAY</span></button>
+        <button id="bPause" title="Pause">&#10073;&#10073;<span>PAUSE</span></button>
+        <button id="bStop" title="Stop">&#9632;<span>STOP</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="song-box mt-3">
+    <div class="song-name">Dil Tera Pighla Doon</div>
+    <div>Lyrics and Music - <a href="../contactus.html" target="_blank" rel="noopener" class="daya-link">Daya</a>. Voice - AI generated.</div>
+  </div>
+
+  <div class="anim-box mt-3">
+    <svg id="stage" viewBox="0 0 800 420" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+
+  <div class="lyrics-box mt-3">
+    <h2>Lyrics</h2>
+    <div class="sect" data-from="0" data-to="43"><div class="music">(Intro music) <span class="tm">0:00 – 0:42</span></div></div>
+
+    <div class="sect" data-from="43" data-to="60">
+      <div class="part">Verse 1 <span class="tm">0:43 – 0:59</span></div>
+      <p>Aankhein jo chaahein, bas wahi tu dekhe<br>
+         Chaahe jo tu, wo zindagi kaise de<br>
+         Barf sa jam gaya, jab dil na khole</p>
+    </div>
+
+    <div class="sect" data-from="60" data-to="89"><div class="music">(Music) <span class="tm">1:00 – 1:28</span></div></div>
+
+    <div class="sect" data-from="89" data-to="141">
+      <div class="part">Verse 2 <span class="tm">from 1:29</span></div>
+      <p>Kitna mila, bas yahi ginta raha<br>
+         Nafrat, pachhtaave mein din khota raha<br>
+         Toot ke bikhra, jab dil na khole</p>
+
+      <div class="music">(Music)</div>
+
+      <div class="part">Chorus <span class="tm">until 2:20</span></div>
+      <p>mmm… mmm… Dil tera pighla doon agar<br>
+         mmm… mmm… Hum na bichhdein umr bhar<br>
+         mmm… mmm… Saunp de khud ko is pal<br>
+         mmm… mmm… Tere hi haathon mein hai hal</p>
+    </div>
+
+    <div class="sect" data-from="141" data-to="999"><div class="music">(Ending music) <span class="tm">2:21 – 3:09</span></div></div>
+
+    <h2 class="mt-4">English translation</h2>
+    <div class="part">Verse 1</div>
+    <p>You see only what your eyes want to see<br>
+       How can life give you everything you want?<br>
+       You froze like ice when you wouldn't open your heart</p>
+
+    <div class="part">Verse 2</div>
+    <p>You kept counting how much you got<br>
+       You lost your days to hate and regret<br>
+       You broke and fell apart when you wouldn't open your heart</p>
+
+    <div class="part">Chorus</div>
+    <p>mmm… mmm… If I could melt your heart<br>
+       mmm… mmm… We'd never part, all our lives<br>
+       mmm… mmm… Give yourself to me, in this moment<br>
+       mmm… mmm… The answer is in your hands</p>
+  </div>
+</main>
+
+<script>
+/* ---------- Jukebox: Play, Pause, Stop ---------- */
+const player = document.getElementById('player');
+const $ = id => document.getElementById(id);
+const fmt = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '0:00';
+
+let stopped = true;
+function show(){
+  const state = !player.paused ? 'Playing' : stopped ? 'Stopped' : 'Paused';
+  $('bPlay').classList.toggle('on', state === 'Playing');
+  $('bPause').classList.toggle('on', state === 'Paused');
+  $('bStop').classList.toggle('on', state === 'Stopped');
+  $('jFill').style.width = (player.duration ? player.currentTime / player.duration * 100 : 0) + '%';
+  $('jTime').textContent = fmt(player.currentTime) + ' / ' + fmt(player.duration);
+}
+$('bPlay').onclick  = () => { stopped = false; player.play().catch(() => {}); };
+$('bPause').onclick = () => { if (!player.paused){ stopped = false; player.pause(); } };
+$('bStop').onclick  = () => { stopped = true; player.pause(); player.currentTime = 0; show(); };
+$('jBar').onclick = e => {                     // click the bar to jump
+  if (!player.duration) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  player.currentTime = (e.clientX - r.left) / r.width * player.duration;
+};
+['play', 'pause', 'timeupdate', 'loadedmetadata'].forEach(ev => player.addEventListener(ev, show));
+player.addEventListener('ended', () => { stopped = true; player.currentTime = 0; show(); });
+show();
+
+/* ---------- Animation: shapes, then a woman's shadow on green that blurs in at 0:40 and out at 2:20 ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('stage');
+const W = 800, H = 420, CX = W / 2;
+
+function el(tag, attrs, parent = svg){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+}
+const f1 = n => n.toFixed(1);
+
+
+/* 1. Two spinning flowers (the example's rotating ellipses), one each side of her */
+const flowers = [140, 660].map((x, n) => {
+  const petals = [];
+  const colors = n ? ['cyan', 'magenta', 'yellow', 'lime', 'orange'] : ['yellow', 'lime', 'cyan', 'magenta', 'orange'];
+  for (let i = 0; i < 5; i++){
+    const g = el('g', {});
+    const e = el('ellipse', { rx:55, ry:8, opacity:.6, fill:colors[i], stroke:'purple', 'stroke-width':1.5 }, g);
+    petals.push({ g, e, base:i * 72 });
+  }
+  return { x, y:150 + n * 120, petals, dir:n ? -1 : 1 };
+});
+
+/* 2. Shapes drifting around and bouncing off the edges */
+function polygonPoints(n, r, inner){
+  const pts = [];
+  const steps = inner ? n * 2 : n;
+  for (let i = 0; i < steps; i++){
+    const a = -Math.PI / 2 + i * Math.PI * 2 / steps;
+    const rr = inner && i % 2 ? r * inner : r;
+    pts.push(f1(rr * Math.cos(a)) + ',' + f1(rr * Math.sin(a)));
+  }
+  return pts.join(' ');
+}
+const kinds = [
+  s => el('circle', { r:s }),
+  s => el('rect', { x:-s, y:-s, width:s * 2, height:s * 2, rx:s * .2 }),
+  s => el('polygon', { points:polygonPoints(3, s * 1.2) }),
+  s => el('polygon', { points:polygonPoints(5, s * 1.3, .45) }),
+  s => el('polygon', { points:polygonPoints(6, s) }),
+];
+const floaters = [];
+for (let i = 0; i < 16; i++){
+  const size = 7 + Math.random() * 14;
+  const shape = kinds[i % kinds.length](size);
+  const hue = Math.floor(Math.random() * 360);
+  shape.setAttribute('stroke', `hsl(${(hue + 180) % 360} 90% 70%)`);
+  shape.setAttribute('stroke-width', 1.5);
+  floaters.push({
+    shape, size, hue,
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - .5) * 110, vy: (Math.random() - .5) * 110,
+    rot: Math.random() * 360, vr: (Math.random() - .5) * 180,
+  });
+}
+
+/* 3. A ring of dots circling her */
+const orbit = [];
+for (let i = 0; i < 14; i++) orbit.push(el('circle', { r:5, fill:`hsl(${i * 26} 100% 65%)` }));
+
+/* 4. The woman: a dark side-on silhouette (head, neck, shoulders, long flowing hair) on a soft green glow.
+      Hidden at first; she blurs in from 0:40 and blurs out after the last lyric, from 2:20. */
+const SHOW_IN = 40, SHOW_OUT = 140, FADE = 4;   // seconds
+const defs = el('defs', {});
+const glow = el('radialGradient', { id:'greenGlow' }, defs);
+[[0, '#5fe08a'], [.45, '#2f9e5a'], [.8, 'rgba(20,90,45,.35)'], [1, 'rgba(10,60,30,0)']]
+  .forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, glow));
+const shadowFill = el('linearGradient', { id:'shadowFill', x1:0, y1:0, x2:1, y2:0 }, defs);
+[[0, '#0b1a12'], [.7, '#050c08'], [1, '#020403']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, shadowFill));
+const blurF = el('filter', { id:'blurIn', x:'-30%', y:'-30%', width:'160%', height:'160%' }, defs);
+const blurG = el('feGaussianBlur', { stdDeviation:0 }, blurF);
+
+const woman = el('g', { opacity:0 });
+const greenBg = el('ellipse', { cx:140, cy:170, rx:190, ry:200, fill:'url(#greenGlow)' }, woman);
+const figure = el('g', {}, woman);
+const hairMass = el('path', { fill:'url(#shadowFill)' }, figure);
+// Loose locks on the outside of the hair; the lighter ones catch the green light
+const locks = [0, 1, 2, 3, 4, 5, 6].map(i => el('path', { fill:'none', 'stroke-linecap':'round',
+  stroke: i % 3 === 2 ? 'rgba(140,255,180,.3)' : '#06100a', 'stroke-width': i % 3 === 2 ? 1.2 : 2.5 + (i % 2) * 2 }, figure));
+// Face profile (forehead, sharp nose, full lips, chin, jaw); the rim of light follows the same line
+const PROFILE =
+  'C80,74 80,86 78,94 C80,106 74,114 62,120 ' +              // nose: a scooped (concave) curve down the bridge
+  'C56,123 56,129 63,129 C66,129 69,129 71,129 C71,131 72,132 73,133 ' +   // a rounded, slightly upturned tip, philtrum
+  'C67,135 66,140 70,143 C71,144 72,144 74,144 ' +           // fuller upper lip
+  'C68,147 68,153 73,156 C76,158 76,161 76,164 ' +           // fuller lower lip
+  'C75,169 78,174 84,177 C92,183 98,185 104,187';           // chin and jaw
+el('path', { fill:'url(#shadowFill)', d:
+  'M122,28 C100,30 88,42 84,60 ' + PROFILE + ' ' +
+  'C106,200 106,216 104,232 C92,248 74,260 54,272 C42,280 36,292 34,300 ' +   // thicker neck, shoulder
+  'L248,300 C242,284 228,270 208,258 C190,246 178,232 175,212 C173,196 175,184 181,168 ' +
+  'C192,146 196,118 190,92 C184,58 160,30 122,28 Z' }, figure);
+// A faint rim of light along the face, where the green glow catches the edge
+const rim = el('path', { fill:'none', stroke:'rgba(140,255,180,.55)', 'stroke-width':1.5, d:'M84,60 ' + PROFILE }, figure);
+// Long flowing hair: over the crown, down the back of the head and well past the shoulders.
+// Points further down the hair wave more, like hair moving in a slow breeze.
+function curve(p, closed){
+  // Smooth curve through the points (Catmull-Rom as cubic Béziers)
+  const n = p.length, at = i => closed ? p[(i + n) % n] : p[Math.max(0, Math.min(n - 1, i))];
+  let d = `M${f1(p[0][0])},${f1(p[0][1])}`;
+  for (let i = 0; i < (closed ? n : n - 1); i++){
+    const a = at(i - 1), b = at(i), c = at(i + 1), e = at(i + 2);
+    d += `C${f1(b[0] + (c[0] - a[0]) / 6)},${f1(b[1] + (c[1] - a[1]) / 6)} ${f1(c[0] - (e[0] - b[0]) / 6)},${f1(c[1] - (e[1] - b[1]) / 6)} ${f1(c[0])},${f1(c[1])}`;
+  }
+  return closed ? d + 'Z' : d;
+}
+function hairShapes(t){
+  const w = (k, amp) => amp * Math.sin(t * 1.1 - k * .7);           // wave at step k down the hair
+  hairMass.setAttribute('d', curve([
+    [96, 40], [120, 18], [160, 16], [196, 38], [214, 80],              // over the crown
+    [224 + w(1, 3), 130], [236 + w(2, 6), 180], [246 + w(3, 9), 228],    // outer edge flowing down
+    [250 + w(4, 12), 270], [244 + w(5, 15), 304],                      // the ends, past the shoulder
+    [222 + w(5, 12), 296], [214 + w(4, 9), 262], [204 + w(3, 6), 220],   // inner edge back up
+    [192 + w(2, 3), 176], [184, 130], [168, 70], [130, 40],
+  ], true));
+  locks.forEach((l, i) => {
+    const x0 = 200 + i * 5, y0 = 70 + i * 22, len = 110 + i * 14;
+    const pts = [];
+    for (let k = 0; k <= 4; k++){
+      const y = y0 + len * k / 4;
+      pts.push([x0 + 22 * k / 4 + i * 2 + w(k + i * .4, 2 + k * 3.5), y]);
+    }
+    l.setAttribute('d', curve(pts));
+  });
+}
+const SCALE = 1.3, FX = CX - 140 * SCALE, FY = 22;
+svg.appendChild(woman);
+
+function visibility(t){
+  // 0 before 0:40, rising to 1 over FADE seconds, 1 until 2:20, then falling back to 0
+  if (t < SHOW_IN || t > SHOW_OUT + FADE) return 0;
+  if (t < SHOW_IN + FADE) return (t - SHOW_IN) / FADE;
+  if (t > SHOW_OUT) return 1 - (t - SHOW_OUT) / FADE;
+  return 1;
+}
+
+let last = performance.now(), T = 0, shownBlur = -1;
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000);
+  last = now;
+  const playing = !player.paused;
+  const speed = playing ? 1 : .25;
+  T += dt * speed;
+
+  /* The woman: blur in / out with the song time, and sway slowly while she is there */
+  const v = visibility(player.currentTime);
+  const ease = v * v * (3 - 2 * v);
+  woman.setAttribute('opacity', f1(ease));
+  const blur = Math.round((1 - ease) * 14);
+  if (blur !== shownBlur){
+    shownBlur = blur;
+    blurG.setAttribute('stdDeviation', blur);
+    if (blur) woman.setAttribute('filter', 'url(#blurIn)'); else woman.removeAttribute('filter');
+  }
+  if (v > 0){
+    const rot = 2.5 * Math.sin(T * .5), dx = 14 * Math.sin(T * .3), dy = 4 * Math.sin(T * .8);
+    woman.setAttribute('transform', `translate(${f1(FX + dx)} ${f1(FY + dy)}) scale(${SCALE})`);
+    figure.setAttribute('transform', `rotate(${f1(rot)} 140 300)`);
+    hairShapes(T);
+    greenBg.setAttribute('rx', f1(185 + 10 * Math.sin(T * .7)));
+  }
+  /* Flowers */
+  flowers.forEach(fl => {
+    const spinF = T * 360 / 7 * fl.dir;
+    const cx = (-20 + 120 * (1 - Math.cos(T * Math.PI * 2 / 8))) * .3;
+    const ry = 20 - 14 * Math.cos(T * Math.PI * 2 / 3);
+    fl.petals.forEach(p => {
+      p.g.setAttribute('transform', `translate(${fl.x} ${fl.y}) rotate(${f1(p.base + spinF * .3)})`);
+      p.e.setAttribute('cx', f1(cx)); p.e.setAttribute('ry', f1(ry));
+      p.e.setAttribute('transform', `rotate(${f1(spinF)})`);
+    });
+  });
+
+  /* Floaters: drift, bounce, spin and slowly change colour */
+  floaters.forEach(f => {
+    f.x += f.vx * dt * speed; f.y += f.vy * dt * speed; f.rot += f.vr * dt * speed;
+    if (f.x < f.size || f.x > W - f.size){ f.vx *= -1; f.x = Math.max(f.size, Math.min(W - f.size, f.x)); }
+    if (f.y < f.size || f.y > H - f.size){ f.vy *= -1; f.y = Math.max(f.size, Math.min(H - f.size, f.y)); }
+    f.hue = (f.hue + 20 * dt * speed) % 360;
+    f.shape.setAttribute('fill', `hsl(${f.hue.toFixed(0)} 90% 60% / .7)`);
+    f.shape.setAttribute('transform', `translate(${f1(f.x)} ${f1(f.y)}) rotate(${f1(f.rot)})`);
+  });
+
+  /* Dots circling her: the ones in front are bigger and pass in front of her */
+  orbit.forEach((d, i) => {
+    const a = T * .8 + i * Math.PI * 2 / orbit.length;
+    d.setAttribute('cx', f1(CX + 200 * Math.cos(a)));
+    d.setAttribute('cy', f1(215 + 50 * Math.sin(a)));
+    d.setAttribute('r', f1(3 + 3 * (1 + Math.sin(a))));
+    d.setAttribute('opacity', f1(.45 + .5 * (1 + Math.sin(a)) / 2));
+    const front = Math.sin(a) > 0;
+    if (front && !d._front){ svg.appendChild(d); d._front = true; }
+    if (!front && d._front){ svg.insertBefore(d, woman); d._front = false; }
+  });
+
+  /* Lyrics box: light up the part being played */
+  const t = player.currentTime;
+  lyricParts.forEach(p => p.el.classList.toggle('now', !player.paused && t >= p.a && t < p.b));
+
+  requestAnimationFrame(frame);
+}
+const lyricParts = [...document.querySelectorAll('[data-from]')].map(el => ({ el, a:+el.dataset.from, b:+el.dataset.to }));
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
