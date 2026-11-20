@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rani Rani Logic</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-green:#198754;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    --hook:#c2185b;
+  }
+  body{ background:#f7f8fa; margin:0; }
+  html{ scroll-behavior:smooth; }
+  section[id]{ scroll-margin-top:84px; }
+
+  /* Sticky top nav */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+    .topnav .tagline{ font-size:.85rem; letter-spacing:.08em; word-spacing:.3em; }
+  }
+
+  .hero{ background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%); color:#fff; }
+  .box{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .section-title{
+    display:inline-flex; align-items:center; gap:.6rem;
+    padding-bottom:.4rem; border-bottom:3px solid var(--biz-blue); margin-bottom:1.25rem;
+  }
+  .toc-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.8rem; height:1.8rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.85rem; margin-right:.5rem; flex:none;
+  }
+  .toc-list a{ text-decoration:none; color:#212529; }
+  .toc-list a:hover{ color:var(--biz-blue); text-decoration:underline; }
+  .toc-item{ display:flex; align-items:center; padding:.4rem 0; }
+  .back-to-top{ font-size:.85rem; }
+  table thead th{ background:#eef3fb; }
+
+  /* Step boxes */
+  .step-box{ background:#e9ecef; border-radius:.5rem; overflow:hidden; margin:0 0 1.25rem; box-shadow:0 .15rem .5rem rgba(0,0,0,.12); }
+  .step-box .step-bar{ background:var(--nav-blue); color:#5BF527; font-weight:700; padding:.5rem 1.1rem; font-size:.95rem; letter-spacing:.02em; }
+  .step-box .step-body{ padding:1rem 1.25rem; }
+  .step-box .step-body p:last-child{ margin-bottom:0; }
+
+  .chord-chip, .note-chip{ display:inline-block; background:#fff; border:2px solid #c9d3e3; border-radius:.4rem; padding:.15rem .55rem; margin:.15rem; font-weight:700; font-family:Consolas,monospace; }
+  .note-chip.hook{ border-color:var(--hook); color:var(--hook); }
+  .legend-sym{ display:inline-block; min-width:3.2rem; font-family:Consolas,monospace; font-weight:700; color:var(--biz-blue-dark); }
+
+  /* Song timeline: 96 bars, each block's width = its bars */
+  .timeline{ display:flex; width:100%; border-radius:.4rem; overflow:hidden; background:#fff; border:2px solid #c9d3e3; }
+  .timeline div{ padding:.45rem .2rem; font-size:.72rem; font-weight:700; text-align:center; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-right:1px solid rgba(255,255,255,.6); }
+  .timeline div:last-child{ border-right:0; }
+  .tl-intro{ background:#6f42c1; } .tl-chorus{ background:var(--hook); } .tl-verse{ background:var(--biz-blue); }
+  .tl-break{ background:#fd7e14; } .tl-bridge{ background:#20c997; } .tl-outro{ background:#495057; }
+  .tl-scale{ display:flex; justify-content:space-between; font-size:.72rem; color:#6c757d; margin-top:.2rem; }
+
+  /* Lyrics */
+  .lyric-part{ background:#fff; border:2px solid #c9d3e3; border-radius:.5rem; padding:.75rem 1rem; margin-bottom:.75rem; }
+  .lyric-part h3{ font-size:.95rem; font-weight:700; color:var(--biz-blue-dark); margin-bottom:.4rem; }
+  .lyric-part .t{ font-weight:400; color:#6c757d; font-size:.82rem; }
+  .lyric-part.chorus{ border-color:var(--hook); }
+  .lyric-part.chorus h3{ color:var(--hook); }
+  .lyric-part p{ margin-bottom:0; line-height:1.65; }
+  .shout{ color:var(--hook); font-weight:700; }
+  .stage{ color:#6c757d; font-style:italic; }
+
+  .prompt-box{ background:#fff8e1; border:2px dashed var(--biz-yellow); border-radius:.5rem; padding:.75rem 1rem; font-family:Consolas,monospace; font-size:.9rem; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">SONG LOGIC</div>
+</div>
+
+<!-- HERO -->
+<header class="hero py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-9">
+        <span class="badge rounded-pill bg-warning text-dark mb-3 text-wrap text-start">Original Hindi song · Raï-pop × Bollywood · Key: A minor (Hijaz colour) · 128 BPM · 3:00 · 96 bars</span>
+        <h1 class="display-6 fw-bold">Rani Rani: Song Logic</h1>
+        <p class="lead mb-0">A fast, danceable Hindi song in the style of the <strong>1990s Algerian Raï-pop</strong> hits such as
+          <strong>Khaled's “Didi”</strong>. This page explains the <strong>plan</strong>: the 3-minute structure with a
+          <strong>15-second intro</strong>, the full <strong>lyrics</strong>, the <strong>music</strong> (tempo, key, chords, instruments),
+          and <strong>what was taken from Khaled and what is new</strong>.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-5">
+
+  <p class="mb-4"><a href="../index.html" class="text-decoration-none">&larr; Back to the Music Practice App</a></p>
+
+  <!-- TOC -->
+  <section id="toc" class="mb-5">
+    <h2 class="section-title">Table of Contents</h2>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row toc-list">
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">1</span><a href="#adapt">Adapted from Khaled's “Didi”</a></div>
+            <div class="toc-item"><span class="toc-num">2</span><a href="#basics">The Basics: Tempo, Key, Chords</a></div>
+            <div class="toc-item"><span class="toc-num">3</span><a href="#map">Song Map (3:00)</a></div>
+            <div class="toc-item"><span class="toc-num">4</span><a href="#intro">The 15-Second Intro</a></div>
+          </div>
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">5</span><a href="#lyrics">Lyrics</a></div>
+            <div class="toc-item"><span class="toc-num">6</span><a href="#music">Music Description</a></div>
+            <div class="toc-item"><span class="toc-num">7</span><a href="#prompt">Style Prompt for an AI Music Tool</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1. ADAPTATION -->
+  <section id="adapt" class="mb-5">
+    <h2 class="section-title">1. Adapted from Khaled's “Didi”</h2>
+    <div class="step-box">
+      <div class="step-bar">The model: “Didi” by Khaled (1992), the “King of Raï”</div>
+      <div class="step-body">
+        <p><strong>Raï</strong> is a popular music from Oran in western Algeria. In the 1980s and 90s it went electric: synthesizers, drum
+          machines and accordion-like keyboard leads over North African hand drums. Khaled's <strong>“Didi”</strong> (from his 1992 album
+          <em>Khaled</em>) became a hit across Europe, the Middle East and <strong>India</strong>, where its catchy, near-wordless chorus was
+          sung by people who didn't know a word of Arabic. <em>Rani Rani</em> uses that recipe for a Hindi song.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-3">What was taken (the style) and how it changed</h3>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:12rem">Raï / “Didi” idea</th><th>How Rani Rani uses it</th></tr></thead>
+            <tbody>
+              <tr><td><strong>A name as the hook</strong></td><td>A short, two-syllable word repeated and easy to shout. Here it's <strong>“Rani”</strong> (queen), a word every Hindi listener knows, in place of “Didi”.</td></tr>
+              <tr><td><strong>Chorus early</strong></td><td>The chorus comes straight after the intro (0:15), before the first verse, so the hook is heard in the first 30 seconds.</td></tr>
+              <tr><td><strong>Fast dance tempo</strong></td><td>128 BPM, a steady 4/4 club tempo, chosen so 8 bars = exactly 15 s and the song fits 96 bars = 3:00.</td></tr>
+              <tr><td><strong>Minor key, Middle-Eastern scale</strong></td><td>A minor with the <strong>Hijaz</strong> colour (B♭ and C♯) in the lead. Hijaz is close to the Indian <em>raag Bhairav</em> family, so it also sounds familiar to Indian ears.</td></tr>
+              <tr><td><strong>Andalusian cadence</strong></td><td>Am – G – F – E, the falling chord pattern under much Raï and flamenco, used for the intro, verses and break.</td></tr>
+              <tr><td><strong>Synth / accordion lead</strong></td><td>A bright synth accordion plays the riff, doubled at times by a <strong>shehnai</strong>-like reed for an Indian touch.</td></tr>
+              <tr><td><strong>Darbuka groove</strong></td><td>Darbuka is kept, and <strong>dhol</strong> and <strong>tabla</strong> are added: the North African and Punjabi grooves fit together because both are built on a strong, swinging 4.</td></tr>
+              <tr><td><strong>Call and response, “Hey!” shouts</strong></td><td>The group answers “Rani! Rani!” and shouts “Hey!” at section starts. It is the part everyone can sing along to.</td></tr>
+              <tr><td><strong>Ornamented male voice</strong></td><td>Raï melisma (many notes on one vowel) matches the <em>murki</em> and <em>taan</em> of Indian singing: used on “Raaani”, “jaan” and in the bridge.</td></tr>
+              <tr><td><strong>Love for a girl, celebration</strong></td><td>The same simple theme, set in an Indian village: jhumke, mehndi, choodiyan, the bazaar, asking the whole village.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-2">What was <u>not</u> taken</h3>
+        <ul class="mb-0">
+          <li><strong>No lyrics:</strong> every Hindi line is new; none is a translation of “Didi”.</li>
+          <li><strong>No melody:</strong> the hook riff and the vocal tune are to be written fresh. Only the scale and the chord pattern (which are shared by a whole genre and owned by nobody) are reused.</li>
+          <li><strong>No recording or samples</strong> from Khaled's track, and not the name “Didi”.</li>
+        </ul>
+        <p class="small text-muted mt-2 mb-0">So <em>Rani Rani</em> is an original song <strong>in a genre</strong>, not a cover or a remake. That keeps it free to publish as your own.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 2. BASICS -->
+  <section id="basics" class="mb-5">
+    <h2 class="section-title">2. The Basics: Tempo, Key, Chords</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div><span class="legend-sym">128</span> BPM: one bar = 4 × 0.469 s = <strong>1.875 s</strong></div>
+            <div><span class="legend-sym">8</span> bars = <strong>15 s</strong> (the intro) · 96 bars = <strong>3:00</strong></div>
+            <div><span class="legend-sym">4/4</span> claps on beats 2 and 4, bass on the off-beats (“oom-PA”)</div>
+          </div>
+          <div class="col-md-6">
+            <div><span class="legend-sym">Am</span> home key: A minor</div>
+            <div><span class="legend-sym">B♭ C♯</span> the Hijaz notes that give the Middle-Eastern sound</div>
+            <div><span class="legend-sym">E</span> E <em>major</em> (with G♯) pulls back home to Am</div>
+          </div>
+        </div>
+        <p class="mt-3 mb-2">The lead's scale (A Hijaz; the pink notes are what makes it Hijaz):</p>
+        <p class="mb-3"><span class="note-chip">A4</span><span class="note-chip hook">B♭4</span><span class="note-chip hook">C♯5</span><span class="note-chip">D5</span><span class="note-chip">E5</span><span class="note-chip">F5</span><span class="note-chip">G5</span><span class="note-chip">A5</span></p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:9rem">Part</th><th>Chords (one per bar)</th></tr></thead>
+            <tbody>
+              <tr><td>Intro, verse, break</td><td><span class="chord-chip">Am</span><span class="chord-chip">G</span><span class="chord-chip">F</span><span class="chord-chip">E</span> repeated (the Andalusian cadence)</td></tr>
+              <tr><td>Chorus</td><td><span class="chord-chip">Am</span><span class="chord-chip">Dm</span><span class="chord-chip">E</span><span class="chord-chip">Am</span> ×2</td></tr>
+              <tr><td>Bridge</td><td><span class="chord-chip">F</span><span class="chord-chip">G</span><span class="chord-chip">Am</span><span class="chord-chip">Am</span> · <span class="chord-chip">F</span><span class="chord-chip">G</span><span class="chord-chip">E</span><span class="chord-chip">E</span> (held, no drums)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 3. SONG MAP -->
+  <section id="map" class="mb-5">
+    <h2 class="section-title">3. Song Map (3:00)</h2>
+    <div class="step-box">
+      <div class="step-bar">96 bars at 128 BPM · each block's width is its length</div>
+      <div class="step-body">
+        <div class="timeline" aria-label="Song timeline">
+          <div class="tl-intro"  style="width:8.33%"  title="Intro 0:00–0:15">Intro</div>
+          <div class="tl-chorus" style="width:8.33%"  title="Chorus 0:15–0:30">Chorus</div>
+          <div class="tl-verse"  style="width:16.67%" title="Verse 1 0:30–1:00">Verse 1</div>
+          <div class="tl-chorus" style="width:8.33%"  title="Chorus 1:00–1:15">Chorus</div>
+          <div class="tl-break"  style="width:8.33%"  title="Break 1:15–1:30">Break</div>
+          <div class="tl-verse"  style="width:16.67%" title="Verse 2 1:30–2:00">Verse 2</div>
+          <div class="tl-chorus" style="width:8.33%"  title="Chorus 2:00–2:15">Chorus</div>
+          <div class="tl-bridge" style="width:8.33%"  title="Bridge 2:15–2:30">Bridge</div>
+          <div class="tl-chorus" style="width:12.5%"  title="Final chorus 2:30–2:52">Final</div>
+          <div class="tl-outro"  style="width:4.17%"  title="Outro 2:52–3:00">Out</div>
+        </div>
+        <div class="tl-scale"><span>0:00</span><span>0:30</span><span>1:00</span><span>1:30</span><span>2:00</span><span>2:30</span><span>3:00</span></div>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Time</th><th>Section</th><th>Bars</th><th>What happens</th></tr></thead>
+            <tbody>
+              <tr><td>0:00–0:15</td><td><strong>Intro</strong></td><td>8</td><td>Instrumental only (see section 4)</td></tr>
+              <tr><td>0:15–0:30</td><td><strong>Chorus</strong></td><td>8</td><td>The hook first, as in the big Raï hits</td></tr>
+              <tr><td>0:30–1:00</td><td><strong>Verse 1</strong></td><td>16</td><td>Lighter groove: darbuka, bass, voice</td></tr>
+              <tr><td>1:00–1:15</td><td><strong>Chorus</strong></td><td>8</td><td>Full band</td></tr>
+              <tr><td>1:15–1:30</td><td><strong>Instrumental break</strong></td><td>8</td><td>Synth-accordion solo, dhol and claps; crowd “Rani!” on bars 4 and 8</td></tr>
+              <tr><td>1:30–2:00</td><td><strong>Verse 2</strong></td><td>16</td><td>Brass stabs added</td></tr>
+              <tr><td>2:00–2:15</td><td><strong>Chorus</strong></td><td>8</td><td>Full band</td></tr>
+              <tr><td>2:15–2:30</td><td><strong>Bridge</strong></td><td>8</td><td>Breakdown: drums out, slow ornamented vocal over a pad</td></tr>
+              <tr><td>2:30–2:52</td><td><strong>Final chorus</strong></td><td>12</td><td>Chorus + 4 bars of “Rani! Rani!” chant</td></tr>
+              <tr><td>2:52–3:00</td><td><strong>Outro</strong></td><td>4</td><td>The riff once more, a big “Hey!”, hard stop</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 4. INTRO -->
+  <section id="intro" class="mb-5">
+    <h2 class="section-title">4. The 15-Second Intro</h2>
+    <div class="step-box">
+      <div class="step-bar">Bars 1–8 · built up one layer at a time</div>
+      <div class="step-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0 bg-white">
+            <thead><tr><th style="width:8rem">Time</th><th style="width:5rem">Bars</th><th>Layer</th></tr></thead>
+            <tbody>
+              <tr><td>0:00–0:04</td><td>1–2</td><td><strong>Synth accordion alone</strong> plays the hook riff with a fast Hijaz run:
+                <span class="note-chip">E5</span><span class="note-chip hook">F5</span><span class="note-chip">E5</span><span class="note-chip">D5</span><span class="note-chip hook">C♯5</span><span class="note-chip">D5</span><span class="note-chip">E5</span></td></tr>
+              <tr><td>0:04–0:08</td><td>3–4</td><td><strong>Darbuka + tabla</strong> come in with a rolling 16th-note pattern</td></tr>
+              <tr><td>0:08–0:13</td><td>5–7</td><td><strong>Full band:</strong> synth bass, dhol, handclaps, brass stabs on Am – G – F</td></tr>
+              <tr><td>0:13–0:15</td><td>8</td><td>On the E chord: a <strong>dhol and darbuka fill</strong>, then a crowd <span class="shout">“Hey!”</span> right on the chorus downbeat</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 5. LYRICS -->
+  <section id="lyrics" class="mb-5">
+    <h2 class="section-title">5. Lyrics</h2>
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="lyric-part chorus">
+          <h3>Chorus <span class="t">· 0:15, 1:00, 2:00 · 8 bars</span></h3>
+          <p>Rani, Rani, o meri Rani<br>
+             Teri aankhon mein jaadu ki kahani<br>
+             Rani, Rani, na kar manmaani<br>
+             Dil le gayi tu, o meri deewani<br>
+             <span class="shout">(Hey! Hey!)</span></p>
+        </div>
+        <div class="lyric-part">
+          <h3>Verse 1 <span class="t">· 0:30–1:00 · 16 bars, 2 bars a line</span></h3>
+          <p>Gali gali mein charcha tera, shor hai har shaam<br>
+             Jhumke tere chamkein jaise chaand ka paigaam<br>
+             Main to tera deewana, tu hi meri jaan<br>
+             Ek nazar jo dekh le tu, ho jaaun qurbaan<br>
+             Dhol baje, dhak-dhak dil, ruk na paaye paon<br>
+             Tere peeche peeche aaya, chhod ke apna gaon<br>
+             Haan haan, chhod ke apna gaon<br>
+             Aaja, aaja, naach le zara! <span class="shout">(Hey!)</span></p>
+        </div>
+        <div class="lyric-part">
+          <h3>Instrumental break <span class="t">· 1:15–1:30</span></h3>
+          <p class="stage">The lead plays the hook; the crowd shouts <span class="shout">“Rani!”</span> on bars 4 and 8.</p>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="lyric-part">
+          <h3>Verse 2 <span class="t">· 1:30–2:00 · 16 bars</span></h3>
+          <p>Mehndi wale haath tere, choodiyon ki jhankaar<br>
+             Hans ke jo tu chal de, to ruk jaaye bazaar<br>
+             Maa se poochha, baap se poochha, poochha saara gaon<br>
+             Sab ne kaha “woh Rani hai”, le le uska naam<br>
+             Raat jagi hai, taare jaage, jaaga hai yeh pyaar<br>
+             Ek baar tu haan kar de, bas ek hi baar<br>
+             Haan haan, bas ek hi baar<br>
+             Aaja, aaja, naach le zara! <span class="shout">(Hey!)</span></p>
+        </div>
+        <div class="lyric-part">
+          <h3>Bridge <span class="t">· 2:15–2:30 · slow and free</span></h3>
+          <p>Na sona chahiye, na chaandi chahiye<br>
+             Bas teri ek muskaan, meri zindagi chahiye<br>
+             O Raaa-ni… <span class="stage">(long held note with ornaments)</span><br>
+             Tu hi meri zindagi… <span class="stage">(drums crash back in on the last beat)</span></p>
+        </div>
+        <div class="lyric-part chorus">
+          <h3>Final chorus + outro <span class="t">· 2:30–3:00</span></h3>
+          <p>Rani, Rani, o meri Rani … <span class="stage">(full chorus)</span><br>
+             <span class="shout">Rani! Rani!</span> <span class="stage">(crowd)</span> <span class="shout">Hey! Hey!</span> ×4<br>
+             <span class="stage">(the riff)</span> … <span class="shout">Rani!</span> <span class="stage">(stop)</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-4 mt-2">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-2">Meaning in short</h3>
+        <p class="mb-0">A young man is crazy about a village beauty he calls <strong>“Rani”</strong> (queen). The whole lane talks about her; her earrings
+          shine like a message from the moon. He has left his own village to follow her, asked her mother, her father and the whole village, and he
+          wants nothing, not gold, not silver, only her smile and one “yes”.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 6. MUSIC -->
+  <section id="music" class="mb-5">
+    <h2 class="section-title">6. Music Description</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead><tr><th style="width:9rem">Part of the band</th><th>What it plays</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Lead</strong></td><td>Bright synth accordion (the 90s Raï sound), doubled at times by a shehnai-like reed. The hook riff in the intro, break and outro; short answers between chorus lines.</td></tr>
+              <tr><td><strong>Rhythm</strong></td><td>Darbuka + dhol are the heart. Tabla for fills, handclaps on 2 and 4, a 1-bar fill at the end of every section.</td></tr>
+              <tr><td><strong>Bass</strong></td><td>Punchy synth bass on the off-beats (“oom-PA”), following the chord roots.</td></tr>
+              <tr><td><strong>Keys / brass</strong></td><td>Short synth-brass stabs on the chords in the chorus and verse 2; a soft pad under the bridge.</td></tr>
+              <tr><td><strong>Vocals</strong></td><td>Bright male lead with Raï melisma on long words (“Raaani”, “jaan”). A group answers “Rani! Rani!” and shouts “Hey!”.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 class="h6 fw-bold mb-2">Energy curve</h3>
+        <ul class="mb-0">
+          <li><strong>High</strong>: intro build-up and first chorus</li>
+          <li><strong>Medium</strong>: verses (room for the words)</li>
+          <li><strong>Highest</strong>: instrumental break</li>
+          <li><strong>Quiet dip</strong>: bridge, no drums</li>
+          <li><strong>Maximum</strong>: final chorus and chant, then a sudden stop</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 7. PROMPT -->
+  <section id="prompt" class="mb-5">
+    <h2 class="section-title">7. Style Prompt for an AI Music Tool</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <p class="mb-2">Paste this as the style, and the lyrics above (with the section names in brackets) as the lyrics:</p>
+        <div class="prompt-box">Fast 90s Algerian Raï-pop fused with Bollywood, 128 BPM, A minor with Hijaz scale, synth accordion lead, darbuka and dhol, handclaps, off-beat synth bass, brass stabs, energetic male Hindi vocals with melismatic ornaments, group chants "Rani! Rani!" and "Hey!", 15-second instrumental intro, 3 minutes</div>
+        <p class="small text-muted mt-2 mb-0">Name a genre, not an artist: many tools refuse or ignore prompts that name a real singer, and the result should be your own sound anyway.</p>
+        <a class="btn btn-primary btn-sm mt-3" href="SUNO-GUIDE.html">Read the Suno Guide →</a>
+        <a class="btn btn-outline-primary btn-sm mt-3 ms-1" href="SONG-2-RANI-RANI-ENGLISH-LOGIC.html">English boy-band version →</a>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+</main>
+
+<footer class="text-white py-4">
+  <div class="container small">
+    Song Logic · part of the <a href="../index.html">Music Practice App</a>.
+  </div>
+</footer>
+
+</body>
+</html>

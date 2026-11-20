@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rani Rani</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav: same as index.html */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+  }
+
+  /* Pink song box under the jukebox */
+  .song-box{
+    background:#fde4ec; border:2px solid #f5a3bf; border-radius:.75rem;
+    padding:1rem 1.25rem; color:#4a1730;
+  }
+  .song-box .song-name{ font-weight:800; font-size:1.3rem; }
+  .song-box .daya-link{ color:#b0124f; font-weight:700; }
+  /* Jukebox: red box on a blue background */
+  .juke-wrap{
+    background:linear-gradient(160deg,#0b3d91,#1565c0); border-radius:.75rem;
+    padding:1.5rem 1rem; display:flex; justify-content:center;
+  }
+  .jukebox{
+    width:100%; max-width:440px; background:linear-gradient(#e53935,#b71c1c);
+    border:4px solid #ffd60a; border-radius:1rem;
+    padding:1.2rem 1.4rem 1.4rem; text-align:center; color:#fff;
+    box-shadow:0 .5rem 1.2rem rgba(0,0,0,.45), inset 0 0 0 6px #c62828;
+  }
+  .juke-bar{ height:8px; background:#7f0000; border-radius:4px; cursor:pointer; overflow:hidden; }
+  .juke-bar > div{ height:100%; width:0; background:#ffd60a; }
+  .juke-time{ font-size:.85rem; margin-top:.35rem; color:#ffe0e0; }
+  .juke-btns{ display:flex; gap:.7rem; justify-content:center; margin-top:1rem; }
+  .juke-btns button{
+    width:78px; height:78px; border-radius:50%; border:3px solid #ffd60a;
+    background:#0d47a1; color:#fff; font-size:1.6rem; line-height:1;
+    box-shadow:0 .25rem .5rem rgba(0,0,0,.4); transition:transform .08s, background .15s;
+  }
+  .juke-btns button span{ display:block; font-size:.7rem; font-weight:700; margin-top:.2rem; letter-spacing:.05em; }
+  .juke-btns button:hover{ background:#1976d2; }
+  .juke-btns button:active{ transform:scale(.94); }
+  .juke-btns button.on{ background:#ffd60a; color:#000; }
+
+  /* Black animation box: the dance floor */
+  .anim-box{
+    background:#000; border-radius:.75rem; overflow:hidden;
+    box-shadow:0 .3rem 1rem rgba(0,0,0,.3);
+  }
+  .anim-box svg{ display:block; width:100%; height:420px; }
+  @media (max-width:576px){ .anim-box svg{ height:auto; aspect-ratio:800 / 420; } }
+  .anim-note{ font-size:.85rem; color:#6c757d; }
+
+  /* Light green lyrics box under the animation */
+  .lyrics-box{
+    background:#e6f6e6; border:2px solid #9fd79f; border-radius:.75rem;
+    padding:1rem 1.25rem; color:#1b4d1b;
+  }
+  .lyrics-box h2{ font-size:1.2rem; font-weight:800; margin-bottom:.75rem; }
+  .lyrics-box .part{ font-weight:700; color:#2e7d32; font-size:.85rem; text-transform:uppercase; letter-spacing:.06em; margin-top:.9rem; }
+  .lyrics-box .music{ font-style:italic; color:#558b55; margin-top:.9rem; }
+  .lyrics-box p{ margin:.15rem 0 0; font-size:1.05rem; line-height:1.6; }
+  .lyrics-box .tm{ font-weight:400; font-style:normal; text-transform:none; letter-spacing:0; color:#6b8f6b; font-size:.8rem; margin-left:.4rem; }
+  .lyrics-box .sect{ border-radius:.5rem; padding:0 .5rem .3rem; margin:0 -.5rem; transition:background .3s; }
+  .lyrics-box .sect.now{ background:#c8ecc8; }
+  .lyrics-box .shout{ color:#b0124f; font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+
+  <audio id="player" src="Rani-Rani.wav" preload="auto"></audio>
+
+  <div class="juke-wrap">
+    <div class="jukebox">
+      <div class="juke-bar" id="jBar"><div id="jFill"></div></div>
+      <div class="juke-time" id="jTime">0:00 / 0:00</div>
+      <div class="juke-btns">
+        <button id="bPlay" title="Play">&#9654;&#xFE0E;<span>PLAY</span></button>
+        <button id="bPause" title="Pause">&#10073;&#10073;<span>PAUSE</span></button>
+        <button id="bStop" title="Stop">&#9632;<span>STOP</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="song-box mt-3">
+    <div class="song-name">Rani Rani</div>
+    <div>Lyrics and Music - <a href="../contactus.html" target="_blank" rel="noopener" class="daya-link">Daya</a>. Voice - AI generated.</div>
+    <div class="small mt-1">A fast dance song: 90s boy-band pop with a Raï flavour. <a href="../SONG-LOGIC/SONG-2-RANI-RANI-ENGLISH-LOGIC.html" class="daya-link">How this song was planned →</a></div>
+  </div>
+
+  <div class="anim-box mt-3">
+    <svg id="stage" viewBox="0 0 800 420" preserveAspectRatio="xMidYMid meet" aria-label="Six funny characters dancing to the song"></svg>
+  </div>
+  <div class="anim-note mt-1">The Rani Rani Dance Troupe: Tamatar Chacha, Lambu Noodle, Billu the cool cat, Robo-Raja, Pingu and Bhalu on the dhol. Press Play and they dance to the beat.</div>
+
+  <div class="lyrics-box mt-3">
+    <h2>Lyrics</h2>
+    <div class="sect" data-from="0" data-to="34"><div class="music">(Intro music) <span class="tm">0:00 – 0:33</span></div></div>
+
+    <div class="sect">
+      <div class="part">Intro</div>
+      <p>Yeah… this one's for the queen.<br>
+         Ooh-ooh, ooh-ooh…<br>
+         <span class="shout">R-R-R-Rani! Hey!</span></p>
+
+      <div class="part">Chorus</div>
+      <p>Rani, Rani, oh my Rani<br>
+         Got the whole town dancing, can't you see?<br>
+         Rani, Rani, don't you play me<br>
+         One look from you and I'm not free<br>
+         <span class="shout">(Hey! Hey!)</span></p>
+
+      <div class="part">Verse 1</div>
+      <p>Every street is talking 'bout the way you move<br>
+         Silver earrings shining like the midnight moon<br>
+         I left my little town to follow you around<br>
+         (Follow you around)<br>
+         One glance across the room and I'm going down<br>
+         Drums are beating faster, can't control my feet<br>
+         Every heartbeat's saying that you're all I need<br>
+         (All I need, yeah)<br>
+         Come on, come on, dance with me! <span class="shout">(Hey!)</span></p>
+
+      <div class="music">(Chorus, then music)</div>
+
+      <div class="part">Verse 2</div>
+      <p>Henna on your fingers, bangles in the air<br>
+         When you laugh the market stops and starts to stare<br>
+         I asked your mama, asked your daddy, asked the whole town too<br>
+         (Asked the whole town too)<br>
+         Everybody told me, "Boy, she's the queen, it's true"<br>
+         Stars are up all night, and so is this old heart<br>
+         Just say yes one time, that's where we start<br>
+         (That's where we start)<br>
+         Come on, come on, dance with me! <span class="shout">(Hey!)</span></p>
+
+      <div class="music">(Chorus)</div>
+
+      <div class="part">Bridge</div>
+      <p>I don't need the gold, I don't need the gems<br>
+         (Nah, girl…)<br>
+         Just your smile, girl, that's my diamond, that's my everything<br>
+         Ohh Raaa-ni…<br>
+         Everybody, sing it with me…</p>
+
+      <div class="part">Final chorus</div>
+      <p>Rani, Rani, oh my Rani<br>
+         Got the whole world dancing, can't you see?<br>
+         Rani, Rani, don't you play me<br>
+         One look from you and I'm not free<br>
+         <span class="shout">Ra-ni! (Ra-ni!) Hey! Hey!</span></p>
+
+      <div class="part">Outro</div>
+      <p>R-R-R-Rani… my queen. <span class="shout">Hey!</span></p>
+    </div>
+
+    <div class="sect" data-from="222" data-to="999"><div class="music">(Ending music) <span class="tm">3:42 – 3:52</span></div></div>
+  </div>
+</main>
+
+<script>
+/* ---------- Jukebox: Play, Pause, Stop ---------- */
+const player = document.getElementById('player');
+const $ = id => document.getElementById(id);
+const fmt = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '0:00';
+
+let stopped = true;
+function show(){
+  const state = !player.paused ? 'Playing' : stopped ? 'Stopped' : 'Paused';
+  $('bPlay').classList.toggle('on', state === 'Playing');
+  $('bPause').classList.toggle('on', state === 'Paused');
+  $('bStop').classList.toggle('on', state === 'Stopped');
+  $('jFill').style.width = (player.duration ? player.currentTime / player.duration * 100 : 0) + '%';
+  $('jTime').textContent = fmt(player.currentTime) + ' / ' + fmt(player.duration);
+}
+$('bPlay').onclick  = () => { stopped = false; player.play().catch(() => {}); };
+$('bPause').onclick = () => { if (!player.paused){ stopped = false; player.pause(); } };
+$('bStop').onclick  = () => { stopped = true; player.pause(); player.currentTime = 0; show(); };
+$('jBar').onclick = e => {                     // click the bar to jump
+  if (!player.duration) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  player.currentTime = (e.clientX - r.left) / r.width * player.duration;
+};
+['play', 'pause', 'timeupdate', 'loadedmetadata'].forEach(ev => player.addEventListener(ev, show));
+player.addEventListener('ended', () => { stopped = true; player.currentTime = 0; show(); });
+show();
+
+/* ---------- The beat of Rani-Rani.wav (measured with spectral-flux onsets) ----------
+   192 beats a minute (a fast 96 BPM groove counted in double time), the first beat at 0.208 s.
+   ENERGY: the loudness of each second of the song, 0 (quiet) to 9 (loudest). The dancers move harder when it is loud. */
+const BEAT = 60 / 192, PHASE = 0.208;
+const ENERGY = '0000000000001200201212232222332026464364663646526555365652645436565375664545647575375764767747567476863868758687476643647536560079975989787784234442345849677499910010200039786754786434344322585777889999898988989979899799934325333444';
+
+/* ---------- Drawing helpers ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('stage');
+const W = 800, H = 420, FLOOR = 372;
+
+function el(tag, attrs, parent = svg){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+}
+const f1 = n => n.toFixed(1);
+const lerp = (a, b, t) => a + (b - a) * t;
+function curve(p){
+  // Smooth curve through the points (Catmull-Rom as cubic Béziers)
+  const n = p.length, at = i => p[Math.max(0, Math.min(n - 1, i))];
+  let d = `M${f1(p[0][0])},${f1(p[0][1])}`;
+  for (let i = 0; i < n - 1; i++){
+    const a = at(i - 1), b = at(i), c = at(i + 1), e = at(i + 2);
+    d += `C${f1(b[0] + (c[0] - a[0]) / 6)},${f1(b[1] + (c[1] - a[1]) / 6)} ${f1(c[0] - (e[0] - b[0]) / 6)},${f1(c[1] - (e[1] - b[1]) / 6)} ${f1(c[0])},${f1(c[1])}`;
+  }
+  return d;
+}
+const line = (parent, color, width) => el('path', { fill:'none', stroke:color, 'stroke-width':width, 'stroke-linecap':'round', 'stroke-linejoin':'round' }, parent);
+
+/* ---------- The stage: spotlights, disco ball, neon sign, floor ---------- */
+const defs = el('defs', {});
+const beam = el('linearGradient', { id:'beam', x1:0, y1:0, x2:0, y2:1 }, defs);
+[[0, 'rgba(255,255,255,.35)'], [1, 'rgba(255,255,255,0)']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, beam));
+const ballG = el('radialGradient', { id:'ball', cx:.35, cy:.35 }, defs);
+[[0, '#ffffff'], [.5, '#b0bec5'], [1, '#455a64']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, ballG));
+
+const spots = [[60, 0], [740, 0]].map(([x, y], i) => {
+  const p = el('polygon', { points:`0,0 -70,420 70,420`, fill:'url(#beam)' });
+  return { p, x, y, dir: i ? -1 : 1 };
+});
+
+const neon = el('text', { x:W / 2, y:118, 'text-anchor':'middle', 'font-size':76, 'font-weight':900,
+  'font-family':'Segoe UI, Arial, sans-serif', fill:'none', 'stroke-width':3, 'letter-spacing':6 });
+neon.textContent = 'RANI RANI';
+
+el('line', { x1:W / 2, y1:0, x2:W / 2, y2:16, stroke:'#888', 'stroke-width':2 });
+const ball = el('g', { transform:`translate(${W / 2} 38)` });
+el('circle', { r:22, fill:'url(#ball)' }, ball);
+const facets = [];
+for (let i = 0; i < 12; i++) facets.push(el('rect', { width:6, height:6, fill:'#fff', opacity:0 }, ball));
+const sparkles = [];
+for (let i = 0; i < 6; i++) sparkles.push(el('polygon', { points:'0,-7 2,-2 7,0 2,2 0,7 -2,2 -7,0 -2,-2', fill:'#fff', opacity:0 }));
+
+const tiles = [];
+for (let i = 0; i < 16; i++) tiles.push(el('rect', { x:i * 50 + 1, y:FLOOR, width:48, height:H - FLOOR, rx:3 }));
+const TILE_COLORS = [[330, 90], [200, 90], [50, 95], [280, 80], [140, 75]];
+
+/* ---------- The Rani Rani Dance Troupe ----------
+   Each character is drawn standing on y = 0 (its feet) and has update(s), where s holds:
+   b   beats (192 BPM),  hb half-beats (96 BPM, the main groove),
+   hit 1 on each beat falling to 0,  hit2 the same for each half-time beat,
+   sw  a slow side-to-side sway (-1..1, one swing every 2 half-beats),  amp how hard to dance (0..1). */
+const troupe = [];
+function character(x, build){
+  const g = el('g', { transform:`translate(${x} ${FLOOR})` });
+  const c = build(g);
+  c.x = x; c.g = g;
+  // Speech bubble above the head
+  c.bubble = el('g', { opacity:0 }, g);
+  el('rect', { x:-34, y:c.top - 40, width:68, height:28, rx:12, fill:'#fff', stroke:'#ff4081', 'stroke-width':2 }, c.bubble);
+  el('polygon', { points:`-6,${c.top - 13} 6,${c.top - 13} 0,${c.top - 4}`, fill:'#fff' }, c.bubble);
+  c.bubbleText = el('text', { x:0, y:c.top - 21, 'text-anchor':'middle', 'font-size':15, 'font-weight':800, fill:'#c2185b',
+    'font-family':'Segoe UI, Arial, sans-serif' }, c.bubble);
+  troupe.push(c);
+  return c;
+}
+
+/* 1. Tamatar Chacha: a round tomato with googly eyes and a big moustache, all hips */
+character(78, root => {
+  const legs = [-1, 1].map(s => ({ s, l:line(root, '#2e7d32', 6), foot:el('ellipse', { rx:11, ry:6, fill:'#1b5e20' }, root) }));
+  const torso = el('g', {}, root);
+  const arms = [-1, 1].map(s => ({ s, l:line(torso, '#2e7d32', 6), hand:el('circle', { r:7, fill:'#fff', stroke:'#2e7d32', 'stroke-width':2 }, torso) }));
+  el('circle', { cx:0, cy:-75, r:48, fill:'#e53935', stroke:'#b71c1c', 'stroke-width':3 }, torso);
+  el('ellipse', { cx:-20, cy:-98, rx:13, ry:7, fill:'rgba(255,255,255,.35)', transform:'rotate(-25 -20 -98)' }, torso);
+  el('path', { d:'M0,-120 l-16,-6 l10,-2 l-6,-12 l12,8 l12,-8 l-6,12 l10,2 z', fill:'#43a047' }, torso);
+  const pupils = [-16, 16].map(x => { el('circle', { cx:x, cy:-88, r:11, fill:'#fff', stroke:'#7f0000', 'stroke-width':1.5 }, torso);
+    return el('circle', { cx:x, cy:-88, r:5, fill:'#111' }, torso); });
+  const mouth = el('ellipse', { cx:0, cy:-50, rx:9, ry:4, fill:'#5d0000' }, torso);
+  el('path', { d:'M-30,-60 C-22,-74 -6,-70 0,-63 C6,-70 22,-74 30,-60 C20,-65 8,-59 0,-57 C-8,-59 -20,-65 -30,-60Z', fill:'#3e2723' }, torso);
+  return { top:-135, update(s){
+    torso.setAttribute('transform', `translate(${f1(s.sw * 10 * s.amp)} ${f1(-s.hit2 * 5 * s.amp)}) rotate(${f1(s.sw * 12 * s.amp)} 0 -30) scale(${f1(1 + s.hit2 * .07 * s.amp)} ${f1(1 - s.hit2 * .07 * s.amp)})`);
+    arms.forEach(a => {
+      const up = Math.sin(Math.PI * s.hb) * a.s;
+      const hx = a.s * 78, hy = -95 - 32 * s.amp * up;
+      a.l.setAttribute('d', `M${a.s * 44},-82 Q${a.s * 64},${f1(-80 + 10 * up)} ${f1(hx)},${f1(hy)}`);
+      a.hand.setAttribute('cx', f1(hx)); a.hand.setAttribute('cy', f1(hy));
+    });
+    legs.forEach(l => {
+      const lift = Math.max(0, Math.sin(Math.PI * s.hb) * l.s) * 12 * s.amp;
+      const fx = l.s * 20 + s.sw * 6 * s.amp;
+      l.l.setAttribute('d', `M${l.s * 14},-30 L${f1(fx)},${f1(-lift - 3)}`);
+      l.foot.setAttribute('cx', f1(fx + l.s * 4)); l.foot.setAttribute('cy', f1(-lift));
+    });
+    pupils.forEach((p, i) => { p.setAttribute('cx', f1((i ? 16 : -16) + 4 * Math.sin(s.b * 1.3 + i))); p.setAttribute('cy', f1(-88 + 3 * s.hit)); });
+    mouth.setAttribute('ry', f1(3 + 7 * s.hit2 * s.amp));
+  }};
+});
+
+/* 2. Lambu Noodle: a very tall, very bendy noodle with spaghetti arms */
+character(205, root => {
+  const legs = [-1, 1].map(s => ({ s, l:line(root, '#f9a825', 9), shoe:el('ellipse', { rx:13, ry:6, fill:'#d32f2f' }, root) }));
+  const bodyOut = line(root, '#f57f17', 34), body = line(root, '#fdd835', 28);
+  const arms = [-1, 1].map(s => ({ s, o:line(root, '#f57f17', 11), l:line(root, '#fdd835', 7) }));
+  const head = el('g', {}, root);
+  el('circle', { r:24, fill:'#fdd835', stroke:'#f57f17', 'stroke-width':3 }, head);
+  [-9, 9].forEach(x => { el('circle', { cx:x, cy:-5, r:7, fill:'#fff' }, head); el('circle', { cx:x + 1, cy:-4, r:3.5, fill:'#111' }, head); });
+  const grin = el('path', { fill:'#7f0000' }, head);
+  el('path', { d:'M-6,-22 C-14,-40 4,-38 -2,-50', fill:'none', stroke:'#f57f17', 'stroke-width':3, 'stroke-linecap':'round' }, head);
+  return { top:-232, update(s){
+    const spine = [];
+    for (let k = 0; k <= 6; k++){
+      const t = k / 6;
+      spine.push([s.sw * s.amp * 34 * t * t + Math.sin(s.hb * Math.PI * 2 + k * .7) * 5 * s.amp * t, -38 - 132 * t + s.hit * 5 * s.amp * t]);
+    }
+    const d = curve(spine);
+    bodyOut.setAttribute('d', d); body.setAttribute('d', d);
+    const top = spine[6], sh = spine[4];
+    head.setAttribute('transform', `translate(${f1(top[0])} ${f1(top[1] - 22)}) rotate(${f1(s.sw * 18 * s.amp)})`);
+    grin.setAttribute('d', `M-11,6 Q0,${f1(14 + 8 * s.hit2 * s.amp)} 11,6 Z`);
+    arms.forEach(a => {
+      const pts = [];
+      const raise = a.s === 1 ? (1 + Math.sin(Math.PI * s.hb)) / 2 : (1 - Math.sin(Math.PI * s.hb)) / 2;
+      for (let k = 0; k <= 6; k++){
+        pts.push([sh[0] + a.s * k * 13, sh[1] - k * 9 * raise * s.amp * 1.6 + k * 4 + Math.sin(s.b * Math.PI - k * .9) * (3 + k * 2.2) * s.amp]);
+      }
+      const d2 = curve(pts);
+      a.o.setAttribute('d', d2); a.l.setAttribute('d', d2);
+    });
+    legs.forEach(l => {
+      const kick = Math.max(0, Math.sin(Math.PI * s.hb) * l.s);
+      const fx = l.s * (18 + 14 * kick * s.amp), fy = -kick * 14 * s.amp;
+      l.l.setAttribute('d', curve([[l.s * 6, -40], [l.s * (14 + s.sw * 8 * s.amp), -20], [fx, fy - 4]]));
+      l.shoe.setAttribute('cx', f1(fx + l.s * 5)); l.shoe.setAttribute('cy', f1(fy - 2));
+    });
+  }};
+});
+
+/* 3. Billu: a cool cat in sunglasses doing the disco point and a head-bang */
+character(335, root => {
+  const legs = [-1, 1].map(s => ({ s, l:line(root, '#4527a0', 9), foot:el('ellipse', { rx:11, ry:6, fill:'#311b92' }, root) }));
+  const torso = el('g', {}, root);
+  const tail = line(torso, '#7e57c2', 8);
+  el('ellipse', { cx:0, cy:-72, rx:32, ry:42, fill:'#7e57c2', stroke:'#4527a0', 'stroke-width':2 }, torso);
+  el('ellipse', { cx:0, cy:-66, rx:18, ry:28, fill:'#b39ddb' }, torso);
+  const armL = line(torso, '#7e57c2', 9), armR = line(torso, '#7e57c2', 9);
+  const pawR = el('circle', { r:6, fill:'#b39ddb' }, torso);
+  const head = el('g', {}, torso);
+  el('polygon', { points:'-28,-12 -24,-44 -6,-26', fill:'#7e57c2', stroke:'#4527a0', 'stroke-width':2 }, head);
+  el('polygon', { points:'28,-12 24,-44 6,-26', fill:'#7e57c2', stroke:'#4527a0', 'stroke-width':2 }, head);
+  el('circle', { r:30, fill:'#7e57c2', stroke:'#4527a0', 'stroke-width':2 }, head);
+  el('rect', { x:-24, y:-12, width:21, height:13, rx:5, fill:'#111' }, head);
+  el('rect', { x:3, y:-12, width:21, height:13, rx:5, fill:'#111' }, head);
+  el('line', { x1:-3, y1:-7, x2:3, y2:-7, stroke:'#111', 'stroke-width':3 }, head);
+  const shine = el('line', { x1:-20, y1:-9, x2:-14, y2:-3, stroke:'#fff', 'stroke-width':2, 'stroke-linecap':'round', opacity:.8 }, head);
+  el('polygon', { points:'-4,5 4,5 0,10', fill:'#f48fb1' }, head);
+  el('path', { d:'M-9,13 Q-4,19 0,13 Q4,19 9,13', fill:'none', stroke:'#311b92', 'stroke-width':2, 'stroke-linecap':'round' }, head);
+  [[-1, 6], [-1, 11], [1, 6], [1, 11]].forEach(([s, y]) => el('line', { x1:s * 12, y1:y, x2:s * 34, y2:y + (y - 8) * 1.5, stroke:'#311b92', 'stroke-width':1.2 }, head));
+  return { top:-185, update(s){
+    torso.setAttribute('transform', `translate(${f1(s.sw * 9 * s.amp)} ${f1(-s.hit * 4 * s.amp)})`);
+    head.setAttribute('transform', `translate(0 ${f1(-128 + s.hit2 * 9 * s.amp)}) rotate(${f1(s.sw * 9 * s.amp)})`);
+    shine.setAttribute('opacity', f1(.3 + .7 * s.hit2));
+    tail.setAttribute('d', curve([[24, -45], [50, -50],[58 + s.sw * 10 * s.amp, -85], [44 + s.sw * 26 * s.amp, -112]]));
+    armL.setAttribute('d', 'M-26,-92 L-46,-72 L-28,-56');                                   // hand on hip
+    const p = (1 + Math.sin(Math.PI * s.hb / 2)) / 2;                                       // point up, then down across
+    const upP = Math.max(0, Math.min(1, lerp(.5, p, s.amp * 1.4)));
+    const hx = lerp(48, 66, upP), hy = lerp(-40, -178, upP);
+    armR.setAttribute('d', `M26,-92 L${f1(lerp(44, 48, upP))},${f1(lerp(-72, -130, upP))} L${f1(hx)},${f1(hy)}`);
+    pawR.setAttribute('cx', f1(hx)); pawR.setAttribute('cy', f1(hy));
+    legs.forEach(l => {
+      const tap = Math.max(0, Math.sin(Math.PI * s.b) * l.s) * 8 * s.amp;
+      l.l.setAttribute('d', `M${l.s * 14},-36 L${l.s * 18 + s.sw * 5 * s.amp},${f1(-tap - 3)}`);
+      l.foot.setAttribute('cx', f1(l.s * 22 + s.sw * 5 * s.amp)); l.foot.setAttribute('cy', f1(-tap));
+    });
+  }};
+});
+
+/* 4. Robo-Raja: a robot that snaps into a new pose on every beat */
+character(465, root => {
+  const legL = el('rect', { x:-22, y:-58, width:14, height:58, fill:'#78909c' }, root);
+  const legR = el('rect', { x:8, y:-58, width:14, height:58, fill:'#78909c' }, root);
+  [-15, 15].forEach(x => el('rect', { x:x - 12, y:-8, width:24, height:9, rx:3, fill:'#455a64' }, root));
+  const torso = el('g', {}, root);
+  const arms = [-1, 1].map(s => ({ s, l:el('polyline', { fill:'none', stroke:'#90a4ae', 'stroke-width':10, 'stroke-linejoin':'round', 'stroke-linecap':'round' }, torso),
+                                    claw:el('circle', { r:7, fill:'#ffca28', stroke:'#455a64', 'stroke-width':2 }, torso) }));
+  el('rect', { x:-34, y:-130, width:68, height:74, rx:8, fill:'#b0bec5', stroke:'#546e7a', 'stroke-width':3 }, torso);
+  const lights = [-14, 0, 14].map(x => el('circle', { cx:x, cy:-100, r:5 }, torso));
+  el('rect', { x:-18, y:-82, width:36, height:12, rx:3, fill:'#546e7a' }, torso);
+  const head = el('g', {}, torso);
+  el('line', { x1:0, y1:-40, x2:0, y2:-56, stroke:'#546e7a', 'stroke-width':3 }, head);
+  const bulb = el('circle', { cx:0, cy:-60, r:6 }, head);
+  el('rect', { x:-26, y:-42, width:52, height:42, rx:8, fill:'#cfd8dc', stroke:'#546e7a', 'stroke-width':3 }, head);
+  const eyes = [-11, 11].map(x => el('rect', { x:x - 6, y:-32, width:12, height:9, rx:2 }, head));
+  const mouthR = el('rect', { x:-12, y:-16, width:24, height:6, rx:2, fill:'#37474f' }, head);
+  // Poses: [upper arm, forearm] angles in degrees from straight down, outward is positive
+  const POSES = [
+    { L:[150, 40], R:[30, 60] }, { L:[30, 60], R:[150, 40] }, { L:[90, 90], R:[90, -90] }, { L:[170, 0], R:[170, 0] },
+    { L:[90, -90], R:[90, 90] }, { L:[45, 100], R:[45, 100] }, { L:[120, 60], R:[10, 10] }, { L:[10, 10], R:[120, 60] },
+  ];
+  const REST = { L:[15, 20], R:[15, 20] };
+  const COLORS = ['#ff1744', '#00e5ff', '#76ff03', '#ffea00'];
+  return { top:-195, update(s){
+    const k = Math.floor(s.hb);
+    const pose = s.amp > .3 ? POSES[((k % POSES.length) + POSES.length) % POSES.length] : REST;
+    const dip = s.hit2 * 6 * s.amp;
+    torso.setAttribute('transform', `translate(0 ${f1(dip)})`);
+    legL.setAttribute('height', f1(58 - dip * .3)); legR.setAttribute('height', f1(58 - dip * .3));
+    head.setAttribute('transform', `translate(0 -130) rotate(${s.amp > .3 ? (k % 2 ? 12 : -12) : 0})`);
+    arms.forEach(a => {
+      const [a1, a2] = a.s < 0 ? pose.L : pose.R;
+      const r1 = a1 * Math.PI / 180, r2 = (a1 + a2) * Math.PI / 180;
+      const sx = a.s * 36, sy = -122;
+      const ex = sx + a.s * 30 * Math.sin(r1), ey = sy + 30 * Math.cos(r1);
+      const hx = ex + a.s * 28 * Math.sin(r2), hy = ey + 28 * Math.cos(r2);
+      a.l.setAttribute('points', `${sx},${sy} ${f1(ex)},${f1(ey)} ${f1(hx)},${f1(hy)}`);
+      a.claw.setAttribute('cx', f1(hx)); a.claw.setAttribute('cy', f1(hy));
+    });
+    const c = COLORS[((Math.floor(s.b) % 4) + 4) % 4];
+    bulb.setAttribute('fill', c);
+    lights.forEach((l, i) => l.setAttribute('fill', (Math.floor(s.b) + i) % 3 === 0 ? c : '#37474f'));
+    eyes.forEach(e => e.setAttribute('fill', s.hit > .6 && s.amp > .3 ? '#fff' : '#00e5ff'));
+    mouthR.setAttribute('height', f1(4 + 6 * s.hit2 * s.amp));
+  }};
+});
+
+/* 5. Pingu: a penguin in a red bow tie who hops and flaps */
+character(592, root => {
+  const body = el('g', {}, root);
+  const flippers = [-1, 1].map(s => el('ellipse', { cx:s * 34, cy:-62, rx:9, ry:28, fill:'#212121' }, body));
+  el('ellipse', { cx:0, cy:-62, rx:37, ry:60, fill:'#263238' }, body);
+  el('ellipse', { cx:0, cy:-52, rx:25, ry:44, fill:'#fafafa' }, body);
+  [-10, 10].forEach(x => { el('circle', { cx:x, cy:-98, r:7, fill:'#fff' }, body); el('circle', { cx:x + 1, cy:-97, r:3.5, fill:'#111' }, body); });
+  [-17, 17].forEach(x => el('circle', { cx:x, cy:-86, r:5, fill:'#f48fb1', opacity:.8 }, body));
+  const beak = el('polygon', { fill:'#ff9800' }, body);
+  el('polygon', { points:'-12,-76 0,-71 -12,-66', fill:'#e53935' }, body);
+  el('polygon', { points:'12,-76 0,-71 12,-66', fill:'#e53935' }, body);
+  el('circle', { cx:0, cy:-71, r:3, fill:'#b71c1c' }, body);
+  [-1, 1].forEach(s => el('ellipse', { cx:s * 14, cy:-3, rx:13, ry:5, fill:'#ff9800' }, body));
+  const shadow = el('ellipse', { cx:0, cy:0, rx:30, ry:5, fill:'rgba(0,0,0,.4)' }, root);
+  root.insertBefore(shadow, body);
+  return { top:-140, update(s){
+    const hop = Math.abs(Math.sin(Math.PI * s.hb)) * 26 * s.amp;
+    body.setAttribute('transform', `translate(${f1(s.sw * 12 * s.amp)} ${f1(-hop)}) rotate(${f1(s.sw * 12 * s.amp)} 0 0)`);
+    shadow.setAttribute('rx', f1(30 - hop * .4));
+    const flap = Math.abs(Math.sin(Math.PI * s.b));
+    flippers.forEach((f, i) => { const sd = i ? 1 : -1; f.setAttribute('transform', `rotate(${f1(sd * (15 + 60 * flap * s.amp))} ${sd * 32} -86)`); });
+    const open = 2 + 5 * s.hit2 * s.amp;
+    beak.setAttribute('points', `-7,-88 7,-88 0,${f1(-80 + open)}`);
+  }};
+});
+
+/* 6. Bhalu: a bear playing the dhol, one stick on every beat */
+character(722, root => {
+  [-1, 1].forEach(s => el('ellipse', { cx:s * 18, cy:-10, rx:14, ry:12, fill:'#6d4c41' }, root));
+  const torso = el('g', {}, root);
+  el('ellipse', { cx:0, cy:-62, rx:40, ry:48, fill:'#8d6e63', stroke:'#5d4037', 'stroke-width':2 }, torso);
+  el('ellipse', { cx:0, cy:-55, rx:24, ry:32, fill:'#d7ccc8' }, torso);
+  const head = el('g', {}, torso);
+  [-1, 1].forEach(s => { el('circle', { cx:s * 22, cy:-24, r:11, fill:'#8d6e63', stroke:'#5d4037', 'stroke-width':2 }, head);
+                         el('circle', { cx:s * 22, cy:-24, r:5, fill:'#d7ccc8' }, head); });
+  el('circle', { r:30, fill:'#8d6e63', stroke:'#5d4037', 'stroke-width':2 }, head);
+  el('ellipse', { cx:0, cy:9, rx:15, ry:11, fill:'#d7ccc8' }, head);
+  el('ellipse', { cx:0, cy:3, rx:6, ry:4, fill:'#3e2723' }, head);
+  [-11, 11].forEach(x => el('circle', { cx:x, cy:-7, r:4, fill:'#111' }, head));
+  const mouth = el('ellipse', { cx:0, cy:14, rx:5, ry:2, fill:'#4e342e' }, head);
+  // The dhol: a barrel drum across the belly
+  const dhol = el('g', { transform:'translate(0 -48)' }, torso);
+  el('rect', { x:-40, y:-18, width:80, height:36, rx:14, fill:'#ff7043', stroke:'#bf360c', 'stroke-width':2 }, dhol);
+  [-24, -8, 8, 24].forEach(x => el('line', { x1:x - 6, y1:-16, x2:x + 6, y2:16, stroke:'#ffe082', 'stroke-width':2 }, dhol));
+  const skins = [-1, 1].map(s => el('ellipse', { cx:s * 40, cy:0, rx:7, ry:18, fill:'#ffe0b2', stroke:'#bf360c', 'stroke-width':2 }, dhol));
+  const arms = [-1, 1].map(s => ({ s, l:line(torso, '#8d6e63', 12), stick:line(torso, '#5d4037', 4) }));
+  return { top:-180, update(s){
+    torso.setAttribute('transform', `translate(0 ${f1(s.hit * 3 * s.amp)})`);
+    head.setAttribute('transform', `translate(0 -122) rotate(${f1(s.sw * 10 * s.amp)})`);
+    mouth.setAttribute('ry', f1(2 + 6 * s.hit * s.amp));
+    const beat = Math.floor(s.b);
+    arms.forEach((a, i) => {
+      const mine = ((beat % 2) + 2) % 2 === i;                      // left stick on even beats, right on odd
+      const down = mine ? s.hit : 0;
+      const lift = s.amp * (1 - down);
+      const hx = a.s * 56, hy = -60 - 40 * lift;
+      a.l.setAttribute('d', `M${a.s * 30},-92 Q${a.s * 50},-90 ${f1(hx)},${f1(hy)}`);
+      const tx = a.s * lerp(40, 46, lift), ty = lerp(-48, hy - 30, lift);
+      a.stick.setAttribute('d', `M${f1(hx)},${f1(hy)} L${f1(tx)},${f1(ty)}`);
+      skins[i].setAttribute('fill', down > .5 && s.amp > .3 ? '#fff' : '#ffe0b2');
+    });
+  }};
+});
+
+/* ---------- Confetti on the loudest parts ---------- */
+const confetti = [];
+for (let i = 0; i < 70; i++){
+  confetti.push({ e:el('rect', { width:7, height:4, opacity:0 }), alive:false });
+}
+function burst(n){
+  for (const c of confetti){
+    if (n <= 0) break;
+    if (c.alive) continue;
+    Object.assign(c, { alive:true, x:Math.random() * W, y:-10, vx:(Math.random() - .5) * 60, vy:60 + Math.random() * 90,
+      rot:Math.random() * 360, vr:(Math.random() - .5) * 600, hue:Math.floor(Math.random() * 360) });
+    c.e.setAttribute('fill', `hsl(${c.hue} 95% 60%)`);
+    n--;
+  }
+}
+
+/* ---------- Animation loop ---------- */
+const SHOUTS = ['Hey!', 'Rani!', 'Wah!', 'Aaja!', 'Oye!', 'Hey hey!'];
+let last = performance.now(), T = 0, idleB = 0, lastBeat = -1;
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000);
+  last = now;
+  T += dt;
+  const playing = !player.paused;
+  const t = player.currentTime;
+
+  // Beat clock: the song's own beat while it plays, a slow idle sway when it is stopped or paused
+  let b, amp, e = 0;
+  if (playing){
+    b = (t - PHASE) / BEAT;
+    e = +(ENERGY[Math.floor(t)] || 0) / 9;
+    amp = .3 + .7 * e;
+  } else {
+    idleB += dt * 1.6;
+    b = idleB;
+    amp = .12;
+  }
+  const hb = b / 2;
+  const frac = x => x - Math.floor(x);
+  const s = { b, hb, amp, hit:Math.pow(1 - frac(b), 3), hit2:Math.pow(1 - frac(hb), 3), sw:Math.sin(Math.PI * hb / 2) };
+
+  troupe.forEach(c => c.update(s));
+
+  // Neon sign flashes on the half-time beat
+  const hue = (Math.floor(hb) * 47) % 360;
+  neon.setAttribute('stroke', `hsl(${hue} 100% 60%)`);
+  neon.setAttribute('opacity', f1(playing ? .18 + .45 * s.hit2 * amp : .12));
+
+  // Spotlights sweep, disco ball sparkles
+  spots.forEach((sp, i) => {
+    const ang = sp.dir * (18 + 14 * Math.sin(T * .9 + i * 2));
+    sp.p.setAttribute('transform', `translate(${sp.x} ${sp.y}) rotate(${f1(ang)})`);
+    sp.p.setAttribute('opacity', f1(playing ? .5 + .5 * s.hit2 * amp : .3));
+  });
+  facets.forEach((f, i) => {
+    const a = T * 1.5 + i * Math.PI * 2 / 12, r = 13 + 6 * ((i * 7) % 3) / 2;
+    const x = r * Math.cos(a), vis = Math.sin(a);
+    f.setAttribute('x', f1(x - 3)); f.setAttribute('y', f1(-14 + (i % 4) * 7 - 3));
+    f.setAttribute('opacity', f1(Math.max(0, vis) * (playing ? .9 : .4)));
+  });
+  sparkles.forEach((sp, i) => {
+    const a = i * 1.05 + T * .3;
+    const on = playing ? Math.max(0, Math.sin(T * 6 + i * 2.1)) * amp : 0;
+    sp.setAttribute('transform', `translate(${f1(W / 2 + 70 * Math.cos(a) * (1 + i % 2))} ${f1(45 + 30 * Math.sin(a))}) scale(${f1(.6 + on)})`);
+    sp.setAttribute('opacity', f1(on));
+  });
+
+  // Floor tiles change colour on every beat
+  const beatN = Math.floor(b);
+  tiles.forEach((tl, i) => {
+    const [h, sat] = TILE_COLORS[((i + beatN) % TILE_COLORS.length + TILE_COLORS.length) % TILE_COLORS.length];
+    const light = playing ? 18 + 30 * s.hit * amp * ((i + beatN) % 2) : 14;
+    tl.setAttribute('fill', `hsl(${h} ${sat}% ${f1(light)}%)`);
+  });
+
+  // On each new beat: confetti when it is loud, and now and then someone shouts
+  if (playing && beatN !== lastBeat){
+    lastBeat = beatN;
+    if (e >= .85) burst(4);
+    if (beatN % 32 === 0 && e >= .5){
+      const c = troupe[Math.floor(beatN / 32) % troupe.length];
+      c.bubbleText.textContent = SHOUTS[Math.floor(beatN / 32 / troupe.length) % SHOUTS.length];
+      c.shoutUntil = t + 6 * BEAT;
+    }
+  }
+  troupe.forEach(c => c.bubble.setAttribute('opacity', playing && c.shoutUntil && t < c.shoutUntil && t > c.shoutUntil - 6 * BEAT ? 1 : 0));
+
+  confetti.forEach(c => {
+    if (!c.alive) return;
+    c.x += c.vx * dt; c.y += c.vy * dt; c.rot += c.vr * dt;
+    if (c.y > FLOOR){ c.alive = false; c.e.setAttribute('opacity', 0); return; }
+    c.e.setAttribute('opacity', 1);
+    c.e.setAttribute('transform', `translate(${f1(c.x)} ${f1(c.y)}) rotate(${f1(c.rot)})`);
+  });
+
+  /* Lyrics box: light up the part being played */
+  lyricParts.forEach(p => p.el.classList.toggle('now', playing && t >= p.a && t < p.b));
+
+  requestAnimationFrame(frame);
+}
+const lyricParts = [...document.querySelectorAll('[data-from]')].map(el => ({ el, a:+el.dataset.from, b:+el.dataset.to }));
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

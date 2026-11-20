@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rani Rani English Logic</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-green:#198754;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    --hook:#c2185b;
+  }
+  body{ background:#f7f8fa; margin:0; }
+  html{ scroll-behavior:smooth; }
+  section[id]{ scroll-margin-top:84px; }
+
+  /* Sticky top nav */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+    .topnav .tagline{ font-size:.85rem; letter-spacing:.08em; word-spacing:.3em; }
+  }
+
+  .hero{ background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%); color:#fff; }
+  .box{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .section-title{
+    display:inline-flex; align-items:center; gap:.6rem;
+    padding-bottom:.4rem; border-bottom:3px solid var(--biz-blue); margin-bottom:1.25rem;
+  }
+  .toc-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.8rem; height:1.8rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.85rem; margin-right:.5rem; flex:none;
+  }
+  .toc-list a{ text-decoration:none; color:#212529; }
+  .toc-list a:hover{ color:var(--biz-blue); text-decoration:underline; }
+  .toc-item{ display:flex; align-items:center; padding:.4rem 0; }
+  .back-to-top{ font-size:.85rem; }
+  table thead th{ background:#eef3fb; }
+
+  /* Step boxes */
+  .step-box{ background:#e9ecef; border-radius:.5rem; overflow:hidden; margin:0 0 1.25rem; box-shadow:0 .15rem .5rem rgba(0,0,0,.12); }
+  .step-box .step-bar{ background:var(--nav-blue); color:#5BF527; font-weight:700; padding:.5rem 1.1rem; font-size:.95rem; letter-spacing:.02em; }
+  .step-box .step-body{ padding:1rem 1.25rem; }
+  .step-box .step-body p:last-child{ margin-bottom:0; }
+
+  .chord-chip, .note-chip{ display:inline-block; background:#fff; border:2px solid #c9d3e3; border-radius:.4rem; padding:.15rem .55rem; margin:.15rem; font-weight:700; font-family:Consolas,monospace; }
+  .note-chip.hook, .chord-chip.hook{ border-color:var(--hook); color:var(--hook); }
+  .legend-sym{ display:inline-block; min-width:3.2rem; font-family:Consolas,monospace; font-weight:700; color:var(--biz-blue-dark); }
+
+  /* Song timeline: 96 bars, each block's width = its bars */
+  .timeline{ display:flex; width:100%; border-radius:.4rem; overflow:hidden; background:#fff; border:2px solid #c9d3e3; }
+  .timeline div{ padding:.45rem .2rem; font-size:.72rem; font-weight:700; text-align:center; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-right:1px solid rgba(255,255,255,.6); }
+  .timeline div:last-child{ border-right:0; }
+  .tl-intro{ background:#6f42c1; } .tl-chorus{ background:var(--hook); } .tl-verse{ background:var(--biz-blue); }
+  .tl-break{ background:#fd7e14; } .tl-bridge{ background:#20c997; } .tl-outro{ background:#495057; }
+  .tl-key{ background:#a0124a; }
+  .tl-scale{ display:flex; justify-content:space-between; font-size:.72rem; color:#6c757d; margin-top:.2rem; }
+
+  /* Lyrics */
+  .lyric-part{ background:#fff; border:2px solid #c9d3e3; border-radius:.5rem; padding:.75rem 1rem; margin-bottom:.75rem; }
+  .lyric-part h3{ font-size:.95rem; font-weight:700; color:var(--biz-blue-dark); margin-bottom:.4rem; }
+  .lyric-part .t{ font-weight:400; color:#6c757d; font-size:.82rem; }
+  .lyric-part.chorus{ border-color:var(--hook); }
+  .lyric-part.chorus h3{ color:var(--hook); }
+  .lyric-part p{ margin-bottom:0; line-height:1.65; }
+  .shout{ color:var(--hook); font-weight:700; }
+  .stage{ color:#6c757d; font-style:italic; }
+  .who{ display:inline-block; font-size:.72rem; font-weight:700; color:#fff; background:var(--biz-blue-dark); border-radius:.3rem; padding:0 .35rem; margin-right:.3rem; vertical-align:1px; }
+  .who.l2{ background:#6f42c1; } .who.all{ background:var(--hook); } .who.bass{ background:#495057; } .who.harm{ background:#20c997; }
+
+  .prompt-box{ background:#fff8e1; border:2px dashed var(--biz-yellow); border-radius:.5rem; padding:.75rem 1rem; font-family:Consolas,monospace; font-size:.88rem; white-space:pre-wrap; word-break:break-word; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">SONG LOGIC</div>
+</div>
+
+<!-- HERO -->
+<header class="hero py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-9">
+        <span class="badge rounded-pill bg-warning text-dark mb-3 text-wrap text-start">English version · late-90s boy-band pop × Raï · Key: A minor → B♭ minor · 128 BPM · 3:00 · 96 bars</span>
+        <h1 class="display-6 fw-bold">Rani Rani (English): Song Logic</h1>
+        <p class="lead mb-0">The <a href="SONG-1-RANI-RANI-LOGIC.html" class="link-light">Hindi Raï-pop song</a> imagined as if a
+          <strong>five-member late-90s boy band</strong> (think NSYNC) had sung it: <strong>stacked harmonies</strong>, a clean
+          <strong>R&amp;B-pop groove</strong>, two leads trading lines, a spoken bridge and the big <strong>key change</strong> at the end.
+          Same 3-minute map, same 15-second intro, new English words.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-5">
+
+  <p class="mb-4"><a href="SONG-1-RANI-RANI-LOGIC.html" class="text-decoration-none">&larr; Back to Rani Rani (Hindi): Song Logic</a></p>
+
+  <!-- TOC -->
+  <section id="toc" class="mb-5">
+    <h2 class="section-title">Table of Contents</h2>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row toc-list">
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">1</span><a href="#adapt">From Raï to Boy-Band Pop</a></div>
+            <div class="toc-item"><span class="toc-num">2</span><a href="#basics">The Basics: Tempo, Key, Chords</a></div>
+            <div class="toc-item"><span class="toc-num">3</span><a href="#map">Song Map (3:00)</a></div>
+            <div class="toc-item"><span class="toc-num">4</span><a href="#intro">The 15-Second Intro</a></div>
+          </div>
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">5</span><a href="#lyrics">Lyrics</a></div>
+            <div class="toc-item"><span class="toc-num">6</span><a href="#music">Music Description</a></div>
+            <div class="toc-item"><span class="toc-num">7</span><a href="#prompt">Making It in Suno</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1. ADAPTATION -->
+  <section id="adapt" class="mb-5">
+    <h2 class="section-title">1. From Raï to Boy-Band Pop</h2>
+    <div class="step-box">
+      <div class="step-bar">Three layers: Khaled's genre → the Hindi song → the boy-band version</div>
+      <div class="step-body">
+        <p>The <a href="SONG-1-RANI-RANI-LOGIC.html">Hindi version</a> took the <strong>style</strong> of 90s Algerian Raï-pop (Khaled's “Didi”):
+          a name as the hook, the Hijaz scale, the Am–G–F–E chords, darbuka, “Hey!” shouts. This English version keeps that <strong>song</strong>
+          (structure, hook, story, chords) and dresses it in the sound of the <strong>late-90s American boy bands</strong>, which ruled pop radio at the
+          same time as Raï ruled the clubs of Paris and Mumbai.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-3">What changes</h3>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:9rem"></th><th>Raï version (Hindi)</th><th>Boy-band version (English)</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Groove</strong></td><td>Darbuka + dhol, off-beat bass</td><td>Tight drum machine, finger snaps, funky synth bass. Darbuka stays as an accent.</td></tr>
+              <tr><td><strong>Lead sound</strong></td><td>Synth accordion</td><td>Bright synth plucks and pizzicato strings; the accordion riff only in the intro and break</td></tr>
+              <tr><td><strong>Vocals</strong></td><td>One male lead with melisma</td><td>Five voices: two leads trading lines, three-part harmony “oohs”, one deep bass voice</td></tr>
+              <tr><td><strong>Tricks</strong></td><td>“Hey!” crowd shouts</td><td>Stuttered vocal chops (“R-R-Rani”), beatbox fills, half-spoken bridge, <strong>key change</strong></td></tr>
+              <tr><td><strong>Key</strong></td><td>A minor throughout</td><td>A minor; the final chorus jumps up a half step to <strong>B♭ minor</strong></td></tr>
+              <tr><td><strong>Lyrics</strong></td><td>Hindi village images</td><td>The same story in English; jhumke → silver earrings, mehndi → henna, “haan” → “say yes”</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-2">What was <u>not</u> taken</h3>
+        <ul class="mb-0">
+          <li><strong>No lyrics or melodies</strong> from NSYNC, Khaled or anyone else: every line is new.</li>
+          <li>Only <strong>genre traits</strong> are borrowed (harmony stacks, key change, vocal chops, spoken bridge), which belong to a whole era of pop, not to one band.</li>
+          <li>The word <strong>“Rani”</strong> is kept as the girl's name, so the hook is the same in both languages.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 2. BASICS -->
+  <section id="basics" class="mb-5">
+    <h2 class="section-title">2. The Basics: Tempo, Key, Chords</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div><span class="legend-sym">128</span> BPM: one bar = <strong>1.875 s</strong>, 8 bars = 15 s, 96 bars = 3:00</div>
+            <div><span class="legend-sym">4/4</span> snaps on 2 and 4, a slight swing on the hi-hats</div>
+          </div>
+          <div class="col-md-6">
+            <div><span class="legend-sym">Am</span> home key for most of the song</div>
+            <div><span class="legend-sym">B♭m</span> after the key change (2:30): every chord moves up one half step</div>
+          </div>
+        </div>
+        <div class="table-responsive mt-3">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:11rem">Part</th><th>Chords (one per bar)</th></tr></thead>
+            <tbody>
+              <tr><td>Intro, verse, break</td><td><span class="chord-chip">Am</span><span class="chord-chip">G</span><span class="chord-chip">F</span><span class="chord-chip">E</span></td></tr>
+              <tr><td>Chorus</td><td><span class="chord-chip">Am</span><span class="chord-chip">Dm</span><span class="chord-chip">E</span><span class="chord-chip">Am</span> ×2</td></tr>
+              <tr><td>Bridge</td><td><span class="chord-chip">F</span><span class="chord-chip">G</span><span class="chord-chip">Am</span><span class="chord-chip">Am</span> · <span class="chord-chip">F</span><span class="chord-chip">G</span><span class="chord-chip">E</span><span class="chord-chip hook">F (pivot)</span></td></tr>
+              <tr><td>Final chorus (up ½ step)</td><td><span class="chord-chip hook">B♭m</span><span class="chord-chip hook">E♭m</span><span class="chord-chip hook">F</span><span class="chord-chip hook">B♭m</span> ×2</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small text-muted mt-2 mb-0">The bridge's last bar is <strong>F</strong> (not E): F is the E-major “pull home” chord of the new key B♭ minor, so the key change lands smoothly.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 3. SONG MAP -->
+  <section id="map" class="mb-5">
+    <h2 class="section-title">3. Song Map (3:00)</h2>
+    <div class="step-box">
+      <div class="step-bar">96 bars at 128 BPM · each block's width is its length</div>
+      <div class="step-body">
+        <div class="timeline" aria-label="Song timeline">
+          <div class="tl-intro"  style="width:8.33%"  title="Intro 0:00–0:15">Intro</div>
+          <div class="tl-chorus" style="width:8.33%"  title="Chorus 0:15–0:30">Chorus</div>
+          <div class="tl-verse"  style="width:16.67%" title="Verse 1 0:30–1:00">Verse 1</div>
+          <div class="tl-chorus" style="width:8.33%"  title="Chorus 1:00–1:15">Chorus</div>
+          <div class="tl-break"  style="width:8.33%"  title="Break 1:15–1:30">Break</div>
+          <div class="tl-verse"  style="width:16.67%" title="Verse 2 1:30–2:00">Verse 2</div>
+          <div class="tl-chorus" style="width:8.33%"  title="Chorus 2:00–2:15">Chorus</div>
+          <div class="tl-bridge" style="width:8.33%"  title="Bridge 2:15–2:30">Bridge</div>
+          <div class="tl-key"    style="width:12.5%"  title="Final chorus, key change 2:30–2:52">Key ↑</div>
+          <div class="tl-outro"  style="width:4.17%"  title="Outro 2:52–3:00">Out</div>
+        </div>
+        <div class="tl-scale"><span>0:00</span><span>0:30</span><span>1:00</span><span>1:30</span><span>2:00</span><span>2:30</span><span>3:00</span></div>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Time</th><th>Section</th><th>Bars</th><th>Who sings / what happens</th></tr></thead>
+            <tbody>
+              <tr><td>0:00–0:15</td><td><strong>Intro</strong></td><td>8</td><td>Accordion riff, snaps, beat; bass voice speaks; harmony “oohs”; vocal chop</td></tr>
+              <tr><td>0:15–0:30</td><td><strong>Chorus</strong></td><td>8</td><td>All five in harmony</td></tr>
+              <tr><td>0:30–1:00</td><td><strong>Verse 1</strong></td><td>16</td><td>Lead 1, then Lead 2; harmony echoes line endings</td></tr>
+              <tr><td>1:00–1:15</td><td><strong>Chorus</strong></td><td>8</td><td>All</td></tr>
+              <tr><td>1:15–1:30</td><td><strong>Instrumental break</strong></td><td>8</td><td>Accordion solo over the pop beat, 2-bar beatbox fill, “RANI!” shouts</td></tr>
+              <tr><td>1:30–2:00</td><td><strong>Verse 2</strong></td><td>16</td><td>Lead 2, then Lead 1</td></tr>
+              <tr><td>2:00–2:15</td><td><strong>Chorus</strong></td><td>8</td><td>All</td></tr>
+              <tr><td>2:15–2:30</td><td><strong>Bridge</strong></td><td>8</td><td>Half-time, no drums; Lead 1 sings, bass voice speaks; whisper into the key change</td></tr>
+              <tr><td>2:30–2:52</td><td><strong>Final chorus ↑</strong></td><td>12</td><td>Up a half step; all + Lead 2 ad-libs; 4 bars call and response</td></tr>
+              <tr><td>2:52–3:00</td><td><strong>Outro</strong></td><td>4</td><td>Vocal chop, bass voice “…my queen”, “Hey!”, hard stop</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 4. INTRO -->
+  <section id="intro" class="mb-5">
+    <h2 class="section-title">4. The 15-Second Intro</h2>
+    <div class="step-box">
+      <div class="step-bar">Bars 1–8 · the Raï riff opens the door, the boy band walks in</div>
+      <div class="step-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0 bg-white">
+            <thead><tr><th style="width:8rem">Time</th><th style="width:5rem">Bars</th><th>Layer</th></tr></thead>
+            <tbody>
+              <tr><td>0:00–0:04</td><td>1–2</td><td><strong>Accordion riff alone</strong> (the Hijaz run from the Hindi version):
+                <span class="note-chip">E5</span><span class="note-chip hook">F5</span><span class="note-chip">E5</span><span class="note-chip">D5</span><span class="note-chip hook">C♯5</span><span class="note-chip">D5</span><span class="note-chip">E5</span></td></tr>
+              <tr><td>0:04–0:08</td><td>3–4</td><td><strong>Finger snaps + kick</strong>; bass voice speaks “Yeah… this one's for the queen.”</td></tr>
+              <tr><td>0:08–0:13</td><td>5–7</td><td><strong>Full beat</strong>, funky synth bass, pizzicato strings; three-part “ooh-ooh” swells up</td></tr>
+              <tr><td>0:13–0:15</td><td>8</td><td>Drums cut out, stuttered vocal chop <span class="shout">“R-R-R-Rani!”</span>, then <span class="shout">“Hey!”</span> on the chorus downbeat</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 5. LYRICS -->
+  <section id="lyrics" class="mb-5">
+    <h2 class="section-title">5. Lyrics</h2>
+    <p class="mb-3"><span class="who">Lead 1</span><span class="who l2">Lead 2</span><span class="who harm">Harmony</span><span class="who bass">Bass voice</span><span class="who all">All</span></p>
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="lyric-part">
+          <h3>Intro <span class="t">· 0:00–0:15</span></h3>
+          <p><span class="stage">(accordion riff, then snaps and beat)</span><br>
+             <span class="who bass">Bass</span><span class="stage">(spoken)</span> Yeah… this one's for the queen.<br>
+             <span class="who harm">Harm</span>Ooh-ooh, ooh-ooh…<br>
+             <span class="stage">(vocal chop)</span> <span class="shout">R-R-R-Rani! Hey!</span></p>
+        </div>
+        <div class="lyric-part chorus">
+          <h3>Chorus <span class="t">· 0:15, 1:00, 2:00 · 8 bars</span></h3>
+          <p><span class="who all">All</span>Rani, Rani, oh my Rani<br>
+             Got the whole town dancing, can't you see?<br>
+             Rani, Rani, don't you play me<br>
+             One look from you and I'm not free<br>
+             <span class="shout">Hey! Hey!</span></p>
+        </div>
+        <div class="lyric-part">
+          <h3>Verse 1 <span class="t">· 0:30–1:00 · 16 bars</span></h3>
+          <p><span class="who">Lead 1</span>Every street is talking 'bout the way you move<br>
+             Silver earrings shining like the midnight moon<br>
+             I left my little town to follow you around<br>
+             <span class="who harm">Harm</span><span class="stage">(Follow you around)</span><br>
+             <span class="who">Lead 1</span>One glance across the room and I'm going down<br>
+             <span class="who l2">Lead 2</span>Drums are beating faster, can't control my feet<br>
+             Every heartbeat's saying that you're all I need<br>
+             <span class="who all">All</span><span class="stage">(All I need, yeah)</span><br>
+             Come on, come on, dance with me! <span class="shout">(Hey!)</span></p>
+        </div>
+        <div class="lyric-part">
+          <h3>Instrumental break <span class="t">· 1:15–1:30</span></h3>
+          <p class="stage">Accordion solo over the beat, beatbox fill, crowd shouts <span class="shout">“RANI!”</span></p>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="lyric-part">
+          <h3>Verse 2 <span class="t">· 1:30–2:00 · 16 bars</span></h3>
+          <p><span class="who l2">Lead 2</span>Henna on your fingers, bangles in the air<br>
+             When you laugh the market stops and starts to stare<br>
+             I asked your mama, asked your daddy, asked the whole town too<br>
+             <span class="who harm">Harm</span><span class="stage">(Asked the whole town too)</span><br>
+             <span class="who l2">Lead 2</span>Everybody told me, “Boy, she's the queen, it's true”<br>
+             <span class="who">Lead 1</span>Stars are up all night, and so is this old heart<br>
+             Just say yes one time, that's where we start<br>
+             <span class="who all">All</span><span class="stage">(That's where we start)</span><br>
+             Come on, come on, dance with me! <span class="shout">(Hey!)</span></p>
+        </div>
+        <div class="lyric-part">
+          <h3>Bridge <span class="t">· 2:15–2:30 · half-time, no drums</span></h3>
+          <p><span class="who">Lead 1</span>I don't need the gold, I don't need the gems<br>
+             <span class="who bass">Bass</span><span class="stage">(spoken)</span> Nah, girl…<br>
+             <span class="who">Lead 1</span>Just your smile, girl, that's my diamond, that's my everything<br>
+             Ohh Raaa-ni… <span class="stage">(long run)</span><br>
+             <span class="who bass">Bass</span><span class="stage">(whispered)</span> Everybody, sing it with me…</p>
+        </div>
+        <div class="lyric-part chorus">
+          <h3>Final chorus, key change ↑ <span class="t">· 2:30–2:52 · 12 bars</span></h3>
+          <p><span class="who all">All</span>Rani, Rani, oh my Rani<br>
+             Got the whole <strong>world</strong> dancing, can't you see?<br>
+             Rani, Rani, don't you play me<br>
+             One look from you and I'm not free<br>
+             <span class="shout">Ra-ni!</span> <span class="stage">(Ra-ni!)</span> <span class="shout">Hey! Hey!</span> ×4 <span class="stage">(Lead 2 ad-libs on top)</span></p>
+        </div>
+        <div class="lyric-part chorus">
+          <h3>Outro <span class="t">· 2:52–3:00</span></h3>
+          <p><span class="stage">(vocal chop)</span> R-R-R-Rani…<br>
+             <span class="who bass">Bass</span>…my queen. <span class="shout">Hey!</span> <span class="stage">(stop)</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-4 mt-2">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-2">Same story, new words</h3>
+        <p class="mb-0">A young man has left his small town to follow Rani, the girl the whole street talks about. He asked her parents and the whole town,
+          and they all say she's a queen. He doesn't want gold or gems, just her smile and one “yes”. In the final chorus the “whole town” becomes the
+          “whole <strong>world</strong>”, a small lift that goes with the key change.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 6. MUSIC -->
+  <section id="music" class="mb-5">
+    <h2 class="section-title">6. Music Description</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead><tr><th style="width:10rem">Part of the band</th><th>What it plays</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Drums</strong></td><td>Tight drum machine, finger snaps on 2 and 4, swung hi-hats; darbuka rolls as accents at the edge of the mix</td></tr>
+              <tr><td><strong>Bass</strong></td><td>Funky, bouncing synth bass with short slides between notes</td></tr>
+              <tr><td><strong>Keys / strings</strong></td><td>Bright synth plucks, pizzicato string stabs in the choruses, a soft pad and keyboard under the bridge</td></tr>
+              <tr><td><strong>Guitar</strong></td><td>Muted, funky rhythm guitar in the verses</td></tr>
+              <tr><td><strong>Accordion</strong></td><td>The Raï link: the Hijaz riff in the intro, the solo in the break, the last riff in the outro</td></tr>
+              <tr><td><strong>Vocals</strong></td><td>Two lead tenors trading lines; three-part harmony on “oohs” and echoes; a deep bass voice for spoken lines; all five on the choruses</td></tr>
+              <tr><td><strong>Effects</strong></td><td>Stuttered vocal chops (“R-R-Rani”), beatbox fills, a whispered lead-in to the key change</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 class="h6 fw-bold mb-2">Energy curve</h3>
+        <ul class="mb-0">
+          <li><strong>Build</strong>: intro, one layer at a time</li>
+          <li><strong>High</strong>: first chorus</li>
+          <li><strong>Medium, funky</strong>: verses</li>
+          <li><strong>Highest</strong>: break with the accordion solo</li>
+          <li><strong>Quiet dip</strong>: bridge, no drums, spoken parts</li>
+          <li><strong>Maximum</strong>: key change, final chorus, ad-libs, hard stop</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 7. SUNO -->
+  <section id="prompt" class="mb-5">
+    <h2 class="section-title">7. Making It in Suno</h2>
+    <div class="step-box">
+      <div class="step-bar">Paste into Suno's Custom mode · no artist names (Suno refuses them)</div>
+      <div class="step-body" id="sunoBody">
+        <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-primary btn-sm" id="copySuno" type="button">📋 Copy all (title, style, exclude, lyrics)</button>
+          <span class="small fw-bold" id="copyMsg" role="status"></span>
+        </div>
+        <p class="mb-1"><strong>Title:</strong> <span id="sunoTitle">Rani Rani (English Version)</span></p>
+        <p class="mb-1 mt-3"><strong>Style:</strong></p>
+        <div class="prompt-box" id="sunoStyle">Late 90s boy band pop, R&amp;B pop fusion with Algerian Raï flavour, 128 BPM, A minor with Hijaz scale, five-part male vocal harmonies, two trading lead tenors, deep spoken bass voice, stuttered vocal chops, beatbox fills, finger snaps, funky synth bass, synth plucks, pizzicato strings, accordion riff intro, darbuka accents, key change in final chorus, polished radio mix</div>
+        <p class="mb-1 mt-3"><strong>Exclude styles:</strong></p>
+        <div class="prompt-box" id="sunoExclude">female vocals, rock guitar, heavy autotune</div>
+        <p class="mb-1 mt-3"><strong>Lyrics:</strong></p>
+<div class="prompt-box" id="sunoLyrics">[Intro: 8 bars, accordion riff alone, finger snaps, beat builds, harmony oohs]
+[Spoken, deep male voice]
+Yeah... this one's for the queen.
+(Ooh-ooh, ooh-ooh...)
+R-R-R-Rani! HEY!
+
+[Chorus: full group harmony]
+Rani, Rani, oh my Rani
+Got the whole town dancing, can't you see?
+Rani, Rani, don't you play me
+One look from you and I'm not free
+(Hey! Hey!)
+
+[Verse 1: lead tenor, funky and sparse]
+Every street is talking 'bout the way you move
+Silver earrings shining like the midnight moon
+I left my little town to follow you around
+(Follow you around)
+One glance across the room and I'm going down
+[Second lead tenor]
+Drums are beating faster, can't control my feet
+Every heartbeat's saying that you're all I need
+(All I need, yeah)
+Come on, come on, dance with me! (Hey!)
+
+[Chorus: full group harmony]
+Rani, Rani, oh my Rani
+Got the whole town dancing, can't you see?
+Rani, Rani, don't you play me
+One look from you and I'm not free
+(Hey! Hey!)
+
+[Instrumental: 8 bars accordion solo over pop beat, beatbox fill, crowd shouts "RANI!"]
+
+[Verse 2: second lead tenor]
+Henna on your fingers, bangles in the air
+When you laugh the market stops and starts to stare
+I asked your mama, asked your daddy, asked the whole town too
+(Asked the whole town too)
+Everybody told me, "Boy, she's the queen, it's true"
+[Lead tenor]
+Stars are up all night, and so is this old heart
+Just say yes one time, that's where we start
+(That's where we start)
+Come on, come on, dance with me! (Hey!)
+
+[Chorus: full group harmony]
+Rani, Rani, oh my Rani
+Got the whole town dancing, can't you see?
+Rani, Rani, don't you play me
+One look from you and I'm not free
+(Hey! Hey!)
+
+[Bridge: half-time, no drums, soft pad]
+I don't need the gold, I don't need the gems
+(Spoken: Nah, girl...)
+Just your smile, girl, that's my diamond, that's my everything
+Ohh Raaa-ni...
+[Whispered]
+Everybody, sing it with me...
+
+[Key change]
+[Final Chorus: full group, ad-libs]
+Rani, Rani, oh my Rani
+Got the whole world dancing, can't you see?
+Rani, Rani, don't you play me
+One look from you and I'm not free
+RA-NI! (Ra-ni!) HEY! HEY!
+RA-NI! (Ra-ni!) HEY! HEY!
+RA-NI! (Ra-ni!) HEY! HEY!
+RA-NI! (Ra-ni!) HEY! HEY!
+
+[Outro: vocal chop]
+R-R-R-Rani...
+[Spoken, deep male voice]
+...my queen. HEY!
+
+[End]</div>
+        <p class="small text-muted mt-2 mb-0">The key change is the part Suno is least sure to follow. If it doesn't happen, make the song, then use <strong>Extend</strong> from 2:30
+          with “key change up a half step” at the start of the style, or <strong>Replace section</strong> on the final chorus.
+          More tips in the <a href="SUNO-GUIDE.html">Suno Guide</a>.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+</main>
+
+<footer class="text-white py-4">
+  <div class="container small">
+    Song Logic · <a href="SONG-1-RANI-RANI-LOGIC.html">Rani Rani (Hindi)</a> · <a href="SUNO-GUIDE.html">Suno Guide</a> · <a href="SONG-3-LAILA-LAILA-LOGIC.html">Laila, Laila</a> · part of the <a href="../index.html">Music Practice App</a>.
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  const btn = document.getElementById('copySuno'), msg = document.getElementById('copyMsg');
+  const txt = id => document.getElementById(id).textContent.trim();
+
+  function sunoText(){
+    return 'Title: ' + txt('sunoTitle') + '\n\n' +
+           'Style:\n' + txt('sunoStyle') + '\n\n' +
+           'Exclude styles:\n' + txt('sunoExclude') + '\n\n' +
+           'Lyrics:\n' + txt('sunoLyrics') + '\n';
+  }
+
+  function fallbackCopy(s){
+    const ta = document.createElement('textarea');
+    ta.value = s; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    return ok;
+  }
+
+  function show(ok){
+    msg.textContent = ok ? '✓ Copied' : 'Copy failed: select the text and press Ctrl+C';
+    msg.style.color = ok ? '#198754' : '#dc3545';
+    clearTimeout(show.t); show.t = setTimeout(() => { msg.textContent = ''; }, 2500);
+  }
+
+  btn.addEventListener('click', () => {
+    const s = sunoText();
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(s).then(() => show(true), () => show(fallbackCopy(s)));
+    } else {
+      show(fallbackCopy(s));
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

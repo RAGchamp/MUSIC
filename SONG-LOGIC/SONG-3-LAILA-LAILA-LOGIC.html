@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laila Laila Logic</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-green:#198754;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    --hook:#c2185b;
+  }
+  body{ background:#f7f8fa; margin:0; }
+  html{ scroll-behavior:smooth; }
+  section[id]{ scroll-margin-top:84px; }
+
+  /* Sticky top nav */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+    .topnav .tagline{ font-size:.85rem; letter-spacing:.08em; word-spacing:.3em; }
+  }
+
+  .hero{ background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%); color:#fff; }
+  .box{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .section-title{
+    display:inline-flex; align-items:center; gap:.6rem;
+    padding-bottom:.4rem; border-bottom:3px solid var(--biz-blue); margin-bottom:1.25rem;
+  }
+  .toc-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.8rem; height:1.8rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.85rem; margin-right:.5rem; flex:none;
+  }
+  .toc-list a{ text-decoration:none; color:#212529; }
+  .toc-list a:hover{ color:var(--biz-blue); text-decoration:underline; }
+  .toc-item{ display:flex; align-items:center; padding:.4rem 0; }
+  .back-to-top{ font-size:.85rem; }
+  table thead th{ background:#eef3fb; }
+
+  /* Step boxes */
+  .step-box{ background:#e9ecef; border-radius:.5rem; overflow:hidden; margin:0 0 1.25rem; box-shadow:0 .15rem .5rem rgba(0,0,0,.12); }
+  .step-box .step-bar{ background:var(--nav-blue); color:#5BF527; font-weight:700; padding:.5rem 1.1rem; font-size:.95rem; letter-spacing:.02em; }
+  .step-box .step-body{ padding:1rem 1.25rem; }
+  .step-box .step-body p:last-child{ margin-bottom:0; }
+
+  .chord-chip, .note-chip{ display:inline-block; background:#fff; border:2px solid #c9d3e3; border-radius:.4rem; padding:.15rem .55rem; margin:.15rem; font-weight:700; font-family:Consolas,monospace; }
+  .note-chip.hook, .chord-chip.hook{ border-color:var(--hook); color:var(--hook); }
+  .legend-sym{ display:inline-block; min-width:3.2rem; font-family:Consolas,monospace; font-weight:700; color:var(--biz-blue-dark); }
+
+  /* Song timeline: 90 bars, each block's width = its bars */
+  .timeline{ display:flex; width:100%; border-radius:.4rem; overflow:hidden; background:#fff; border:2px solid #c9d3e3; }
+  .timeline div{ padding:.45rem .2rem; font-size:.72rem; font-weight:700; text-align:center; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-right:1px solid rgba(255,255,255,.6); }
+  .timeline div:last-child{ border-right:0; }
+  .tl-intro{ background:#6f42c1; } .tl-chorus{ background:var(--hook); } .tl-verse{ background:var(--biz-blue); }
+  .tl-break{ background:#fd7e14; } .tl-bridge{ background:#20c997; } .tl-outro{ background:#495057; }
+  .tl-scale{ display:flex; justify-content:space-between; font-size:.72rem; color:#6c757d; margin-top:.2rem; }
+
+  /* Lyrics */
+  .lyric-part{ background:#fff; border:2px solid #c9d3e3; border-radius:.5rem; padding:.75rem 1rem; margin-bottom:.75rem; }
+  .lyric-part h3{ font-size:.95rem; font-weight:700; color:var(--biz-blue-dark); margin-bottom:.4rem; }
+  .lyric-part .t{ font-weight:400; color:#6c757d; font-size:.82rem; }
+  .lyric-part.chorus{ border-color:var(--hook); }
+  .lyric-part.chorus h3{ color:var(--hook); }
+  .lyric-part p{ margin-bottom:0; line-height:1.65; }
+  .shout{ color:var(--hook); font-weight:700; }
+  .stage{ color:#6c757d; font-style:italic; }
+  .echo{ color:#6f42c1; font-style:italic; }
+  .who{ display:inline-block; font-size:.72rem; font-weight:700; color:#fff; background:#495057; border-radius:.3rem; padding:0 .35rem; margin-right:.3rem; vertical-align:1px; }
+  .who.women{ background:#6f42c1; } .who.all{ background:var(--hook); }
+
+  .prompt-box{ background:#fff8e1; border:2px dashed var(--biz-yellow); border-radius:.5rem; padding:.75rem 1rem; font-family:Consolas,monospace; font-size:.88rem; white-space:pre-wrap; word-break:break-word; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">SONG LOGIC</div>
+</div>
+
+<!-- HERO -->
+<header class="hero py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-9">
+        <span class="badge rounded-pill bg-warning text-dark mb-3 text-wrap text-start">Original English song · 70s Euro-disco × Bollywood western · Key: D minor (Phrygian dominant) · 120 BPM · 3:00 · 90 bars</span>
+        <h1 class="display-6 fw-bold">Laila, Laila: Song Logic</h1>
+        <p class="lead mb-0">A dancer at a bandits' campfire, in the <strong>music of “Mehbooba Mehbooba”</strong> (R.D. Burman, <em>Sholay</em>, 1975),
+          sung the way <strong>Boney M</strong> sang <strong>“Daddy Cool”</strong>: a deep male voice telling the story, a high female trio answering,
+          an octave-jumping disco bass and sweeping strings. New English lyrics, a 16-second intro, 3 minutes.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-5">
+
+  <p class="mb-4"><a href="SONG-2-RANI-RANI-ENGLISH-LOGIC.html" class="text-decoration-none">&larr; Previous: Rani Rani (English): Song Logic</a></p>
+
+  <!-- TOC -->
+  <section id="toc" class="mb-5">
+    <h2 class="section-title">Table of Contents</h2>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row toc-list">
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">1</span><a href="#adapt">Adapted from “Mehbooba” and Boney M</a></div>
+            <div class="toc-item"><span class="toc-num">2</span><a href="#basics">The Basics: Tempo, Key, Chords</a></div>
+            <div class="toc-item"><span class="toc-num">3</span><a href="#map">Song Map (3:00)</a></div>
+            <div class="toc-item"><span class="toc-num">4</span><a href="#intro">The Intro</a></div>
+          </div>
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">5</span><a href="#lyrics">Lyrics</a></div>
+            <div class="toc-item"><span class="toc-num">6</span><a href="#music">Music Description</a></div>
+            <div class="toc-item"><span class="toc-num">7</span><a href="#prompt">Making It in Suno</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1. ADAPTATION -->
+  <section id="adapt" class="mb-5">
+    <h2 class="section-title">1. Adapted from “Mehbooba” and Boney M</h2>
+    <div class="step-box">
+      <div class="step-bar">Two 1970s hits, one campfire</div>
+      <div class="step-body">
+        <p><strong>“Mehbooba Mehbooba”</strong> plays in <em>Sholay</em> (1975) while a dancer performs at the bandit Gabbar Singh's camp. R.D. Burman sang it himself
+          in a rough, smoky voice over a swaying Middle-Eastern groove; it was his own adaptation of Demis Roussos's “Say You Love Me” (1974), so
+          borrowing a style is part of its story too.</p>
+        <p><strong>Boney M</strong>'s <strong>“Daddy Cool”</strong> (1976) set the Euro-disco formula: an octave-jumping bass, a <strong>deep male voice</strong> that half sings,
+          half speaks, and a <strong>high female trio</strong> that answers and repeats the hook. Boney M also loved <strong>story songs</strong> about one exotic
+          character, so a desert dancer called <strong>Laila</strong> fits them well.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-3">What comes from where</h3>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:11rem">From “Mehbooba”</th><th>How Laila, Laila uses it</th></tr></thead>
+            <tbody>
+              <tr><td><strong>The scene</strong></td><td>A dancer at a bandits' campfire, rough men forgetting their guns. A distant gunshot at the end nods to <em>Sholay</em>.</td></tr>
+              <tr><td><strong>The scale</strong></td><td>D Phrygian dominant (E♭ and F♯): the “desert” colour of the song.</td></tr>
+              <tr><td><strong>Instruments</strong></td><td>Bouzouki riff, nylon-string Spanish guitar flourishes, ankle bells (ghungroo).</td></tr>
+              <tr><td><strong>R.D. Burman touches</strong></td><td>Breathy rhythm grunts (“huh–ha!”) on the off-beats, sound effects (wind, hooves).</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-responsive mt-3">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:11rem">From Boney M</th><th>How Laila, Laila uses it</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Disco groove</strong></td><td>120 BPM, four-on-the-floor kick, open hi-hats, hand claps.</td></tr>
+              <tr><td><strong>Octave bass</strong></td><td>Eighth notes jumping D3–D2, with the Phrygian E♭ as a passing note.</td></tr>
+              <tr><td><strong>Deep male voice</strong></td><td>Tells the story in the verses and speaks in the breakdown.</td></tr>
+              <tr><td><strong>Female trio</strong></td><td>Echoes the ends of his lines and sings the “Laila, Laila” hook, which he answers.</td></tr>
+              <tr><td><strong>Story song</strong></td><td>One mysterious character, told like a legend: who is she, where is she from?</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-2">What was <u>not</u> taken</h3>
+        <ul class="mb-0">
+          <li><strong>No lyrics</strong> from “Mehbooba”, “Daddy Cool” or any other song: every line is new.</li>
+          <li><strong>No melody:</strong> the hook riff and the vocal tune are new; only the scale, the groove and the way the voices share the song are reused.</li>
+          <li><strong>A new name:</strong> the hook is “Laila”, not “Mehbooba”.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 2. BASICS -->
+  <section id="basics" class="mb-5">
+    <h2 class="section-title">2. The Basics: Tempo, Key, Chords</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div><span class="legend-sym">120</span> BPM: one bar = <strong>2 s</strong>, 8 bars = 16 s, 90 bars = 3:00</div>
+            <div><span class="legend-sym">4/4</span> kick on every beat, claps on 2 and 4, a shaker with a slight sway</div>
+          </div>
+          <div class="col-md-6">
+            <div><span class="legend-sym">Dm</span> home key: D minor</div>
+            <div><span class="legend-sym">E♭ F♯</span> the Phrygian-dominant notes that give the desert sound</div>
+          </div>
+        </div>
+        <p class="mt-3 mb-2">The scale (D Phrygian dominant; the pink notes make it sound Middle-Eastern):</p>
+        <p class="mb-3"><span class="note-chip">D4</span><span class="note-chip hook">E♭4</span><span class="note-chip hook">F♯4</span><span class="note-chip">G4</span><span class="note-chip">A4</span><span class="note-chip">B♭4</span><span class="note-chip">C5</span><span class="note-chip">D5</span></p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:11rem">Part</th><th>Chords (one per bar)</th></tr></thead>
+            <tbody>
+              <tr><td>Intro, verse, solo</td><td><span class="chord-chip">Dm</span><span class="chord-chip">C</span><span class="chord-chip">B♭</span><span class="chord-chip">A</span></td></tr>
+              <tr><td>Chorus</td><td><span class="chord-chip">Dm</span><span class="chord-chip">Gm</span><span class="chord-chip">A</span><span class="chord-chip">Dm</span> ×2</td></tr>
+              <tr><td>Breakdown</td><td><span class="chord-chip">Dm</span> held (bass and drums only), <span class="chord-chip hook">A</span> on the last bar</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 3. SONG MAP -->
+  <section id="map" class="mb-5">
+    <h2 class="section-title">3. Song Map (3:00)</h2>
+    <div class="step-box">
+      <div class="step-bar">90 bars at 120 BPM · each block's width is its length</div>
+      <div class="step-body">
+        <div class="timeline" aria-label="Song timeline">
+          <div class="tl-intro"  style="width:8.89%"  title="Intro 0:00–0:16">Intro</div>
+          <div class="tl-verse"  style="width:17.78%" title="Verse 1 0:16–0:48">Verse 1</div>
+          <div class="tl-chorus" style="width:8.89%"  title="Chorus 0:48–1:04">Chorus</div>
+          <div class="tl-break"  style="width:8.89%"  title="Solo 1:04–1:20">Solo</div>
+          <div class="tl-verse"  style="width:17.78%" title="Verse 2 1:20–1:52">Verse 2</div>
+          <div class="tl-chorus" style="width:8.89%"  title="Chorus 1:52–2:08">Chorus</div>
+          <div class="tl-bridge" style="width:8.89%"  title="Breakdown 2:08–2:24">Break</div>
+          <div class="tl-chorus" style="width:13.33%" title="Final chorus 2:24–2:48">Final</div>
+          <div class="tl-outro"  style="width:6.66%"  title="Outro 2:48–3:00">Out</div>
+        </div>
+        <div class="tl-scale"><span>0:00</span><span>0:30</span><span>1:00</span><span>1:30</span><span>2:00</span><span>2:30</span><span>3:00</span></div>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Time</th><th>Section</th><th>Bars</th><th>What happens</th></tr></thead>
+            <tbody>
+              <tr><td>0:00–0:16</td><td><strong>Intro</strong></td><td>8</td><td>Desert wind, galloping hooves, bouzouki riff, then the disco beat drops</td></tr>
+              <tr><td>0:16–0:48</td><td><strong>Verse 1</strong></td><td>16</td><td>Deep male voice tells the story; the female trio echoes line endings</td></tr>
+              <tr><td>0:48–1:04</td><td><strong>Chorus</strong></td><td>8</td><td>Women sing “Laila, Laila”, the man answers</td></tr>
+              <tr><td>1:04–1:20</td><td><strong>Instrumental</strong></td><td>8</td><td>Bouzouki and Spanish-guitar solo over strings; women “Ah-ah-ah-ah”</td></tr>
+              <tr><td>1:20–1:52</td><td><strong>Verse 2</strong></td><td>16</td><td>Strings swell, ankle bells on the off-beats</td></tr>
+              <tr><td>1:52–2:08</td><td><strong>Chorus</strong></td><td>8</td><td>As before</td></tr>
+              <tr><td>2:08–2:24</td><td><strong>Breakdown</strong></td><td>8</td><td>Drums and bass only; deep spoken voice, whispered “Laila”</td></tr>
+              <tr><td>2:24–2:48</td><td><strong>Final chorus</strong></td><td>12</td><td>Full band + 4 bars of “Lai-la! (Hey!) Lai-la! (Ho!)” chant</td></tr>
+              <tr><td>2:48–3:00</td><td><strong>Outro</strong></td><td>6</td><td>Gallop and wind return, a distant gunshot echo, fade</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 4. INTRO -->
+  <section id="intro" class="mb-5">
+    <h2 class="section-title">4. The Intro</h2>
+    <div class="step-box">
+      <div class="step-bar">Bars 1–8 · 16 seconds · a film opening that turns into a dance floor</div>
+      <div class="step-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0 bg-white">
+            <thead><tr><th style="width:8rem">Time</th><th style="width:5rem">Bars</th><th>Layer</th></tr></thead>
+            <tbody>
+              <tr><td>0:00–0:04</td><td>1–2</td><td><strong>Desert wind</strong> and a lone hoof gallop on a low tom</td></tr>
+              <tr><td>0:04–0:08</td><td>3–4</td><td><strong>Bouzouki hook riff</strong>, tremolo on the long notes:
+                <span class="note-chip">D4</span><span class="note-chip hook">E♭4</span><span class="note-chip hook">F♯4</span><span class="note-chip">G4</span><span class="note-chip">A4</span><span class="note-chip">G4</span><span class="note-chip hook">F♯4</span><span class="note-chip hook">E♭4</span><span class="note-chip">D4</span></td></tr>
+              <tr><td>0:08–0:14</td><td>5–7</td><td><strong>Kick, octave bass, strings</strong>; breathy “huh–ha!” on the off-beats</td></tr>
+              <tr><td>0:14–0:16</td><td>8</td><td>String sweep up, deep spoken <span class="shout">“Hey… Laila!”</span>, into the verse</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 5. LYRICS -->
+  <section id="lyrics" class="mb-5">
+    <h2 class="section-title">5. Lyrics</h2>
+    <p class="mb-3"><span class="who">Man (deep)</span><span class="who women">Women (trio)</span><span class="who all">All</span> <span class="echo">(purple italics)</span> = the women's echo</p>
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="lyric-part">
+          <h3>Verse 1 <span class="t">· 0:16–0:48 · 16 bars</span></h3>
+          <p><span class="who">Man</span>Out where the canyon meets the desert sky<br>
+             Bandits round the fire and the moon is high <span class="echo">(moon is high)</span><br>
+             Then came a lady with a silver bell<br>
+             Dancing like a flame, she put them under her spell <span class="echo">(under her spell)</span><br>
+             Every rough man there forgot his gun<br>
+             Every heart was beating like a battle drum <span class="echo">(battle drum)</span><br>
+             Wild as the wind and as free as a bird<br>
+             Nobody could tame her, no, nobody, not a word <span class="echo">(oh-oh)</span></p>
+        </div>
+        <div class="lyric-part chorus">
+          <h3>Chorus <span class="t">· 0:48, 1:52 · 8 bars</span></h3>
+          <p><span class="who women">Women</span>Laila, Laila, dancing in the firelight<br>
+             <span class="who">Man</span>Ooh, she's hot like the desert sun<br>
+             <span class="who women">Women</span>Laila, Laila, stay with me tonight<br>
+             <span class="who">Man</span>Ooh, but she's never the one to stay<br>
+             <span class="who women">Women</span>Laila, Laila, oh, you drive me wild<br>
+             <span class="who">Man</span><span class="stage">(deep)</span> She's a… desert child</p>
+        </div>
+        <div class="lyric-part">
+          <h3>Instrumental <span class="t">· 1:04–1:20</span></h3>
+          <p class="stage">Bouzouki and guitar solo, claps; women: “Ah-ah-ah-ah”.</p>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="lyric-part">
+          <h3>Verse 2 <span class="t">· 1:20–1:52 · 16 bars</span></h3>
+          <p><span class="who">Man</span>Gold round her ankles and a rose in her hair<br>
+             Jingle of her bangles ringing through the air <span class="echo">(through the air)</span><br>
+             The chief said, “Lady, you can have my horse!”<br>
+             She laughed and she spun and she danced on, of course <span class="echo">(of course)</span><br>
+             Who is that lady, where is she from?<br>
+             Nobody knows, by the morning she's gone <span class="echo">(she's gone)</span><br>
+             Only her footprints in the sand remain<br>
+             Waiting for the night she comes dancing again <span class="echo">(oh-oh)</span></p>
+        </div>
+        <div class="lyric-part">
+          <h3>Breakdown <span class="t">· 2:08–2:24 · drums and bass only</span></h3>
+          <p><span class="who">Man</span><span class="stage">(spoken)</span> Listen… can you hear the bells?<br>
+             <span class="who women">Women</span><span class="stage">(whispered)</span> Laila…<br>
+             <span class="who">Man</span>Here she comes… across the sand…<br>
+             <span class="who women">Women</span>Laila…<br>
+             <span class="who">Man</span><span class="stage">(shouted)</span> <span class="shout">Lai-laaa!</span> <span class="stage">(the full band returns)</span></p>
+        </div>
+        <div class="lyric-part chorus">
+          <h3>Final chorus + outro <span class="t">· 2:24–3:00</span></h3>
+          <p><span class="stage">(the chorus as before, then the chant ×4)</span><br>
+             <span class="who all">All</span><span class="shout">Lai-la! (Hey!) Lai-la! (Ho!)</span><br>
+             <span class="who">Man</span><span class="stage">(deep)</span> She's a desert child…<br>
+             <span class="stage">(gallop, wind, a distant gunshot echo, fade)</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm box mb-4 mt-2">
+      <div class="card-body">
+        <h3 class="h6 fw-bold mb-2">The story in short</h3>
+        <p class="mb-0">Bandits sit round a fire in a desert canyon. A mysterious dancer with a silver bell appears, and every rough man forgets his gun.
+          The chief offers her his horse; she laughs and keeps dancing. By morning she's gone, and only her footprints are left, waiting for the
+          night she comes back. Like a Boney M legend, nobody knows who she is.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 6. MUSIC -->
+  <section id="music" class="mb-5">
+    <h2 class="section-title">6. Music Description</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead><tr><th style="width:10rem">Part of the band</th><th>What it plays</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Bass</strong></td><td>The heart of the Boney M sound: octave-jumping eighth notes (D3–D2), with E♭ as a passing note</td></tr>
+              <tr><td><strong>Drums</strong></td><td>Disco four-on-the-floor kick, open hi-hat on the off-beats, claps on 2 and 4, darbuka accents, a galloping tom in the intro and outro</td></tr>
+              <tr><td><strong>Lead</strong></td><td>Bouzouki hook riff; nylon-string Spanish guitar flourishes as in “Mehbooba”</td></tr>
+              <tr><td><strong>Strings</strong></td><td>Sweeping disco strings in the choruses, an upward sweep into each section</td></tr>
+              <tr><td><strong>Vocals</strong></td><td>Deep, almost spoken male storyteller; bright, tight female trio for echoes and the hook; breathy rhythm grunts on the off-beats</td></tr>
+              <tr><td><strong>Effects</strong></td><td>Desert wind, hooves, ankle bells (ghungroo), a gunshot echo at the very end</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 class="h6 fw-bold mb-2">Energy curve</h3>
+        <ul class="mb-0">
+          <li><strong>Cinematic</strong>: intro, wind and hooves before the beat</li>
+          <li><strong>Groovy</strong>: verses, the storyteller and the echoes</li>
+          <li><strong>First peak</strong>: the bouzouki and guitar solo</li>
+          <li><strong>Tense</strong>: breakdown, drums and bass, whispers</li>
+          <li><strong>Biggest</strong>: final chorus and the “Lai-la! Hey! Ho!” chant</li>
+          <li><strong>Fade</strong>: the desert takes her back</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 7. SUNO -->
+  <section id="prompt" class="mb-5">
+    <h2 class="section-title">7. Making It in Suno</h2>
+    <div class="step-box">
+      <div class="step-bar">Paste into Suno's Custom mode · no artist names (Suno refuses them)</div>
+      <div class="step-body" id="sunoBody">
+        <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-primary btn-sm" id="copySuno" type="button">📋 Copy all (title, style, exclude, lyrics)</button>
+          <span class="small fw-bold" id="copyMsg" role="status"></span>
+        </div>
+        <p class="mb-1"><strong>Title:</strong> <span id="sunoTitle">Laila, Laila</span></p>
+        <p class="mb-1 mt-3"><strong>Style:</strong></p>
+        <div class="prompt-box" id="sunoStyle">1970s Euro-disco with Bollywood western film flavour, 120 BPM, D minor Phrygian dominant scale, octave-jumping disco bass, four-on-the-floor, handclaps, bouzouki riff, Spanish guitar flourishes, sweeping strings, deep male storytelling vocals almost spoken, high female trio backing vocals call and response, breathy rhythmic grunts, ankle bells, desert wind and galloping hooves intro, cinematic</div>
+        <p class="mb-1 mt-3"><strong>Exclude styles:</strong></p>
+        <div class="prompt-box" id="sunoExclude">modern EDM, autotune, rock guitar, trap</div>
+        <p class="mb-1 mt-3"><strong>Lyrics:</strong></p>
+<div class="prompt-box" id="sunoLyrics">[Intro: 8 bars, desert wind, galloping hooves, bouzouki riff, then disco beat and strings, breathy grunts]
+[Spoken, deep male voice]
+Hey... Laila!
+
+[Verse 1: deep male voice, female trio echoes]
+Out where the canyon meets the desert sky
+Bandits round the fire and the moon is high (moon is high)
+Then came a lady with a silver bell
+Dancing like a flame, she put them under her spell (under her spell)
+Every rough man there forgot his gun
+Every heart was beating like a battle drum (battle drum)
+Wild as the wind and as free as a bird
+Nobody could tame her, no, nobody, not a word (oh-oh)
+
+[Chorus: female trio, deep male answers]
+Laila, Laila, dancing in the firelight
+Ooh, she's hot like the desert sun
+Laila, Laila, stay with me tonight
+Ooh, but she's never the one to stay
+Laila, Laila, oh, you drive me wild
+She's a... desert child
+
+[Instrumental: 8 bars bouzouki and Spanish guitar solo, strings, handclaps]
+(Ah-ah-ah-ah)
+
+[Verse 2: deep male voice, female trio echoes, ankle bells]
+Gold round her ankles and a rose in her hair
+Jingle of her bangles ringing through the air (through the air)
+The chief said, "Lady, you can have my horse!"
+She laughed and she spun and she danced on, of course (of course)
+Who is that lady, where is she from?
+Nobody knows, by the morning she's gone (she's gone)
+Only her footprints in the sand remain
+Waiting for the night she comes dancing again (oh-oh)
+
+[Chorus: female trio, deep male answers]
+Laila, Laila, dancing in the firelight
+Ooh, she's hot like the desert sun
+Laila, Laila, stay with me tonight
+Ooh, but she's never the one to stay
+Laila, Laila, oh, you drive me wild
+She's a... desert child
+
+[Breakdown: drums and bass only]
+[Spoken, deep male voice]
+Listen... can you hear the bells?
+(Laila...)
+Here she comes... across the sand...
+(Laila...)
+LAI-LAAA!
+
+[Final Chorus: full band]
+Laila, Laila, dancing in the firelight
+Ooh, she's hot like the desert sun
+Laila, Laila, stay with me tonight
+Ooh, but she's never the one to stay
+Laila, Laila, oh, you drive me wild
+She's a... desert child
+LAI-LA! (HEY!) LAI-LA! (HO!)
+LAI-LA! (HEY!) LAI-LA! (HO!)
+LAI-LA! (HEY!) LAI-LA! (HO!)
+LAI-LA! (HEY!) LAI-LA! (HO!)
+
+[Outro: galloping hooves, desert wind, distant gunshot echo, fade out]
+[Spoken, deep male voice]
+She's a desert child...
+
+[End]</div>
+        <p class="small text-muted mt-2 mb-0">Suno may give the verses to a single singer. If the women's echoes don't come out, try putting “female trio echoes” first in the style,
+          or fix one verse with <strong>Replace section</strong>. More tips in the <a href="SUNO-GUIDE.html">Suno Guide</a>.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+</main>
+
+<footer class="text-white py-4">
+  <div class="container small">
+    Song Logic · <a href="SONG-1-RANI-RANI-LOGIC.html">Rani Rani (Hindi)</a> · <a href="SONG-2-RANI-RANI-ENGLISH-LOGIC.html">Rani Rani (English)</a> ·
+    <a href="SUNO-GUIDE.html">Suno Guide</a> · part of the <a href="../index.html">Music Practice App</a>.
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  const btn = document.getElementById('copySuno'), msg = document.getElementById('copyMsg');
+  const txt = id => document.getElementById(id).textContent.trim();
+
+  function sunoText(){
+    return 'Title: ' + txt('sunoTitle') + '\n\n' +
+           'Style:\n' + txt('sunoStyle') + '\n\n' +
+           'Exclude styles:\n' + txt('sunoExclude') + '\n\n' +
+           'Lyrics:\n' + txt('sunoLyrics') + '\n';
+  }
+
+  function fallbackCopy(s){
+    const ta = document.createElement('textarea');
+    ta.value = s; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    return ok;
+  }
+
+  function show(ok){
+    msg.textContent = ok ? '✓ Copied' : 'Copy failed: select the text and press Ctrl+C';
+    msg.style.color = ok ? '#198754' : '#dc3545';
+    clearTimeout(show.t); show.t = setTimeout(() => { msg.textContent = ''; }, 2500);
+  }
+
+  btn.addEventListener('click', () => {
+    const s = sunoText();
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(s).then(() => show(true), () => show(fallbackCopy(s)));
+    } else {
+      show(fallbackCopy(s));
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

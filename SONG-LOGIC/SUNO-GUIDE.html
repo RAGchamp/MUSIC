@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suno Guide</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-green:#198754;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+    --hook:#c2185b;
+  }
+  body{ background:#f7f8fa; margin:0; }
+  html{ scroll-behavior:smooth; }
+  section[id]{ scroll-margin-top:84px; }
+
+  /* Sticky top nav */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; }
+    .topnav .tagline{ font-size:.85rem; letter-spacing:.08em; word-spacing:.3em; }
+  }
+
+  .hero{ background:linear-gradient(120deg, var(--biz-blue-dark) 0%, var(--biz-blue) 55%, #3d8bfd 100%); color:#fff; }
+  .box{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .section-title{
+    display:inline-flex; align-items:center; gap:.6rem;
+    padding-bottom:.4rem; border-bottom:3px solid var(--biz-blue); margin-bottom:1.25rem;
+  }
+  .toc-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.8rem; height:1.8rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.85rem; margin-right:.5rem; flex:none;
+  }
+  .toc-list a{ text-decoration:none; color:#212529; }
+  .toc-list a:hover{ color:var(--biz-blue); text-decoration:underline; }
+  .toc-item{ display:flex; align-items:center; padding:.4rem 0; }
+  .back-to-top{ font-size:.85rem; }
+  table thead th{ background:#eef3fb; }
+
+  /* Step boxes */
+  .step-box{ background:#e9ecef; border-radius:.5rem; overflow:hidden; margin:0 0 1.25rem; box-shadow:0 .15rem .5rem rgba(0,0,0,.12); }
+  .step-box .step-bar{ background:var(--nav-blue); color:#5BF527; font-weight:700; padding:.5rem 1.1rem; font-size:.95rem; letter-spacing:.02em; }
+  .step-box .step-body{ padding:1rem 1.25rem; }
+  .step-box .step-body p:last-child{ margin-bottom:0; }
+
+  .tag-chip{ display:inline-block; background:#fff; border:2px solid #c9d3e3; border-radius:.4rem; padding:.1rem .5rem; margin:.15rem; font-weight:700; font-family:Consolas,monospace; font-size:.88rem; }
+  .tag-chip.hook{ border-color:var(--hook); color:var(--hook); }
+  .legend-sym{ display:inline-block; min-width:3.2rem; font-family:Consolas,monospace; font-weight:700; color:var(--biz-blue-dark); }
+
+  /* Workflow steps */
+  .flow{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:stretch; }
+  .flow .st{ flex:1 1 9rem; background:#fff; border:2px solid #c9d3e3; border-radius:.5rem; padding:.6rem .7rem; font-size:.9rem; }
+  .flow .st b{ display:block; color:var(--biz-blue-dark); }
+  .flow .st .n{ display:inline-flex; width:1.5rem; height:1.5rem; border-radius:50%; background:var(--biz-yellow); color:#2b2b2b; font-weight:700; font-size:.8rem; align-items:center; justify-content:center; margin-bottom:.3rem; }
+
+  .prompt-box{ background:#fff8e1; border:2px dashed var(--biz-yellow); border-radius:.5rem; padding:.75rem 1rem; font-family:Consolas,monospace; font-size:.88rem; white-space:pre-wrap; word-break:break-word; }
+  .good{ color:var(--biz-green); font-weight:700; }
+  .bad{ color:#dc3545; font-weight:700; }
+  .note-box{ background:#fdeef4; border:2px solid #f3b6cc; border-radius:.5rem; padding:.75rem 1rem; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">SONG LOGIC</div>
+</div>
+
+<!-- HERO -->
+<header class="hero py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-9">
+        <span class="badge rounded-pill bg-warning text-dark mb-3 text-wrap text-start">AI music · suno.com · style prompts · lyric tags · editing · Hindi songs</span>
+        <h1 class="display-6 fw-bold">Suno Guide: Making Songs That Sound Planned</h1>
+        <p class="lead mb-0"><strong>Suno</strong> turns a <strong>style description</strong> and your <strong>lyrics</strong> into a finished song, with voice and band.
+          Typing “a happy Hindi song” gives you <em>a</em> song; this guide shows how to get <strong>your</strong> song: the right genre,
+          tempo, instruments, voice, structure and length, then how to fix and finish it.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-5">
+
+  <p class="mb-4"><a href="SONG-1-RANI-RANI-LOGIC.html" class="text-decoration-none">&larr; Back to Rani Rani: Song Logic</a></p>
+
+  <!-- TOC -->
+  <section id="toc" class="mb-5">
+    <h2 class="section-title">Table of Contents</h2>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row toc-list">
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">1</span><a href="#how">How Suno Works</a></div>
+            <div class="toc-item"><span class="toc-num">2</span><a href="#start">Getting Started: Simple vs Custom</a></div>
+            <div class="toc-item"><span class="toc-num">3</span><a href="#style">Writing the Style Prompt</a></div>
+            <div class="toc-item"><span class="toc-num">4</span><a href="#lyrics">Writing Lyrics with Tags</a></div>
+            <div class="toc-item"><span class="toc-num">5</span><a href="#structure">Controlling Structure and Length</a></div>
+            <div class="toc-item"><span class="toc-num">6</span><a href="#hindi">Hindi and Indian Songs</a></div>
+          </div>
+          <div class="col-md-6">
+            <div class="toc-item"><span class="toc-num">7</span><a href="#edit">Fixing and Finishing a Song</a></div>
+            <div class="toc-item"><span class="toc-num">8</span><a href="#workflow">A Workflow That Saves Credits</a></div>
+            <div class="toc-item"><span class="toc-num">9</span><a href="#trouble">Troubleshooting</a></div>
+            <div class="toc-item"><span class="toc-num">10</span><a href="#plans">Credits, Plans and Rights</a></div>
+            <div class="toc-item"><span class="toc-num">11</span><a href="#example">Worked Example: Rani Rani</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1. HOW -->
+  <section id="how" class="mb-5">
+    <h2 class="section-title">1. How Suno Works</h2>
+    <div class="step-box">
+      <div class="step-bar">Two inputs in, two songs out</div>
+      <div class="step-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div><span class="legend-sym">Style</span> <strong>how it sounds</strong>: genre, era, tempo, instruments, voice, mood</div>
+            <div><span class="legend-sym">Lyrics</span> <strong>what is sung, and in what order</strong>: words plus section tags like <span class="tag-chip">[Chorus]</span></div>
+          </div>
+          <div class="col-md-6">
+            <div><span class="legend-sym">Create</span> each press makes <strong>two different versions</strong> from the same input</div>
+            <div><span class="legend-sym">Random</span> the same input gives new songs every time: it is a dice roll, not a recipe</div>
+          </div>
+        </div>
+        <p class="mt-3">Suno doesn't read sheet music or follow exact seconds. It reads your words the way a session band reads a brief from a producer:
+          it gets the <strong>feel</strong> right easily and the <strong>details</strong> (exact intro length, exact melody) only roughly.
+          So the skill is in (a) writing a clear brief, (b) generating several takes, and (c) keeping the best parts and fixing the rest.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 2. START -->
+  <section id="start" class="mb-5">
+    <h2 class="section-title">2. Getting Started: Simple vs Custom</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <ol>
+          <li>Sign in at <a href="https://suno.com">suno.com</a> (Google, Microsoft, Apple or Discord account) and open <strong>Create</strong>.</li>
+          <li>Pick the <strong>model</strong> from the drop-down at the top. Newer models sound clearer and follow instructions better; the newest are usually for paid plans.</li>
+          <li>Choose the mode:</li>
+        </ol>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead><tr><th style="width:9rem">Mode</th><th>You give</th><th>Use it for</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Simple</strong></td><td>One sentence, e.g. “a fast Hindi dance song about a village girl”</td><td>Quick ideas. Suno writes the lyrics itself, and you control very little.</td></tr>
+              <tr><td><strong>Custom</strong></td><td>Your own <strong>Lyrics</strong>, a <strong>Style</strong> box, a <strong>Title</strong>, and advanced options</td><td><strong>Every real song.</strong> The rest of this guide is about Custom mode.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-1">Useful switches in Custom mode (names can change between versions):</p>
+        <ul class="mb-0">
+          <li><strong>Instrumental:</strong> no vocals; the lyrics box is ignored except for tags.</li>
+          <li><strong>Exclude styles:</strong> things you <em>don't</em> want, e.g. <code>autotune, female vocals, rock guitar</code>.</li>
+          <li><strong>Advanced options</strong> (paid models): sliders such as <em>Weirdness</em> (how experimental) and <em>Style influence</em> (how strictly it follows your style text), and a vocal gender choice.</li>
+          <li><strong>Persona</strong>: save a voice and style from a song you liked, to reuse it for the next song, so an album keeps one singer.</li>
+          <li><strong>Upload audio</strong>: start from your own recording (a hummed tune, a guitar riff) and let Suno extend or cover it.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 3. STYLE -->
+  <section id="style" class="mb-5">
+    <h2 class="section-title">3. Writing the Style Prompt</h2>
+    <div class="step-box">
+      <div class="step-bar">Formula: genre + era/region · tempo · key/mood · instruments · voice · production</div>
+      <div class="step-body">
+        <p class="mb-2">Put the <strong>most important words first</strong>; Suno gives the start of the style box the most weight. Use short comma-separated phrases, not long sentences.</p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0 bg-white">
+            <thead><tr><th style="width:9rem">Part</th><th>Examples</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Genre</strong></td><td><span class="tag-chip">Raï-pop</span><span class="tag-chip">Bollywood dance</span><span class="tag-chip">ghazal</span><span class="tag-chip">lo-fi hip hop</span><span class="tag-chip">Punjabi bhangra</span></td></tr>
+              <tr><td><strong>Era / region</strong></td><td><span class="tag-chip">90s</span><span class="tag-chip">North African</span><span class="tag-chip">retro 80s Bollywood</span></td></tr>
+              <tr><td><strong>Tempo</strong></td><td><span class="tag-chip">128 BPM</span><span class="tag-chip">slow 70 BPM</span><span class="tag-chip">upbeat</span></td></tr>
+              <tr><td><strong>Key / mood</strong></td><td><span class="tag-chip">A minor</span><span class="tag-chip">Hijaz scale</span><span class="tag-chip">romantic</span><span class="tag-chip">festive</span><span class="tag-chip">melancholic</span></td></tr>
+              <tr><td><strong>Instruments</strong></td><td><span class="tag-chip">synth accordion lead</span><span class="tag-chip">darbuka</span><span class="tag-chip">dhol</span><span class="tag-chip">tabla</span><span class="tag-chip">sitar</span><span class="tag-chip">bansuri flute</span></td></tr>
+              <tr><td><strong>Voice</strong></td><td><span class="tag-chip">male vocals</span><span class="tag-chip">soft female vocals</span><span class="tag-chip">melismatic</span><span class="tag-chip">group chants</span><span class="tag-chip">duet</span></td></tr>
+              <tr><td><strong>Production</strong></td><td><span class="tag-chip">punchy mix</span><span class="tag-chip">warm analog</span><span class="tag-chip">live band feel</span><span class="tag-chip">wide stereo</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card shadow-sm box mb-3 h-100">
+          <div class="card-body">
+            <p class="bad mb-1">✗ Vague</p>
+            <div class="prompt-box">nice Hindi song, good music, like Khaled</div>
+            <p class="small text-muted mt-2 mb-0">No tempo, no instruments, no voice. And it names a real artist: Suno blocks or ignores artist names.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm box mb-3 h-100">
+          <div class="card-body">
+            <p class="good mb-1">✓ Clear</p>
+            <div class="prompt-box">90s Algerian Raï-pop, Bollywood fusion, 128 BPM, A minor, Hijaz scale, synth accordion lead, darbuka and dhol, handclaps, off-beat synth bass, energetic male Hindi vocals, melismatic, group chants</div>
+            <p class="small text-muted mt-2 mb-0">Describes the <em>sound</em> of the artist instead of naming him.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note-box mt-3">
+      <strong>Tip:</strong> 8–15 well-chosen phrases work better than 40. If two words fight (e.g. <em>“calm, aggressive”</em>), Suno picks one at random.
+      Use <strong>Exclude styles</strong> to push away what keeps creeping in.
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 4. LYRICS -->
+  <section id="lyrics" class="mb-5">
+    <h2 class="section-title">4. Writing Lyrics with Tags</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <p><strong>Tags</strong> in square brackets tell Suno what each part is. They are not sung. Put each tag on its own line, before the words of that part.</p>
+        <p class="mb-2"><strong>Section tags:</strong>
+          <span class="tag-chip">[Intro]</span><span class="tag-chip">[Verse 1]</span><span class="tag-chip">[Pre-Chorus]</span><span class="tag-chip hook">[Chorus]</span>
+          <span class="tag-chip">[Post-Chorus]</span><span class="tag-chip">[Bridge]</span><span class="tag-chip">[Instrumental]</span><span class="tag-chip">[Break]</span>
+          <span class="tag-chip">[Solo]</span><span class="tag-chip">[Drop]</span><span class="tag-chip">[Outro]</span><span class="tag-chip hook">[End]</span></p>
+        <p class="mb-3"><strong>Descriptive tags</strong> (a section name plus a hint):
+          <span class="tag-chip">[Intro: synth accordion riff, darbuka]</span><span class="tag-chip">[Bridge: soft, no drums]</span>
+          <span class="tag-chip">[Chorus: full band, crowd shouts]</span><span class="tag-chip">[Male vocal]</span><span class="tag-chip">[Whispered]</span></p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:12rem">You write</th><th>What Suno does</th></tr></thead>
+            <tbody>
+              <tr><td><code>(Hey! Hey!)</code></td><td>Words in round brackets are usually sung as <strong>backing vocals</strong> or echoes.</td></tr>
+              <tr><td><code>RANI!</code></td><td>CAPITALS often get sung louder or shouted.</td></tr>
+              <tr><td><code>Raaa-ni</code></td><td>Stretched vowels and hyphens make a long, held note.</td></tr>
+              <tr><td>Short lines, 6–10 syllables</td><td>Easier to fit the beat. Very long lines get rushed or cut.</td></tr>
+              <tr><td>Same line count in each verse</td><td>Verses sound like a pair and keep the same melody.</td></tr>
+              <tr><td>Repeat the chorus text fully</td><td>Writing it out each time (not “Chorus ×2”) keeps it the same each time.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 5. STRUCTURE -->
+  <section id="structure" class="mb-5">
+    <h2 class="section-title">5. Controlling Structure and Length</h2>
+    <div class="step-box">
+      <div class="step-bar">Suno thinks in sections, not seconds</div>
+      <div class="step-body">
+        <p>You can't type “intro = 15 seconds”. But you can get close, because <strong>time = bars ÷ tempo</strong>. At 128 BPM a bar of 4 beats lasts
+          1.875 s, so a 15-second intro is <strong>8 bars</strong>. Write the length into the tag and the style:</p>
+        <div class="prompt-box mb-3">[Intro: 8 bars instrumental, synth accordion riff, darbuka builds, crowd shout "Hey!"]</div>
+        <ul class="mb-0">
+          <li><strong>Song length</strong> comes from the amount of lyrics and the number of sections. For ~3 minutes at a fast tempo: intro, 3 choruses, 2 verses, a break, a bridge and an outro is about right.</li>
+          <li><strong>Instrumental parts:</strong> use <span class="tag-chip">[Instrumental]</span> or <span class="tag-chip">[Solo: accordion]</span> with no words under it.</li>
+          <li><strong>Clean ending:</strong> finish with <span class="tag-chip">[Outro]</span> and then <span class="tag-chip hook">[End]</span>, otherwise songs can fade or stop mid-phrase.</li>
+          <li><strong>Too short?</strong> Use <strong>Extend</strong> from a chosen second, with the rest of the lyrics. <strong>Too long?</strong> Crop it in the song editor.</li>
+          <li>Check the length afterwards: listen with a timer, or load the downloaded WAV into a tool like the <a href="../NOTES-TESTER/WAV-VISUALIZER.html">WAV Visualizer</a>.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 6. HINDI -->
+  <section id="hindi" class="mb-5">
+    <h2 class="section-title">6. Hindi and Indian Songs</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <ul class="mb-3">
+          <li><strong>Say the language in the style box:</strong> <code>Hindi vocals</code> (or <code>Punjabi</code>, <code>Urdu</code>). Otherwise Roman-script Hindi may be sung with an English accent.</li>
+          <li><strong>Roman script or Devanagari?</strong> Try both on a short test. Devanagari (रानी) often gives better pronunciation; Roman (Rani) is easier to edit. Stay with one for a whole song.</li>
+          <li><strong>Spell for sound:</strong> if a word comes out wrong, re-spell it the way it should sound: <code>qurbaan</code> → <code>kur-baan</code>, <code>dil</code> → <code>dill</code>.</li>
+          <li><strong>Name Indian instruments</strong> exactly: <em>tabla, dhol, dholak, sitar, sarangi, shehnai, bansuri, harmonium, santoor</em>.</li>
+          <li><strong>Style words that work:</strong> <em>Bollywood, filmi, qawwali, ghazal, bhangra, Sufi, 90s Bollywood romantic, Indian classical fusion</em>.</li>
+          <li><strong>Ornaments:</strong> <code>melismatic</code>, <code>murki</code>, <code>alaap intro</code> push the singer towards Indian-style decorations.</li>
+        </ul>
+        <div class="note-box">Hindi pronunciation is the most common problem. Make a 30-second test with just the chorus first, fix the spellings, and only then make the full song.</div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 7. EDIT -->
+  <section id="edit" class="mb-5">
+    <h2 class="section-title">7. Fixing and Finishing a Song</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <p>Click the <strong>⋯</strong> menu on a song to find these. Some are on paid plans only, and names change between versions.</p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:10rem">Tool</th><th>What it does</th><th>When to use it</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Extend</strong></td><td>Continues the song from a second you choose, with new lyrics</td><td>The song stopped early, or you build it part by part</td></tr>
+              <tr><td><strong>Replace / edit section</strong></td><td>Regenerates one chosen time range, keeping the rest</td><td>One bad line, a wrong word, a weak chorus</td></tr>
+              <tr><td><strong>Crop</strong></td><td>Cuts the start or end</td><td>Long silence or a messy tail</td></tr>
+              <tr><td><strong>Cover</strong></td><td>Re-records the same song in a new style, keeping the tune</td><td>“Same song, but as a slow ghazal”</td></tr>
+              <tr><td><strong>Remaster</strong></td><td>Re-renders an older song with a newer model</td><td>Better sound quality on a song you already like</td></tr>
+              <tr><td><strong>Persona</strong></td><td>Saves the voice and vibe for reuse</td><td>A series of songs with the same singer</td></tr>
+              <tr><td><strong>Stems</strong></td><td>Separate tracks: vocals, drums, bass, other</td><td>Mixing in a DAW, karaoke, or remixing</td></tr>
+              <tr><td><strong>Suno Studio</strong></td><td>A multi-track editor in the browser (top plans)</td><td>Arranging, layering and fine edits</td></tr>
+              <tr><td><strong>Download</strong></td><td>MP3, WAV on paid plans, and video</td><td>Use WAV for this app's tools and for further editing</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 8. WORKFLOW -->
+  <section id="workflow" class="mb-5">
+    <h2 class="section-title">8. A Workflow That Saves Credits</h2>
+    <div class="step-box">
+      <div class="step-bar">Plan on paper, test small, then build</div>
+      <div class="step-body">
+        <div class="flow">
+          <div class="st"><span class="n">1</span><b>Plan</b>Write the song map: sections, bars, tempo, instruments (like the <a href="SONG-1-RANI-RANI-LOGIC.html">Rani Rani logic page</a>).</div>
+          <div class="st"><span class="n">2</span><b>Test the sound</b>Style box + only the chorus. Make 2–3 rounds until the sound and voice are right.</div>
+          <div class="st"><span class="n">3</span><b>Full song</b>Same style, all lyrics with tags. Make 2–4 rounds (4–8 versions).</div>
+          <div class="st"><span class="n">4</span><b>Pick</b>Choose the best <em>whole</em> take, not the best single moment.</div>
+          <div class="st"><span class="n">5</span><b>Fix</b>Replace bad sections, extend, crop.</div>
+          <div class="st"><span class="n">6</span><b>Finish</b>Save a Persona, download WAV + stems, name the version.</div>
+        </div>
+        <ul class="mt-3 mb-0">
+          <li><strong>Change one thing at a time</strong> between rounds, so you know what helped.</li>
+          <li><strong>Keep a log</strong> (a text file): style text, lyrics version and what you liked. Good prompts are worth keeping.</li>
+          <li><strong>Like or keep</strong> good takes right away; the library fills up fast.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 9. TROUBLE -->
+  <section id="trouble" class="mb-5">
+    <h2 class="section-title">9. Troubleshooting</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:14rem">Problem</th><th>Try</th></tr></thead>
+            <tbody>
+              <tr><td>Wrong genre or instruments</td><td>Move the genre to the start of the style; add the unwanted ones to <strong>Exclude styles</strong>; raise <em>Style influence</em>.</td></tr>
+              <tr><td>Tags are sung as words</td><td>Put each tag alone on its own line in square brackets; keep tag hints short.</td></tr>
+              <tr><td>Intro too short or vocals start at once</td><td>A descriptive intro tag with bars (section 5), plus <code>long instrumental intro</code> in the style.</td></tr>
+              <tr><td>Song ends abruptly or fades oddly</td><td>Add <span class="tag-chip">[Outro]</span> and <span class="tag-chip">[End]</span>; or Extend and then Crop.</td></tr>
+              <tr><td>Words mispronounced</td><td>Re-spell by sound, try Devanagari, add the language to the style (section 6); fix just that line with Replace section.</td></tr>
+              <tr><td>Words rushed or skipped</td><td>Shorter lines, fewer lines per section, a slower tempo.</td></tr>
+              <tr><td>Voice changes between songs</td><td>Make a <strong>Persona</strong> from the take you like.</td></tr>
+              <tr><td>Sounds muddy or harsh</td><td>Try a newer model, <strong>Remaster</strong>, or add <code>clean mix, clear vocals</code> to the style.</td></tr>
+              <tr><td>Prompt refused</td><td>Remove real artist names and copyrighted lyrics; describe the style instead.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 10. PLANS -->
+  <section id="plans" class="mb-5">
+    <h2 class="section-title">10. Credits, Plans and Rights</h2>
+    <div class="card shadow-sm box mb-4">
+      <div class="card-body">
+        <p>Each <strong>Create</strong> uses credits (two versions per press). As of late 2026 the plans look roughly like this; prices, models and limits change often, so check
+          <a href="https://suno.com/pricing">suno.com/pricing</a> before you rely on them.</p>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead><tr><th>Plan</th><th>Credits</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Free</strong></td><td>50 a day (about 10 songs)</td><td>Older model; <strong>no commercial use</strong>; downloads are now restricted.</td></tr>
+              <tr><td><strong>Pro</strong> (~$10/month)</td><td>2,500 a month</td><td>Newest models, <strong>commercial use</strong> of songs made while subscribed, WAV and stems.</td></tr>
+              <tr><td><strong>Premier</strong> (~$30/month)</td><td>10,000 a month</td><td>As Pro, plus Suno Studio. Unused credits do not roll over.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="mb-0">
+          <li><strong>Own lyrics stay yours.</strong> Use your own words, like the Rani Rani lyrics. Never paste another song's lyrics.</li>
+          <li><strong>Publishing</strong> (YouTube, Spotify) needs a paid plan for the song's creation; say it is AI-assisted where the platform asks.</li>
+          <li><strong>Inspired by, not copied from:</strong> describe a genre (Raï-pop) rather than a song (Didi), so the result is your own.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+  <!-- 11. EXAMPLE -->
+  <section id="example" class="mb-5">
+    <h2 class="section-title">11. Worked Example: Rani Rani</h2>
+    <div class="step-box">
+      <div class="step-bar">Everything from the Rani Rani logic page, ready to paste into Custom mode</div>
+      <div class="step-body">
+        <p class="mb-1"><strong>Title:</strong> Rani Rani</p>
+        <p class="mb-1 mt-3"><strong>Style:</strong></p>
+        <div class="prompt-box">90s Algerian Raï-pop, Bollywood fusion, 128 BPM, A minor, Hijaz scale, synth accordion lead, shehnai, darbuka and dhol, tabla fills, handclaps, off-beat synth bass, brass stabs, energetic male Hindi vocals, melismatic, group chants, long instrumental intro</div>
+        <p class="mb-1 mt-3"><strong>Exclude styles:</strong></p>
+        <div class="prompt-box">female vocals, rock guitar, autotune, slow ballad</div>
+        <p class="mb-1 mt-3"><strong>Lyrics:</strong></p>
+<div class="prompt-box">[Intro: 8 bars instrumental, synth accordion riff alone, darbuka and tabla join, full band, dhol fill, crowd shout "Hey!"]
+
+[Chorus: full band]
+Rani, Rani, o meri Rani
+Teri aankhon mein jaadu ki kahani
+Rani, Rani, na kar manmaani
+Dil le gayi tu, o meri deewani
+(Hey! Hey!)
+
+[Verse 1: lighter, darbuka and bass]
+Gali gali mein charcha tera, shor hai har shaam
+Jhumke tere chamkein jaise chaand ka paigaam
+Main to tera deewana, tu hi meri jaan
+Ek nazar jo dekh le tu, ho jaaun qurbaan
+Dhol baje, dhak-dhak dil, ruk na paaye paon
+Tere peeche peeche aaya, chhod ke apna gaon
+Haan haan, chhod ke apna gaon
+Aaja, aaja, naach le zara! (Hey!)
+
+[Chorus: full band]
+Rani, Rani, o meri Rani
+Teri aankhon mein jaadu ki kahani
+Rani, Rani, na kar manmaani
+Dil le gayi tu, o meri deewani
+(Hey! Hey!)
+
+[Instrumental: 8 bars synth accordion solo, dhol, claps, crowd shouts "RANI!"]
+
+[Verse 2: brass stabs]
+Mehndi wale haath tere, choodiyon ki jhankaar
+Hans ke jo tu chal de, to ruk jaaye bazaar
+Maa se poochha, baap se poochha, poochha saara gaon
+Sab ne kaha "woh Rani hai", le le uska naam
+Raat jagi hai, taare jaage, jaaga hai yeh pyaar
+Ek baar tu haan kar de, bas ek hi baar
+Haan haan, bas ek hi baar
+Aaja, aaja, naach le zara! (Hey!)
+
+[Chorus: full band]
+Rani, Rani, o meri Rani
+Teri aankhon mein jaadu ki kahani
+Rani, Rani, na kar manmaani
+Dil le gayi tu, o meri deewani
+(Hey! Hey!)
+
+[Bridge: soft, no drums, slow and free]
+Na sona chahiye, na chaandi chahiye
+Bas teri ek muskaan, meri zindagi chahiye
+O Raaa-ni...
+Tu hi meri zindagi...
+
+[Chorus: full band, biggest]
+Rani, Rani, o meri Rani
+Teri aankhon mein jaadu ki kahani
+Rani, Rani, na kar manmaani
+Dil le gayi tu, o meri deewani
+(RANI! RANI! Hey! Hey!)
+(RANI! RANI! Hey! Hey!)
+
+[Outro: synth accordion riff, final shout]
+RANI!
+
+[End]</div>
+        <p class="small text-muted mt-2 mb-0">Start with step 2 of the workflow: only the style and the first chorus, to check the sound and the Hindi pronunciation, before spending credits on the full song.</p>
+      </div>
+    </div>
+    <p class="back-to-top mt-2"><a href="#toc">↑ Back to Table of Contents</a></p>
+  </section>
+
+</main>
+
+<footer class="text-white py-4">
+  <div class="container small">
+    Song Logic · <a href="SONG-1-RANI-RANI-LOGIC.html">Rani Rani</a> · part of the <a href="../index.html">Music Practice App</a>.
+    Suno features and prices change often; check <a href="https://suno.com">suno.com</a> for the current details.
+  </div>
+</footer>
+
+</body>
+</html>
