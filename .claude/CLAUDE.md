@@ -16,7 +16,8 @@ The owner uses it for personal learning.
 
 | Path | What it is |
 |---|---|
-| `index.html` | The whole app: HTML, CSS and JS in one file. Bootstrap 5.3.3 comes from the jsDelivr CDN; there is no build step. |
+| `index.html` | **Home page / showcase** (2026-11-20, owner's request): hero, stats, the RAGchamp vision (AI amplifiers: high-quality output, fewest resources, shortest time; the journey Evals → COBOL→Java → Annual Report Analyzer → Stock Playbook → Small Biz Accounting → Flow Chart App → Music), then cards for Practise / Play / Learn / Create / Behind the scenes / What I did vs Claude Code. No JS. |
+| `practice.html` | **Song Practice**, the original app (was index.html until 2026-11-20; moved with `git mv`): HTML, CSS and JS in one file. Bootstrap 5.3.3 comes from the jsDelivr CDN; there is no build step. Every "🎶 Song Practice" link points here; logos still link to index.html. |
 | `recorder.html` | Records another browser tab's audio (`getDisplayMedia`) to a 16-bit WAV and saves it in a chosen folder (File System Access API; the folder handle is remembered in IndexedDB). It also trims a file: it copies start–end seconds into `name-copy-<timestamp>.wav` in the same folder. It is linked from the index.html footer. |
 | `SONG-INSTRUMENT.json` | Each song's instrument (`piano`, `guitar` or `accordion`), keyed by audio file name. Every song in the library needs an entry. |
 | `logo.svg` | The logo in the top nav (a copy of the BLOG logo). |
@@ -100,7 +101,7 @@ The Inteha timings (68 notes) came from pitch and onset analysis of the clip wit
 STFT, a double-stop salience score, spectral-flux onsets, and a tuning offset of about −10 cents.
 They were then cleaned up by hand against the owner's tab.
 
-## How the page works (index.html)
+## How the page works (practice.html)
 
 1. **Choose a song:** `#songSel` lists `library`. Choosing one shows the key, the note count and the file name in `#songMeta`.
 2. **Instrument:** there is **no instrument picker**; the owner asked for it to be removed. Choosing a song goes straight to
