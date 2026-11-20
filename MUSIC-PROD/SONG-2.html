@@ -67,7 +67,7 @@
     box-shadow:0 .3rem 1rem rgba(0,0,0,.3);
   }
   .anim-box svg{ display:block; width:100%; height:420px; }
-  @media (max-width:576px){ .anim-box svg{ height:auto; aspect-ratio:800 / 420; } }
+  @media (max-width:576px){ .anim-box svg{ height:auto; aspect-ratio:4 / 5; } }
   .anim-note{ font-size:.85rem; color:#6c757d; }
 
   /* Light green lyrics box under the animation */
@@ -118,7 +118,7 @@
   <div class="anim-box mt-3">
     <svg id="stage" viewBox="0 0 800 420" preserveAspectRatio="xMidYMid meet" aria-label="Six funny characters dancing to the song"></svg>
   </div>
-  <div class="anim-note mt-1">The Rani Rani Dance Troupe: Tamatar Chacha, Lambu Noodle, Billu the cool cat, Robo-Raja, Pingu and Bhalu on the dhol. Press Play and they dance to the beat.</div>
+  <div class="anim-note mt-1">Chiku (with the banana) and Miku (with the pink flower) dance in red velvet suits, yellow shoes and green caps, with hearts floating up behind them, to the beat: clapping, waving, scratching, punching the air and swimming. Press Play.</div>
 
   <div class="lyrics-box mt-3">
     <h2>Lyrics</h2>
@@ -214,14 +214,13 @@ show();
 
 /* ---------- The beat of Rani-Rani.wav (measured with spectral-flux onsets) ----------
    192 beats a minute (a fast 96 BPM groove counted in double time), the first beat at 0.208 s.
-   ENERGY: the loudness of each second of the song, 0 (quiet) to 9 (loudest). The dancers move harder when it is loud. */
+   ENERGY: the loudness of each second of the song, 0 (quiet) to 9 (loudest). The monkeys dance harder when it is loud. */
 const BEAT = 60 / 192, PHASE = 0.208;
 const ENERGY = '0000000000001200201212232222332026464364663646526555365652645436565375664545647575375764767747567476863868758687476643647536560079975989787784234442345849677499910010200039786754786434344322585777889999898988989979899799934325333444';
 
 /* ---------- Drawing helpers ---------- */
 const NS = 'http://www.w3.org/2000/svg';
 const svg = document.getElementById('stage');
-const W = 800, H = 420, FLOOR = 372;
 
 function el(tag, attrs, parent = svg){
   const e = document.createElementNS(NS, tag);
@@ -231,6 +230,9 @@ function el(tag, attrs, parent = svg){
 }
 const f1 = n => n.toFixed(1);
 const lerp = (a, b, t) => a + (b - a) * t;
+const lerpP = (p, q, t) => [lerp(p[0], q[0], t), lerp(p[1], q[1], t)];
+const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
+const frac = x => x - Math.floor(x);
 function curve(p){
   // Smooth curve through the points (Catmull-Rom as cubic Béziers)
   const n = p.length, at = i => p[Math.max(0, Math.min(n - 1, i))];
@@ -243,294 +245,246 @@ function curve(p){
 }
 const line = (parent, color, width) => el('path', { fill:'none', stroke:color, 'stroke-width':width, 'stroke-linecap':'round', 'stroke-linejoin':'round' }, parent);
 
-/* ---------- The stage: spotlights, disco ball, neon sign, floor ---------- */
+/* ---------- The stage. Its size follows the box on screen (wide on a laptop, tall on a phone),
+   so the monkeys always fill it. layout() sets VW × VH and places everything. ---------- */
+let VW = 800, VH = 420, FLOOR = 372;
 const defs = el('defs', {});
 const beam = el('linearGradient', { id:'beam', x1:0, y1:0, x2:0, y2:1 }, defs);
 [[0, 'rgba(255,255,255,.35)'], [1, 'rgba(255,255,255,0)']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, beam));
 const ballG = el('radialGradient', { id:'ball', cx:.35, cy:.35 }, defs);
 [[0, '#ffffff'], [.5, '#b0bec5'], [1, '#455a64']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, ballG));
 
-const spots = [[60, 0], [740, 0]].map(([x, y], i) => {
-  const p = el('polygon', { points:`0,0 -70,420 70,420`, fill:'url(#beam)' });
-  return { p, x, y, dir: i ? -1 : 1 };
-});
-
-const neon = el('text', { x:W / 2, y:118, 'text-anchor':'middle', 'font-size':76, 'font-weight':900,
-  'font-family':'Segoe UI, Arial, sans-serif', fill:'none', 'stroke-width':3, 'letter-spacing':6 });
+const spots = [0, 1].map(i => ({ p:el('polygon', { fill:'url(#beam)' }), dir: i ? -1 : 1 }));
+// Neon green sign that always glows: a blurred copy of the letters under sharp ones
+const glowF = el('filter', { id:'neonGlow', x:'-20%', y:'-60%', width:'140%', height:'220%' }, defs);
+el('feGaussianBlur', { in:'SourceGraphic', stdDeviation:6, result:'b1' }, glowF);
+el('feGaussianBlur', { in:'SourceGraphic', stdDeviation:2, result:'b2' }, glowF);
+const merge = el('feMerge', {}, glowF);
+['b1', 'b1', 'b2', 'SourceGraphic'].forEach(i => el('feMergeNode', { in:i }, merge));
+const neon = el('text', { 'text-anchor':'middle', 'font-weight':900, 'font-family':'Segoe UI, Arial, sans-serif',
+  fill:'rgba(57,255,20,.18)', stroke:'#39ff14', 'stroke-width':3, 'letter-spacing':6, filter:'url(#neonGlow)' });
 neon.textContent = 'RANI RANI';
-
-el('line', { x1:W / 2, y1:0, x2:W / 2, y2:16, stroke:'#888', 'stroke-width':2 });
-const ball = el('g', { transform:`translate(${W / 2} 38)` });
-el('circle', { r:22, fill:'url(#ball)' }, ball);
+const cord = el('line', { y1:0, stroke:'#888', 'stroke-width':2 });
+const ball = el('g', {});
+el('circle', { r:24, fill:'url(#ball)' }, ball);
 const facets = [];
 for (let i = 0; i < 12; i++) facets.push(el('rect', { width:6, height:6, fill:'#fff', opacity:0 }, ball));
 const sparkles = [];
-for (let i = 0; i < 6; i++) sparkles.push(el('polygon', { points:'0,-7 2,-2 7,0 2,2 0,7 -2,2 -7,0 -2,-2', fill:'#fff', opacity:0 }));
-
-const tiles = [];
-for (let i = 0; i < 16; i++) tiles.push(el('rect', { x:i * 50 + 1, y:FLOOR, width:48, height:H - FLOOR, rx:3 }));
+for (let i = 0; i < 6; i++) sparkles.push(el('polygon', { points:'0,-8 2,-2 8,0 2,2 0,8 -2,2 -8,0 -2,-2', fill:'#fff', opacity:0 }));
+const floorG = el('g', {});
+let tiles = [];
 const TILE_COLORS = [[330, 90], [200, 90], [50, 95], [280, 80], [140, 75]];
+const heartLayer = el('g', {});   // background hearts, behind everything else on the stage
+svg.insertBefore(heartLayer, spots[0].p);
+const troupeLayer = el('g', {});
 
-/* ---------- The Rani Rani Dance Troupe ----------
-   Each character is drawn standing on y = 0 (its feet) and has update(s), where s holds:
-   b   beats (192 BPM),  hb half-beats (96 BPM, the main groove),
-   hit 1 on each beat falling to 0,  hit2 the same for each half-time beat,
-   sw  a slow side-to-side sway (-1..1, one swing every 2 half-beats),  amp how hard to dance (0..1). */
-const troupe = [];
-function character(x, build){
-  const g = el('g', { transform:`translate(${x} ${FLOOR})` });
-  const c = build(g);
-  c.x = x; c.g = g;
-  // Speech bubble above the head
-  c.bubble = el('g', { opacity:0 }, g);
-  el('rect', { x:-34, y:c.top - 40, width:68, height:28, rx:12, fill:'#fff', stroke:'#ff4081', 'stroke-width':2 }, c.bubble);
-  el('polygon', { points:`-6,${c.top - 13} 6,${c.top - 13} 0,${c.top - 4}`, fill:'#fff' }, c.bubble);
-  c.bubbleText = el('text', { x:0, y:c.top - 21, 'text-anchor':'middle', 'font-size':15, 'font-weight':800, fill:'#c2185b',
-    'font-family':'Segoe UI, Arial, sans-serif' }, c.bubble);
-  troupe.push(c);
-  return c;
+/* Hearts floating up in the background. Positions are fractions of the stage (fx, fy), so they fit any screen shape. */
+const HEART = 'M0,8 C-14,-2 -20,-12 -12,-19 C-6,-24 0,-19 0,-14 C0,-19 6,-24 12,-19 C20,-12 14,-2 0,8 Z';
+const HEART_COLORS = ['#ff4081', '#f50057', '#ff80ab', '#e91e63', '#ff1744', '#f48fb1'];
+const hearts = [];
+for (let i = 0; i < 18; i++){
+  const big = i % 3 === 0;
+  hearts.push({ e:el('path', { d:HEART, fill:HEART_COLORS[i % HEART_COLORS.length], stroke:'rgba(255,255,255,.5)', 'stroke-width':1 }, heartLayer),
+    fx:Math.random(), fy:Math.random(), size: big ? 2.2 + Math.random() : .9 + Math.random() * .9,
+    speed:.03 + Math.random() * .04, ph:Math.random() * 6.28, op: big ? .22 : .35 + Math.random() * .25 });
 }
+// Red velvet: a deep red with a soft sheen in the middle
+const velvet = el('radialGradient', { id:'velvet', cx:.4, cy:.35, r:.75 }, defs);
+[[0, '#ff5252'], [.35, '#d50000'], [.75, '#9b0000'], [1, '#5c0000']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, velvet));
+const VELVET_DARK = '#5c0000', VELVET = '#c40000';
 
-/* 1. Tamatar Chacha: a round tomato with googly eyes and a big moustache, all hips */
-character(78, root => {
-  const legs = [-1, 1].map(s => ({ s, l:line(root, '#2e7d32', 6), foot:el('ellipse', { rx:11, ry:6, fill:'#1b5e20' }, root) }));
-  const torso = el('g', {}, root);
-  const arms = [-1, 1].map(s => ({ s, l:line(torso, '#2e7d32', 6), hand:el('circle', { r:7, fill:'#fff', stroke:'#2e7d32', 'stroke-width':2 }, torso) }));
-  el('circle', { cx:0, cy:-75, r:48, fill:'#e53935', stroke:'#b71c1c', 'stroke-width':3 }, torso);
-  el('ellipse', { cx:-20, cy:-98, rx:13, ry:7, fill:'rgba(255,255,255,.35)', transform:'rotate(-25 -20 -98)' }, torso);
-  el('path', { d:'M0,-120 l-16,-6 l10,-2 l-6,-12 l12,8 l12,-8 l-6,12 l10,2 z', fill:'#43a047' }, torso);
-  const pupils = [-16, 16].map(x => { el('circle', { cx:x, cy:-88, r:11, fill:'#fff', stroke:'#7f0000', 'stroke-width':1.5 }, torso);
-    return el('circle', { cx:x, cy:-88, r:5, fill:'#111' }, torso); });
-  const mouth = el('ellipse', { cx:0, cy:-50, rx:9, ry:4, fill:'#5d0000' }, torso);
-  el('path', { d:'M-30,-60 C-22,-74 -6,-70 0,-63 C6,-70 22,-74 30,-60 C20,-65 8,-59 0,-57 C-8,-59 -20,-65 -30,-60Z', fill:'#3e2723' }, torso);
-  return { top:-135, update(s){
-    torso.setAttribute('transform', `translate(${f1(s.sw * 10 * s.amp)} ${f1(-s.hit2 * 5 * s.amp)}) rotate(${f1(s.sw * 12 * s.amp)} 0 -30) scale(${f1(1 + s.hit2 * .07 * s.amp)} ${f1(1 - s.hit2 * .07 * s.amp)})`);
-    arms.forEach(a => {
-      const up = Math.sin(Math.PI * s.hb) * a.s;
-      const hx = a.s * 78, hy = -95 - 32 * s.amp * up;
-      a.l.setAttribute('d', `M${a.s * 44},-82 Q${a.s * 64},${f1(-80 + 10 * up)} ${f1(hx)},${f1(hy)}`);
-      a.hand.setAttribute('cx', f1(hx)); a.hand.setAttribute('cy', f1(hy));
-    });
-    legs.forEach(l => {
-      const lift = Math.max(0, Math.sin(Math.PI * s.hb) * l.s) * 12 * s.amp;
-      const fx = l.s * 20 + s.sw * 6 * s.amp;
-      l.l.setAttribute('d', `M${l.s * 14},-30 L${f1(fx)},${f1(-lift - 3)}`);
-      l.foot.setAttribute('cx', f1(fx + l.s * 4)); l.foot.setAttribute('cy', f1(-lift));
-    });
-    pupils.forEach((p, i) => { p.setAttribute('cx', f1((i ? 16 : -16) + 4 * Math.sin(s.b * 1.3 + i))); p.setAttribute('cy', f1(-88 + 3 * s.hit)); });
-    mouth.setAttribute('ry', f1(3 + 7 * s.hit2 * s.amp));
-  }};
-});
+/* ---------- Two dancing monkeys ----------
+   Drawn standing on y = 0 (their feet), about 290 units tall.
+   update(s) gets: b beats (192 BPM), hb half-beats (96 BPM, the main groove), hit / hit2 (1 on the beat, falling to 0),
+   sw a slow side-to-side sway (-1..1), amp how hard to dance (0..1), move (which dance) and mix (0→1 blend into it). */
+const FUR = { chiku:['#8d5524', '#5d3412', '#f1c27d'], miku:['#c68642', '#8d5524', '#ffe0bd'] };
 
-/* 2. Lambu Noodle: a very tall, very bendy noodle with spaghetti arms */
-character(205, root => {
-  const legs = [-1, 1].map(s => ({ s, l:line(root, '#f9a825', 9), shoe:el('ellipse', { rx:13, ry:6, fill:'#d32f2f' }, root) }));
-  const bodyOut = line(root, '#f57f17', 34), body = line(root, '#fdd835', 28);
-  const arms = [-1, 1].map(s => ({ s, o:line(root, '#f57f17', 11), l:line(root, '#fdd835', 7) }));
-  const head = el('g', {}, root);
-  el('circle', { r:24, fill:'#fdd835', stroke:'#f57f17', 'stroke-width':3 }, head);
-  [-9, 9].forEach(x => { el('circle', { cx:x, cy:-5, r:7, fill:'#fff' }, head); el('circle', { cx:x + 1, cy:-4, r:3.5, fill:'#111' }, head); });
-  const grin = el('path', { fill:'#7f0000' }, head);
-  el('path', { d:'M-6,-22 C-14,-40 4,-38 -2,-50', fill:'none', stroke:'#f57f17', 'stroke-width':3, 'stroke-linecap':'round' }, head);
-  return { top:-232, update(s){
-    const spine = [];
-    for (let k = 0; k <= 6; k++){
-      const t = k / 6;
-      spine.push([s.sw * s.amp * 34 * t * t + Math.sin(s.hb * Math.PI * 2 + k * .7) * 5 * s.amp * t, -38 - 132 * t + s.hit * 5 * s.amp * t]);
-    }
-    const d = curve(spine);
-    bodyOut.setAttribute('d', d); body.setAttribute('d', d);
-    const top = spine[6], sh = spine[4];
-    head.setAttribute('transform', `translate(${f1(top[0])} ${f1(top[1] - 22)}) rotate(${f1(s.sw * 18 * s.amp)})`);
-    grin.setAttribute('d', `M-11,6 Q0,${f1(14 + 8 * s.hit2 * s.amp)} 11,6 Z`);
-    arms.forEach(a => {
-      const pts = [];
-      const raise = a.s === 1 ? (1 + Math.sin(Math.PI * s.hb)) / 2 : (1 - Math.sin(Math.PI * s.hb)) / 2;
-      for (let k = 0; k <= 6; k++){
-        pts.push([sh[0] + a.s * k * 13, sh[1] - k * 9 * raise * s.amp * 1.6 + k * 4 + Math.sin(s.b * Math.PI - k * .9) * (3 + k * 2.2) * s.amp]);
-      }
-      const d2 = curve(pts);
-      a.o.setAttribute('d', d2); a.l.setAttribute('d', d2);
-    });
-    legs.forEach(l => {
-      const kick = Math.max(0, Math.sin(Math.PI * s.hb) * l.s);
-      const fx = l.s * (18 + 14 * kick * s.amp), fy = -kick * 14 * s.amp;
-      l.l.setAttribute('d', curve([[l.s * 6, -40], [l.s * (14 + s.sw * 8 * s.amp), -20], [fx, fy - 4]]));
-      l.shoe.setAttribute('cx', f1(fx + l.s * 5)); l.shoe.setAttribute('cy', f1(fy - 2));
-    });
-  }};
-});
+function makeMonkey(name, x, mirror){
+  const [fur, dark, face] = FUR[name];
+  const g = el('g', {}, troupeLayer);
+  const inner = el('g', {}, g);                    // mirrored for Miku, so the two face each other
+  const shadow = el('ellipse', { cx:0, cy:0, rx:70, ry:9, fill:'rgba(0,0,0,.45)' }, inner);
+  const tailO = line(inner, dark, 14), tail = line(inner, fur, 9);
+  const legs = [-1, 1].map(s => ({ s, o:line(inner, VELVET_DARK, 26), l:line(inner, VELVET, 20),
+    foot:el('ellipse', { rx:22, ry:10, fill:'#ffd600', stroke:'#c79100', 'stroke-width':2.5 }, inner),
+    shine:el('ellipse', { rx:7, ry:3, fill:'#fff59d' }, inner) }));
+  const body = el('g', {}, inner);
+  // Red velvet suit jacket: white shirt, black bow tie, lapels and gold buttons
+  el('ellipse', { cx:0, cy:-112, rx:51, ry:61, fill:'url(#velvet)', stroke:VELVET_DARK, 'stroke-width':3 }, body);
+  el('path', { d:'M-20,-168 L20,-168 L0,-104 Z', fill:'#fff' }, body);
+  el('path', { d:'M-22,-168 L-6,-116 L-26,-128 L-14,-140 L-34,-150 Z', fill:'#8b0000', stroke:VELVET_DARK, 'stroke-width':1.5 }, body);
+  el('path', { d:'M22,-168 L6,-116 L26,-128 L14,-140 L34,-150 Z', fill:'#8b0000', stroke:VELVET_DARK, 'stroke-width':1.5 }, body);
+  el('path', { d:'M0,-158 L-13,-166 L-13,-150 Z M0,-158 L13,-166 L13,-150 Z', fill:'#111' }, body);
+  el('circle', { cx:0, cy:-158, r:3.5, fill:'#111' }, body);
+  [-94, -76].forEach(y => el('circle', { cx:0, cy:y, r:4.5, fill:'#ffd54f', stroke:'#c79100', 'stroke-width':1.5 }, body));
+  el('path', { d:'M-34,-96 l16,0', stroke:VELVET_DARK, 'stroke-width':2.5, 'stroke-linecap':'round' }, body);  // pocket
+  const arms = [-1, 1].map(s => ({ s, o:line(body, VELVET_DARK, 24), l:line(body, VELVET, 18),
+    hand:el('circle', { r:13, fill:face, stroke:dark, 'stroke-width':2 }, body) }));
+  // Chiku waves a banana in his right hand
+  let banana = null;
+  if (name === 'chiku'){
+    banana = el('g', {}, body);
+    el('path', { d:'M-4,0 C-6,-22 6,-42 24,-48 C14,-36 8,-18 10,2 Z', fill:'#ffeb3b', stroke:'#f9a825', 'stroke-width':2 }, banana);
+    el('path', { d:'M22,-48 l6,-5', stroke:'#6d4c41', 'stroke-width':4, 'stroke-linecap':'round' }, banana);
+  }
+  // Head
+  const head = el('g', {}, body);
+  [-1, 1].forEach(s => { el('circle', { cx:s * 58, cy:-4, r:20, fill:fur, stroke:dark, 'stroke-width':3 }, head);
+                         el('circle', { cx:s * 58, cy:-4, r:11, fill:'#f8bbd0' }, head); });
+  el('circle', { r:54, fill:fur, stroke:dark, 'stroke-width':3 }, head);
+  el('path', { d:'M0,-30 C-14,-44 -44,-36 -42,-8 C-40,10 -34,22 -30,30 C-20,48 20,48 30,30 C34,22 40,10 42,-8 C44,-36 14,-44 0,-30 Z', fill:face }, head);
+  el('path', { d:'M-8,-52 C-4,-66 6,-66 4,-54 M2,-53 C8,-64 16,-60 12,-51', fill:'none', stroke:dark, 'stroke-width':3, 'stroke-linecap':'round' }, head);
+  const eyes = [-1, 1].map(s => {
+    el('ellipse', { cx:s * 18, cy:-10, rx:13, ry:15, fill:'#fff', stroke:dark, 'stroke-width':1.5 }, head);
+    const pupil = el('circle', { cx:s * 18, cy:-8, r:7, fill:'#1a1a1a' }, head);
+    const glint = el('circle', { cx:s * 18 + 3, cy:-11, r:2.5, fill:'#fff' }, head);
+    const lid = el('ellipse', { cx:s * 18, cy:-10, rx:14, ry:0, fill:fur }, head);
+    const brow = el('path', { fill:'none', stroke:dark, 'stroke-width':4, 'stroke-linecap':'round' }, head);
+    return { s, pupil, glint, lid, brow };
+  });
+  el('ellipse', { cx:-6, cy:10, rx:3, ry:2.5, fill:dark }, head);
+  el('ellipse', { cx:6, cy:10, rx:3, ry:2.5, fill:dark }, head);
+  [-1, 1].forEach(s => el('ellipse', { cx:s * 32, cy:18, rx:9, ry:6, fill:'#ff8a80', opacity:.55 }, head));
+  const mouth = el('path', { fill:'#7f1d1d', stroke:dark, 'stroke-width':2 }, head);
+  const teeth = el('rect', { x:-12, y:22, width:24, height:6, rx:2, fill:'#fff' }, head);
+  const tongue = el('ellipse', { cx:0, cy:34, rx:9, ry:5, fill:'#ef5350' }, head);
+  // Green cap, peak turned a little to the side
+  el('path', { d:'M-47,-28 C-46,-74 46,-74 47,-28 C20,-36 -20,-36 -47,-28 Z', fill:'#2e7d32', stroke:'#1b5e20', 'stroke-width':2.5 }, head);
+  el('path', { d:'M-30,-60 C-20,-66 -6,-68 2,-68', fill:'none', stroke:'#66bb6a', 'stroke-width':3, 'stroke-linecap':'round' }, head);
+  el('path', { d:'M18,-34 C40,-42 70,-38 78,-26 C62,-22 36,-26 18,-28 Z', fill:'#1b5e20' }, head);
+  el('circle', { cx:0, cy:-66, r:5, fill:'#ffd600' }, head);
+  if (name === 'miku'){
+    [0, 72, 144, 216, 288].forEach(a => el('ellipse', { cx:-30, cy:-58, rx:5, ry:8, fill:'#f48fb1',
+      transform:`rotate(${a} -30 -50)` }, head));
+    el('circle', { cx:-30, cy:-50, r:4, fill:'#ffd600' }, head);
+  }
+  // Speech bubble above the head
+  const bubble = el('g', { opacity:0 }, g);
+  el('rect', { x:-58, y:-370, width:116, height:44, rx:18, fill:'#fff', stroke:'#ff4081', 'stroke-width':3 }, bubble);
+  el('polygon', { points:'-10,-328 10,-328 0,-312', fill:'#fff' }, bubble);
+  const bubbleText = el('text', { x:0, y:-340, 'text-anchor':'middle', 'font-size':26, 'font-weight':800, fill:'#c2185b',
+    'font-family':'Segoe UI, Arial, sans-serif' }, bubble);
 
-/* 3. Billu: a cool cat in sunglasses doing the disco point and a head-bang */
-character(335, root => {
-  const legs = [-1, 1].map(s => ({ s, l:line(root, '#4527a0', 9), foot:el('ellipse', { rx:11, ry:6, fill:'#311b92' }, root) }));
-  const torso = el('g', {}, root);
-  const tail = line(torso, '#7e57c2', 8);
-  el('ellipse', { cx:0, cy:-72, rx:32, ry:42, fill:'#7e57c2', stroke:'#4527a0', 'stroke-width':2 }, torso);
-  el('ellipse', { cx:0, cy:-66, rx:18, ry:28, fill:'#b39ddb' }, torso);
-  const armL = line(torso, '#7e57c2', 9), armR = line(torso, '#7e57c2', 9);
-  const pawR = el('circle', { r:6, fill:'#b39ddb' }, torso);
-  const head = el('g', {}, torso);
-  el('polygon', { points:'-28,-12 -24,-44 -6,-26', fill:'#7e57c2', stroke:'#4527a0', 'stroke-width':2 }, head);
-  el('polygon', { points:'28,-12 24,-44 6,-26', fill:'#7e57c2', stroke:'#4527a0', 'stroke-width':2 }, head);
-  el('circle', { r:30, fill:'#7e57c2', stroke:'#4527a0', 'stroke-width':2 }, head);
-  el('rect', { x:-24, y:-12, width:21, height:13, rx:5, fill:'#111' }, head);
-  el('rect', { x:3, y:-12, width:21, height:13, rx:5, fill:'#111' }, head);
-  el('line', { x1:-3, y1:-7, x2:3, y2:-7, stroke:'#111', 'stroke-width':3 }, head);
-  const shine = el('line', { x1:-20, y1:-9, x2:-14, y2:-3, stroke:'#fff', 'stroke-width':2, 'stroke-linecap':'round', opacity:.8 }, head);
-  el('polygon', { points:'-4,5 4,5 0,10', fill:'#f48fb1' }, head);
-  el('path', { d:'M-9,13 Q-4,19 0,13 Q4,19 9,13', fill:'none', stroke:'#311b92', 'stroke-width':2, 'stroke-linecap':'round' }, head);
-  [[-1, 6], [-1, 11], [1, 6], [1, 11]].forEach(([s, y]) => el('line', { x1:s * 12, y1:y, x2:s * 34, y2:y + (y - 8) * 1.5, stroke:'#311b92', 'stroke-width':1.2 }, head));
-  return { top:-185, update(s){
-    torso.setAttribute('transform', `translate(${f1(s.sw * 9 * s.amp)} ${f1(-s.hit * 4 * s.amp)})`);
-    head.setAttribute('transform', `translate(0 ${f1(-128 + s.hit2 * 9 * s.amp)}) rotate(${f1(s.sw * 9 * s.amp)})`);
-    shine.setAttribute('opacity', f1(.3 + .7 * s.hit2));
-    tail.setAttribute('d', curve([[24, -45], [50, -50],[58 + s.sw * 10 * s.amp, -85], [44 + s.sw * 26 * s.amp, -112]]));
-    armL.setAttribute('d', 'M-26,-92 L-46,-72 L-28,-56');                                   // hand on hip
-    const p = (1 + Math.sin(Math.PI * s.hb / 2)) / 2;                                       // point up, then down across
-    const upP = Math.max(0, Math.min(1, lerp(.5, p, s.amp * 1.4)));
-    const hx = lerp(48, 66, upP), hy = lerp(-40, -178, upP);
-    armR.setAttribute('d', `M26,-92 L${f1(lerp(44, 48, upP))},${f1(lerp(-72, -130, upP))} L${f1(hx)},${f1(hy)}`);
-    pawR.setAttribute('cx', f1(hx)); pawR.setAttribute('cy', f1(hy));
-    legs.forEach(l => {
-      const tap = Math.max(0, Math.sin(Math.PI * s.b) * l.s) * 8 * s.amp;
-      l.l.setAttribute('d', `M${l.s * 14},-36 L${l.s * 18 + s.sw * 5 * s.amp},${f1(-tap - 3)}`);
-      l.foot.setAttribute('cx', f1(l.s * 22 + s.sw * 5 * s.amp)); l.foot.setAttribute('cy', f1(-tap));
-    });
-  }};
-});
-
-/* 4. Robo-Raja: a robot that snaps into a new pose on every beat */
-character(465, root => {
-  const legL = el('rect', { x:-22, y:-58, width:14, height:58, fill:'#78909c' }, root);
-  const legR = el('rect', { x:8, y:-58, width:14, height:58, fill:'#78909c' }, root);
-  [-15, 15].forEach(x => el('rect', { x:x - 12, y:-8, width:24, height:9, rx:3, fill:'#455a64' }, root));
-  const torso = el('g', {}, root);
-  const arms = [-1, 1].map(s => ({ s, l:el('polyline', { fill:'none', stroke:'#90a4ae', 'stroke-width':10, 'stroke-linejoin':'round', 'stroke-linecap':'round' }, torso),
-                                    claw:el('circle', { r:7, fill:'#ffca28', stroke:'#455a64', 'stroke-width':2 }, torso) }));
-  el('rect', { x:-34, y:-130, width:68, height:74, rx:8, fill:'#b0bec5', stroke:'#546e7a', 'stroke-width':3 }, torso);
-  const lights = [-14, 0, 14].map(x => el('circle', { cx:x, cy:-100, r:5 }, torso));
-  el('rect', { x:-18, y:-82, width:36, height:12, rx:3, fill:'#546e7a' }, torso);
-  const head = el('g', {}, torso);
-  el('line', { x1:0, y1:-40, x2:0, y2:-56, stroke:'#546e7a', 'stroke-width':3 }, head);
-  const bulb = el('circle', { cx:0, cy:-60, r:6 }, head);
-  el('rect', { x:-26, y:-42, width:52, height:42, rx:8, fill:'#cfd8dc', stroke:'#546e7a', 'stroke-width':3 }, head);
-  const eyes = [-11, 11].map(x => el('rect', { x:x - 6, y:-32, width:12, height:9, rx:2 }, head));
-  const mouthR = el('rect', { x:-12, y:-16, width:24, height:6, rx:2, fill:'#37474f' }, head);
-  // Poses: [upper arm, forearm] angles in degrees from straight down, outward is positive
-  const POSES = [
-    { L:[150, 40], R:[30, 60] }, { L:[30, 60], R:[150, 40] }, { L:[90, 90], R:[90, -90] }, { L:[170, 0], R:[170, 0] },
-    { L:[90, -90], R:[90, 90] }, { L:[45, 100], R:[45, 100] }, { L:[120, 60], R:[10, 10] }, { L:[10, 10], R:[120, 60] },
+  const SH = [36, -150];                                  // right shoulder (left is mirrored)
+  // Each dance move gives [elbow, hand] for an arm on side s (+1 right, -1 left)
+  const MOVES = [
+    // 0. Clap: hands meet in front on every half-time beat
+    (s, st) => { const k = st.hit2; return [[s * 62, -112], lerpP([s * 82, -150], [s * 10, -168], k)]; },
+    // 1. Hands up, waving side to side
+    (s, st) => { const w = Math.sin(Math.PI * st.hb); return [[s * 64, -205], [s * 66 + w * 34, -268 + Math.abs(w) * 8]]; },
+    // 2. Monkey scratch: one hand scratches the head, the other the belly; they swap every 4 half-beats
+    (s, st) => { const top = (Math.floor(st.hb / 4) % 2 === 0) === (s > 0); const j = Math.sin(st.b * Math.PI * 2) * 7;
+      return top ? [[s * 72, -205], [s * 26 + j, -262]] : [[s * 64, -96], [s * 16 + j, -112]]; },
+    // 3. Punch up: arms take turns punching to the sky
+    (s, st) => { const mine = (Math.floor(st.hb) % 2 === 0) === (s > 0); const k = mine ? 1 - Math.pow(frac(st.hb), 2) : 0;
+      return [lerpP([s * 66, -112], [s * 54, -200], k), lerpP([s * 50, -150], [s * 48, -268], k)]; },
+    // 4. The swim: arms roll forward in big circles
+    (s, st) => { const a = st.hb * Math.PI + (s > 0 ? 0 : Math.PI); return [[s * 70, -150 + 20 * Math.sin(a)], [s * (70 + 30 * Math.cos(a)), -180 + 70 * Math.sin(a)]]; },
   ];
-  const REST = { L:[15, 20], R:[15, 20] };
-  const COLORS = ['#ff1744', '#00e5ff', '#76ff03', '#ffea00'];
-  return { top:-195, update(s){
-    const k = Math.floor(s.hb);
-    const pose = s.amp > .3 ? POSES[((k % POSES.length) + POSES.length) % POSES.length] : REST;
-    const dip = s.hit2 * 6 * s.amp;
-    torso.setAttribute('transform', `translate(0 ${f1(dip)})`);
-    legL.setAttribute('height', f1(58 - dip * .3)); legR.setAttribute('height', f1(58 - dip * .3));
-    head.setAttribute('transform', `translate(0 -130) rotate(${s.amp > .3 ? (k % 2 ? 12 : -12) : 0})`);
+  const REST = s => [[s * 60, -110], [s * 64, -74]];
+
+  return { g, x, mirror, eyes, blinkAt: 2 + Math.random() * 3, bubble, bubbleText, update(st){
+    const amp = st.amp, sd = mirror ? -1 : 1;
+    const bounce = Math.abs(Math.sin(Math.PI * st.hb)) * 14 * amp;
+    const jump = st.jump * 46;
+    const sway = st.sw * sd;
+    body.setAttribute('transform', `translate(${f1(sway * 14 * amp)} ${f1(-bounce - jump + st.hit * 4 * amp)}) rotate(${f1(sway * 7 * amp)} 0 -60)`);
+    head.setAttribute('transform', `translate(0 -212) rotate(${f1(sway * 12 * amp + Math.sin(st.b * Math.PI) * 3 * amp)})`);
+    shadow.setAttribute('rx', f1(70 - jump * .5)); shadow.setAttribute('opacity', f1(1 - jump / 90));
+
+    // Arms: blend from the last move into the current one
     arms.forEach(a => {
-      const [a1, a2] = a.s < 0 ? pose.L : pose.R;
-      const r1 = a1 * Math.PI / 180, r2 = (a1 + a2) * Math.PI / 180;
-      const sx = a.s * 36, sy = -122;
-      const ex = sx + a.s * 30 * Math.sin(r1), ey = sy + 30 * Math.cos(r1);
-      const hx = ex + a.s * 28 * Math.sin(r2), hy = ey + 28 * Math.cos(r2);
-      a.l.setAttribute('points', `${sx},${sy} ${f1(ex)},${f1(ey)} ${f1(hx)},${f1(hy)}`);
-      a.claw.setAttribute('cx', f1(hx)); a.claw.setAttribute('cy', f1(hy));
+      const cur = amp > .25 ? MOVES[st.move](a.s, st) : REST(a.s);
+      const prev = amp > .25 ? MOVES[st.prevMove](a.s, st) : cur;
+      const e = lerpP(prev[0], cur[0], st.mix), h = lerpP(prev[1], cur[1], st.mix);
+      const d = curve([[a.s * SH[0], SH[1]], e, h]);
+      a.o.setAttribute('d', d); a.l.setAttribute('d', d);
+      a.hand.setAttribute('cx', f1(h[0])); a.hand.setAttribute('cy', f1(h[1]));
+      if (banana && a.s > 0) banana.setAttribute('transform', `translate(${f1(h[0])} ${f1(h[1])}) rotate(${f1(-20 + 30 * Math.sin(st.b * Math.PI))})`);
     });
-    const c = COLORS[((Math.floor(s.b) % 4) + 4) % 4];
-    bulb.setAttribute('fill', c);
-    lights.forEach((l, i) => l.setAttribute('fill', (Math.floor(s.b) + i) % 3 === 0 ? c : '#37474f'));
-    eyes.forEach(e => e.setAttribute('fill', s.hit > .6 && s.amp > .3 ? '#fff' : '#00e5ff'));
-    mouthR.setAttribute('height', f1(4 + 6 * s.hit2 * s.amp));
-  }};
-});
 
-/* 5. Pingu: a penguin in a red bow tie who hops and flaps */
-character(592, root => {
-  const body = el('g', {}, root);
-  const flippers = [-1, 1].map(s => el('ellipse', { cx:s * 34, cy:-62, rx:9, ry:28, fill:'#212121' }, body));
-  el('ellipse', { cx:0, cy:-62, rx:37, ry:60, fill:'#263238' }, body);
-  el('ellipse', { cx:0, cy:-52, rx:25, ry:44, fill:'#fafafa' }, body);
-  [-10, 10].forEach(x => { el('circle', { cx:x, cy:-98, r:7, fill:'#fff' }, body); el('circle', { cx:x + 1, cy:-97, r:3.5, fill:'#111' }, body); });
-  [-17, 17].forEach(x => el('circle', { cx:x, cy:-86, r:5, fill:'#f48fb1', opacity:.8 }, body));
-  const beak = el('polygon', { fill:'#ff9800' }, body);
-  el('polygon', { points:'-12,-76 0,-71 -12,-66', fill:'#e53935' }, body);
-  el('polygon', { points:'12,-76 0,-71 12,-66', fill:'#e53935' }, body);
-  el('circle', { cx:0, cy:-71, r:3, fill:'#b71c1c' }, body);
-  [-1, 1].forEach(s => el('ellipse', { cx:s * 14, cy:-3, rx:13, ry:5, fill:'#ff9800' }, body));
-  const shadow = el('ellipse', { cx:0, cy:0, rx:30, ry:5, fill:'rgba(0,0,0,.4)' }, root);
-  root.insertBefore(shadow, body);
-  return { top:-140, update(s){
-    const hop = Math.abs(Math.sin(Math.PI * s.hb)) * 26 * s.amp;
-    body.setAttribute('transform', `translate(${f1(s.sw * 12 * s.amp)} ${f1(-hop)}) rotate(${f1(s.sw * 12 * s.amp)} 0 0)`);
-    shadow.setAttribute('rx', f1(30 - hop * .4));
-    const flap = Math.abs(Math.sin(Math.PI * s.b));
-    flippers.forEach((f, i) => { const sd = i ? 1 : -1; f.setAttribute('transform', `rotate(${f1(sd * (15 + 60 * flap * s.amp))} ${sd * 32} -86)`); });
-    const open = 2 + 5 * s.hit2 * s.amp;
-    beak.setAttribute('points', `-7,-88 7,-88 0,${f1(-80 + open)}`);
-  }};
-});
+    // Legs: knees bend on the bounce, feet tap in turn
+    const by = -bounce - jump;
+    legs.forEach(l => {
+      const tap = Math.max(0, Math.sin(Math.PI * st.hb) * l.s * sd) * 16 * amp;
+      const fy = -tap - jump * .8;
+      const fx = l.s * 36 + sway * 6 * amp;
+      const d = curve([[l.s * 22 + sway * 14 * amp, -66 + by], [l.s * (46 + bounce * .6), -34 + by * .5 - tap * .5], [fx, fy - 6]]);
+      l.o.setAttribute('d', d); l.l.setAttribute('d', d);
+      l.foot.setAttribute('cx', f1(fx + l.s * 8)); l.foot.setAttribute('cy', f1(fy));
+      l.shine.setAttribute('cx', f1(fx + l.s * 12)); l.shine.setAttribute('cy', f1(fy - 4));
+    });
 
-/* 6. Bhalu: a bear playing the dhol, one stick on every beat */
-character(722, root => {
-  [-1, 1].forEach(s => el('ellipse', { cx:s * 18, cy:-10, rx:14, ry:12, fill:'#6d4c41' }, root));
-  const torso = el('g', {}, root);
-  el('ellipse', { cx:0, cy:-62, rx:40, ry:48, fill:'#8d6e63', stroke:'#5d4037', 'stroke-width':2 }, torso);
-  el('ellipse', { cx:0, cy:-55, rx:24, ry:32, fill:'#d7ccc8' }, torso);
-  const head = el('g', {}, torso);
-  [-1, 1].forEach(s => { el('circle', { cx:s * 22, cy:-24, r:11, fill:'#8d6e63', stroke:'#5d4037', 'stroke-width':2 }, head);
-                         el('circle', { cx:s * 22, cy:-24, r:5, fill:'#d7ccc8' }, head); });
-  el('circle', { r:30, fill:'#8d6e63', stroke:'#5d4037', 'stroke-width':2 }, head);
-  el('ellipse', { cx:0, cy:9, rx:15, ry:11, fill:'#d7ccc8' }, head);
-  el('ellipse', { cx:0, cy:3, rx:6, ry:4, fill:'#3e2723' }, head);
-  [-11, 11].forEach(x => el('circle', { cx:x, cy:-7, r:4, fill:'#111' }, head));
-  const mouth = el('ellipse', { cx:0, cy:14, rx:5, ry:2, fill:'#4e342e' }, head);
-  // The dhol: a barrel drum across the belly
-  const dhol = el('g', { transform:'translate(0 -48)' }, torso);
-  el('rect', { x:-40, y:-18, width:80, height:36, rx:14, fill:'#ff7043', stroke:'#bf360c', 'stroke-width':2 }, dhol);
-  [-24, -8, 8, 24].forEach(x => el('line', { x1:x - 6, y1:-16, x2:x + 6, y2:16, stroke:'#ffe082', 'stroke-width':2 }, dhol));
-  const skins = [-1, 1].map(s => el('ellipse', { cx:s * 40, cy:0, rx:7, ry:18, fill:'#ffe0b2', stroke:'#bf360c', 'stroke-width':2 }, dhol));
-  const arms = [-1, 1].map(s => ({ s, l:line(torso, '#8d6e63', 12), stick:line(torso, '#5d4037', 4) }));
-  return { top:-180, update(s){
-    torso.setAttribute('transform', `translate(0 ${f1(s.hit * 3 * s.amp)})`);
-    head.setAttribute('transform', `translate(0 -122) rotate(${f1(s.sw * 10 * s.amp)})`);
-    mouth.setAttribute('ry', f1(2 + 6 * s.hit * s.amp));
-    const beat = Math.floor(s.b);
-    arms.forEach((a, i) => {
-      const mine = ((beat % 2) + 2) % 2 === i;                      // left stick on even beats, right on odd
-      const down = mine ? s.hit : 0;
-      const lift = s.amp * (1 - down);
-      const hx = a.s * 56, hy = -60 - 40 * lift;
-      a.l.setAttribute('d', `M${a.s * 30},-92 Q${a.s * 50},-90 ${f1(hx)},${f1(hy)}`);
-      const tx = a.s * lerp(40, 46, lift), ty = lerp(-48, hy - 30, lift);
-      a.stick.setAttribute('d', `M${f1(hx)},${f1(hy)} L${f1(tx)},${f1(ty)}`);
-      skins[i].setAttribute('fill', down > .5 && s.amp > .3 ? '#fff' : '#ffe0b2');
+    // Tail swings and curls
+    const tp = [];
+    for (let k = 0; k <= 6; k++){
+      const t = k / 6, w = Math.sin(st.hb * Math.PI * .5 - k * .8) * (8 + 26 * t) * (.4 + amp);
+      tp.push([-30 - 60 * t + w * .4, -70 + by - 90 * t + w]);
+    }
+    tp.push([tp[6][0] + 18, tp[6][1] - 14], [tp[6][0] + 22, tp[6][1] + 4]);
+    const td = curve(tp);
+    tailO.setAttribute('d', td); tail.setAttribute('d', td);
+
+    // Face: mouth opens on the beat, eyes look around and blink, brows pop when it's loud
+    const open = 4 + 16 * st.hit2 * amp;
+    mouth.setAttribute('d', `M-22,18 Q0,${f1(24 + open)} 22,18 Q0,${f1(30 + open * 1.4)} -22,18 Z`);
+    teeth.setAttribute('opacity', open > 8 ? 1 : 0);
+    tongue.setAttribute('cy', f1(28 + open * .9)); tongue.setAttribute('opacity', open > 12 ? 1 : 0);
+    const look = Math.sin(st.T * .9 + (mirror ? 2 : 0)) * 4;
+    const blink = st.now > this.blinkAt ? 1 : 0;           // real seconds, so a blink always lasts 0.14 s
+    if (st.now > this.blinkAt + .14) this.blinkAt = st.now + 2 + Math.random() * 3;
+    eyes.forEach(ey => {
+      ey.pupil.setAttribute('cx', f1(ey.s * 18 + look)); ey.glint.setAttribute('cx', f1(ey.s * 18 + look + 3));
+      ey.lid.setAttribute('ry', blink ? 16 : 0);
+      const up = 8 * st.hit2 * amp;
+      ey.brow.setAttribute('d', `M${ey.s * 8},${f1(-30 - up)} Q${ey.s * 18},${f1(-38 - up)} ${ey.s * 30},${f1(-30 - up + 2)}`);
     });
   }};
-});
+}
+const troupe = [makeMonkey('chiku', 0, false), makeMonkey('miku', 0, true)];
+
+/* ---------- Fit the stage to the box on screen ---------- */
+let SC = 1;
+function layout(){
+  const w = svg.clientWidth || 800, h = svg.clientHeight || 420, aspect = w / h;
+  if (aspect >= 1){ VH = 420; VW = Math.round(420 * aspect); } else { VW = 460; VH = Math.round(460 / aspect); }
+  svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
+  FLOOR = VH - Math.max(40, VH * .1);
+  const neonY = VH * .2 + 30;
+  SC = Math.min((FLOOR - neonY - 12) / 275, VW * .94 / 400);  // as big as fits between the banner and the floor, side by side
+  const gap = 100 * SC;
+  troupe.forEach((m, i) => { m.x = VW / 2 + (i ? gap : -gap); });
+  spots[0].x = VW * .06; spots[1].x = VW * .94;
+  spots.forEach(sp => sp.p.setAttribute('points', `0,0 ${f1(-VW * .1)},${VH} ${f1(VW * .1)},${VH}`));
+  neon.setAttribute('x', VW / 2); neon.setAttribute('y', f1(neonY));
+  neon.setAttribute('font-size', f1(Math.min(96, VW * .13)));
+  cord.setAttribute('x1', VW / 2); cord.setAttribute('x2', VW / 2); cord.setAttribute('y2', 16);
+  ball.setAttribute('transform', `translate(${VW / 2} 40)`);
+  floorG.replaceChildren(); tiles = [];
+  const n = Math.ceil(VW / 50);
+  for (let i = 0; i < n; i++) tiles.push(el('rect', { x:i * 50 + 1, y:FLOOR, width:48, height:VH - FLOOR, rx:3 }, floorG));
+}
+layout();
+if (window.ResizeObserver) new ResizeObserver(layout).observe(svg); else window.addEventListener('resize', layout);
 
 /* ---------- Confetti on the loudest parts ---------- */
 const confetti = [];
-for (let i = 0; i < 70; i++){
-  confetti.push({ e:el('rect', { width:7, height:4, opacity:0 }), alive:false });
-}
+for (let i = 0; i < 80; i++) confetti.push({ e:el('rect', { width:9, height:5, opacity:0 }), alive:false });
 function burst(n){
   for (const c of confetti){
     if (n <= 0) break;
     if (c.alive) continue;
-    Object.assign(c, { alive:true, x:Math.random() * W, y:-10, vx:(Math.random() - .5) * 60, vy:60 + Math.random() * 90,
-      rot:Math.random() * 360, vr:(Math.random() - .5) * 600, hue:Math.floor(Math.random() * 360) });
-    c.e.setAttribute('fill', `hsl(${c.hue} 95% 60%)`);
+    Object.assign(c, { alive:true, x:Math.random() * VW, y:-10, vx:(Math.random() - .5) * 60, vy:70 + Math.random() * 100,
+      rot:Math.random() * 360, vr:(Math.random() - .5) * 600 });
+    c.e.setAttribute('fill', `hsl(${Math.floor(Math.random() * 360)} 95% 60%)`);
     n--;
   }
 }
 
 /* ---------- Animation loop ---------- */
-const SHOUTS = ['Hey!', 'Rani!', 'Wah!', 'Aaja!', 'Oye!', 'Hey hey!'];
-let last = performance.now(), T = 0, idleB = 0, lastBeat = -1;
+const SHOUTS = [['Hey!', 'Rani!'], ['Wah!', 'Aaja!'], ['Oye!', 'Hey hey!'], ['Ooh!', 'Ah-ha!']];
+let last = performance.now(), T = 0, idleB = 0, lastBeat = -1, jumpUntil = -1, shoutUntil = -1;
+let move = 0, prevMove = 0, moveStart = 0;
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000);
   last = now;
@@ -547,57 +501,77 @@ function frame(now){
   } else {
     idleB += dt * 1.6;
     b = idleB;
-    amp = .12;
+    amp = .15;
   }
   const hb = b / 2;
-  const frac = x => x - Math.floor(x);
-  const s = { b, hb, amp, hit:Math.pow(1 - frac(b), 3), hit2:Math.pow(1 - frac(hb), 3), sw:Math.sin(Math.PI * hb / 2) };
 
-  troupe.forEach(c => c.update(s));
+  // A new dance move every 16 half-beats (about 10 s); blend into it over one half-beat
+  const want = playing ? ((Math.floor(hb / 16) % 5) + 5) % 5 : 0;
+  if (want !== move){ prevMove = move; move = want; moveStart = hb; }
+  const mix = smooth(Math.abs(hb - moveStart));
 
-  // Neon sign flashes on the half-time beat
-  const hue = (Math.floor(hb) * 47) % 360;
-  neon.setAttribute('stroke', `hsl(${hue} 100% 60%)`);
-  neon.setAttribute('opacity', f1(playing ? .18 + .45 * s.hit2 * amp : .12));
+  // Both monkeys jump at the start of every 8 half-beats when the song is loud
+  const beatN = Math.floor(b);
+  if (playing && beatN !== lastBeat){
+    lastBeat = beatN;
+    if (e >= .85) burst(5);
+    if (beatN % 16 === 0 && e >= .7) jumpUntil = t + 2 * BEAT;
+    if (beatN % 32 === 0 && e >= .5){
+      const pair = SHOUTS[Math.floor(beatN / 32) % SHOUTS.length];
+      troupe.forEach((m, i) => m.bubbleText.textContent = pair[i]);
+      shoutUntil = t + 6 * BEAT;
+    }
+  }
+  const jump = playing && t < jumpUntil ? Math.sin(Math.PI * (1 - (jumpUntil - t) / (2 * BEAT))) : 0;
+
+  const st = { b, hb, amp, T, now: now / 1000, move, prevMove, mix, jump,
+    hit:Math.pow(1 - frac(b), 3), hit2:Math.pow(1 - frac(hb), 3), sw:Math.sin(Math.PI * hb / 2) };
+  troupe.forEach(m => {
+    m.update(st);
+    m.g.setAttribute('transform', `translate(${f1(m.x)} ${f1(FLOOR)}) scale(${f1(m.mirror ? -SC : SC)} ${f1(SC)})`);
+    const showB = playing && t < shoutUntil && t > shoutUntil - 6 * BEAT;
+    m.bubble.setAttribute('opacity', showB ? 1 : 0);
+    m.bubbleText.setAttribute('transform', m.mirror ? 'scale(-1 1)' : '');   // keep Miku's words readable
+  });
+
+  // Hearts drift up (faster when the song is loud), wobble side to side and pulse on the beat
+  hearts.forEach(h => {
+    h.fy -= h.speed * dt * (playing ? 1 + 1.5 * amp : .5);
+    if (h.fy < -.08){ h.fy = 1.05; h.fx = Math.random(); }
+    const x = h.fx * VW + Math.sin(T * .8 + h.ph) * 18, y = h.fy * VH;
+    const pulse = 1 + (playing ? .18 * st.hit2 * amp : .05 * Math.sin(T * 2 + h.ph));
+    h.e.setAttribute('transform', `translate(${f1(x)} ${f1(y)}) rotate(${f1(Math.sin(T + h.ph) * 15)}) scale(${(h.size * pulse).toFixed(2)})`);
+    h.e.setAttribute('opacity', f1(h.op * (playing ? .8 + .4 * amp : .7)));
+  });
+
+  // Neon sign: always glowing green, a little brighter on each half-time beat
+  neon.setAttribute('opacity', f1(playing ? .8 + .2 * st.hit2 * amp : .85));
+  neon.setAttribute('stroke', playing && st.hit2 * amp > .5 ? '#b9ff9e' : '#39ff14');
 
   // Spotlights sweep, disco ball sparkles
   spots.forEach((sp, i) => {
-    const ang = sp.dir * (18 + 14 * Math.sin(T * .9 + i * 2));
-    sp.p.setAttribute('transform', `translate(${sp.x} ${sp.y}) rotate(${f1(ang)})`);
-    sp.p.setAttribute('opacity', f1(playing ? .5 + .5 * s.hit2 * amp : .3));
+    const ang = sp.dir * (16 + 12 * Math.sin(T * .9 + i * 2));
+    sp.p.setAttribute('transform', `translate(${f1(sp.x)} 0) rotate(${f1(ang)})`);
+    sp.p.setAttribute('opacity', f1(playing ? .5 + .5 * st.hit2 * amp : .3));
   });
   facets.forEach((f, i) => {
     const a = T * 1.5 + i * Math.PI * 2 / 12, r = 13 + 6 * ((i * 7) % 3) / 2;
-    const x = r * Math.cos(a), vis = Math.sin(a);
-    f.setAttribute('x', f1(x - 3)); f.setAttribute('y', f1(-14 + (i % 4) * 7 - 3));
-    f.setAttribute('opacity', f1(Math.max(0, vis) * (playing ? .9 : .4)));
+    f.setAttribute('x', f1(r * Math.cos(a) - 3)); f.setAttribute('y', f1(-14 + (i % 4) * 7 - 3));
+    f.setAttribute('opacity', f1(Math.max(0, Math.sin(a)) * (playing ? .9 : .4)));
   });
   sparkles.forEach((sp, i) => {
     const a = i * 1.05 + T * .3;
     const on = playing ? Math.max(0, Math.sin(T * 6 + i * 2.1)) * amp : 0;
-    sp.setAttribute('transform', `translate(${f1(W / 2 + 70 * Math.cos(a) * (1 + i % 2))} ${f1(45 + 30 * Math.sin(a))}) scale(${f1(.6 + on)})`);
+    sp.setAttribute('transform', `translate(${f1(VW / 2 + VW * .1 * Math.cos(a) * (1 + i % 2))} ${f1(48 + 30 * Math.sin(a))}) scale(${f1(.6 + on)})`);
     sp.setAttribute('opacity', f1(on));
   });
 
   // Floor tiles change colour on every beat
-  const beatN = Math.floor(b);
   tiles.forEach((tl, i) => {
     const [h, sat] = TILE_COLORS[((i + beatN) % TILE_COLORS.length + TILE_COLORS.length) % TILE_COLORS.length];
-    const light = playing ? 18 + 30 * s.hit * amp * ((i + beatN) % 2) : 14;
+    const light = playing ? 18 + 30 * st.hit * amp * ((i + beatN) % 2) : 14;
     tl.setAttribute('fill', `hsl(${h} ${sat}% ${f1(light)}%)`);
   });
-
-  // On each new beat: confetti when it is loud, and now and then someone shouts
-  if (playing && beatN !== lastBeat){
-    lastBeat = beatN;
-    if (e >= .85) burst(4);
-    if (beatN % 32 === 0 && e >= .5){
-      const c = troupe[Math.floor(beatN / 32) % troupe.length];
-      c.bubbleText.textContent = SHOUTS[Math.floor(beatN / 32 / troupe.length) % SHOUTS.length];
-      c.shoutUntil = t + 6 * BEAT;
-    }
-  }
-  troupe.forEach(c => c.bubble.setAttribute('opacity', playing && c.shoutUntil && t < c.shoutUntil && t > c.shoutUntil - 6 * BEAT ? 1 : 0));
 
   confetti.forEach(c => {
     if (!c.alive) return;
