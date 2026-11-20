@@ -43,6 +43,9 @@ The owner uses it for personal learning.
 | `MUSIC-THEORY/MUSIC-BASICS.html` | **Music Basics** (beginner theory, added 2026-11-17; copied from BLOG's MUSIC-BASICS.html, nav/footer now point to `../`): Western & Indian basics, a composer app, and **Part D** (sections 13–20): 39 short theory lessons in 8 groups (The Basics, Rhythm and Meter, Scales and Key Signatures, Intervals, Chords, Diatonic Chords, Chord Progressions, Neapolitan Chords) with a lesson index. The owner removed the Tip Tip and Inteha song presets. Part D helpers: `.mstaff` (data-clef/key/time/notes, drawn by `drawStaff()`; tokens `C4+E4/q.@label`, `r/h`, `|`, `||`, `|.`, `~`), 🔊 `data-play="C4:1 C4+E4+G4:2 r:1"` (`playTokens`, `data-bpm`), `data-meter="2+2+3"` (`playMeter`), key-signature calculator (15.5). Its note parser is `pdNote` (the composer already has a `parseNote`). |
 | `MUSIC-PROD/SONG.html` | **Dil Tera Pighla Doon** (2026-11-19): the owner's original Hindi song (lyrics and music by Daya, AI voice; `MUSIC-PROD/Dil-Tera-Pighla-Doon-with-tabla.wav`, 3:09, 36 MB). Red jukebox (Play/Pause/Stop, progress bar; no autoplay, the browser blocked it), pink credit box ("Daya" links to contactus.html in a new tab), a black SVG box: spinning flowers, drifting shapes and orbiting dots; a dark side-on woman's silhouette with flowing hair on a green glow blurs in at 0:40 and out at 2:20 (`SHOW_IN`/`SHOW_OUT`, follows `audio.currentTime`); green lyrics box with section times (the part being sung lights up) and an English translation. Linked from the end of Music Basics (creativity box + footer) and SITE-MAP.html. Everything else from MUSIC-PROD (other WAVs, lyric drafts) was moved to the git-ignored `S-PAD/`. |
 | `MUSIC-PROD/SONG-2.html` | **Rani Rani** (2026-11-20): the owner's fast English dance song (boy-band pop with a Raï flavour; lyrics from SONG-LOGIC/SONG-2-RANI-RANI-ENGLISH-LOGIC.html) (`MUSIC-PROD/Rani-Rani.wav`, 3:52, 44 MB). Same jukebox/pink/green boxes as SONG.html; the black box is a disco stage with an always-glowing neon green "RANI RANI" sign and two big SVG monkeys in red velvet suits (`#velvet` gradient, sleeves and trousers too), yellow shoes and green caps (Chiku waves a banana; Miku has a pink flower on her cap; she is drawn mirrored), with pink/red hearts floating up behind everything (`hearts`, positions as fractions of the stage, pulse on the beat) changing dance move every 16 half-beats (clap, wave, scratch, punch, swim). The six small characters were replaced 2026-11-20 because they looked tiny in the owner's portrait video: the viewBox now follows the box's shape (`layout()`, ResizeObserver; phones use a 4:5 box) so the monkeys fill it. They dance on the measured beat (`BEAT` = 60/192 s, `PHASE` 0.208 s) and harder when louder (`ENERGY`, one digit 0–9 per second). English lyrics, no translation; only the intro (0:00–0:33) and ending (3:42–) have times. Linked from Music Basics (creativity box + footer) and SITE-MAP.html. |
+| `GIF-CREATOR/gif.html` | **GIF Creator** (2026-11-20): animated GIFs of Chiku and Miku (SONG-2.html's monkeys) in 5 themes with a 50-character message. See "GIF Creator" below. Linked from the index.html footer, SITE-MAP.html and a red "🎞️ Create a Gif" button under SONG-2.html's dance stage. |
+| `GIF-CREATOR/Gifs/` | Saved GIFs (committed, owner's choice). `GIF-1-throwing-kisses.gif` is a ready-made AI-video GIF (10 s, 10.7 MB) offered as an extra download in the kiss theme. |
+| `INFO/GIF-CREATOR-PLAN.md` | The approved plan for the GIF Creator, with the owner's decisions. |
 | `SONG-LOGIC/*.html` | Song plans (same look as the old S-PAD notes pages): `SONG-1-RANI-RANI-LOGIC.html` (Hindi Raï-pop, adapted from the style of Khaled's "Didi"), `SONG-2-RANI-RANI-ENGLISH-LOGIC.html` (English, late-90s boy-band style), `SONG-3-LAILA-LAILA-LOGIC.html` (Mehbooba-style music, Boney M-style English vocals), `SUNO-GUIDE.html` (how to use suno.com). Pages 2 and 3 have a 📋 Copy all button for the Suno inputs. Not linked from the main pages yet. |
 
 ## Why the song list is a .js file
@@ -253,6 +256,42 @@ One self-contained page; nav, step cards and pink box like the other pages.
   `check()` returns problems (parsing, 4 options, a note for every wrong option, range inside C4–C6).
 - Checked headless (2026-11-18): `check()` empty; 11 answers worked out from their notes agree with the key; every topic
   anchor exists; first-answer scoring, retry and reload; keys light in order; 390 px page has no sideways scroll.
+
+## GIF Creator (GIF-CREATOR/gif.html, 2026-11-20)
+
+One self-contained page, recorder.html's look (nav, step cards, `.mode-opt` boxes, `.prompt`, `.now-card`s, `.file-box`).
+- **Themes** (`THEMES`): 💋 Throwing kisses, 🎂 Happy Birthday, 💃 Dance party, 🙏 Thank you, 🎉 Congratulations. Each has
+  `segs` (per monkey: `[start phase, move]` over the loop), `hbRate`, `amp`, tile colours and extras (hearts, balloons, cake,
+  petals + gold glow, confetti, stars, trophy, disco ball, banana). Moves in `MOVES`: SONG-2's clap/wave/scratch/punch/swim
+  plus `sway`, `kiss1`, `kissBoth` (hand to mouth, pucker, closed eyes, throw), `namaste`, `bow`, `cheer` (jumps), `trophy`.
+- **Monkeys:** `makeMonkey()` copied from SONG-2.html; the head is drawn before the arms (hands can cover the mouth); new
+  pucker mouth, closed-eye curves, trophy prop. **No audio:** everything is a function of the loop phase `p = i / NF`
+  (half-beats per loop a multiple of 4, positions via `frac`), random numbers seeded (`rng`), so the loop is seamless and the
+  preview equals the GIF. Kiss hearts fly from the thrower's hand (`world()`) to the other monkey; kissBoth sends up a big heart that bursts.
+- **Options:** message ≤ 50 characters (counted with `Array.from`, so an emoji is 1), top/bottom, 4 colours (neon green glows),
+  a drawn red "🎞️ Create a Gif" button + `ragchamp.github.io/MUSIC/GIF-CREATOR/gif.html` at the bottom (replaced the
+  Rani Rani credit line at the owner's request; a GIF can't hold a clickable link; on by default, `S.credit`), length 3/5/8 s, size 540×600 / 480×480 / 360×400, 10/12.5/15 fps. Saved in localStorage `gifCreator`.
+- **Frames:** `drawFrame(i)` updates the hidden SVG, it is serialised into an `<img>`, drawn on a canvas, and the message and
+  button are drawn with `fillText` (two lines max, font shrinks to fit). The preview uses the same `renderFrame()`.
+- **Encoder** (own, no library): one palette for the whole GIF (median cut on a 15-bit histogram of 10 sample frames,
+  ≤ 255 colours, black kept, index 255 = transparent), frames after the first store only the changed rectangle with
+  unchanged pixels transparent (disposal 1), LZW with a stamped 1M-entry table, NETSCAPE loop forever.
+  540×600 × 5 s = 63 frames, 2.2–3.0 MB, ~3.5 s headless.
+- **Save:** 💾 into a folder chosen once (IndexedDB `gif-creator` / `saveDir`) as `GIF-<next n>-<theme>.gif`; ⬇ Download
+  (`GIF-<theme>-<message>.gif`); 📤 Share via `navigator.share` where files can be shared (phones).
+- **Removed (owner, 2026-11-20): keep it simple, monkeys only.** A 🧚 Fairies choice and a photo face (upload a picture,
+  MediaPipe face finder, cartoon filter, animated eyes/mouth on Chiku) were built and then taken out. **Don't add them back.**
+  Steps: 1 theme, 2 message, 3 preview, 4 voice, 5 create.
+- **Video with sound** (added 2026-11-20: the owner asked for 10 s of audio; a GIF can't hold sound). Step 4 records the
+  user's **voice** with the microphone (owner's choice; not a song clip or an uploaded file): ● Record stops by itself at 10 s,
+  `tidyVoice` cuts the silence before the first word and sets the peak to 0.9 (at most ×4); ▶ Play with the preview restarts
+  the preview with it; 🗑 Delete. Step 5's **🎬 Create video with sound** draws one loop of frames into ImageBitmaps, then plays
+  them for **always 10 s** (`VIDEO_SECS`, owner's choice; the animation loops) on an off-screen canvas while `MediaRecorder`
+  records `canvas.captureStream(30)` + the voice (`MediaStreamDestination`). MP4 (H.264 + AAC) in Chrome/Edge, else WebM with a
+  warning. Saved as `VIDEO-<n>-<theme>.mp4` / downloaded as `VIDEO-<theme>-<message>.mp4`. Checked headless with a fake mic:
+  MP4 540×600, 10.2 s, 1.6 MB, avc1 + mp4a tracks, ~13 s to make.
+- `window.__gifCreator` = {themes, state, set(o), setTheme, setMessage, create, createVideo, startRec, stopRec, voice, setVoice,
+  videoType, ac, layout, drawFrame, renderFrame, frames, lastGif}.
 
 ## How new songs are made (from 2026-11-17)
 

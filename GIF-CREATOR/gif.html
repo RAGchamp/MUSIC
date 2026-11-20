@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GIF Creator</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd;
+    --biz-blue-dark:#084298;
+    --biz-yellow:#ffc107;
+    --biz-red:#dc3545;
+    --biz-green:#198754;
+    --nav-blue:#04264d;
+    --nav-yellow:#ffd60a;
+  }
+  body{ background:#f7f8fa; margin:0; }
+
+  /* Sticky top nav: same as recorder.html */
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{
+    font-weight:600; font-size:1.05rem; color:var(--nav-yellow);
+    letter-spacing:.15em; word-spacing:.6em; font-style:italic;
+  }
+  @media (max-width:576px){
+    .topnav{ position:static; padding:.5rem 1rem; }
+    .topnav .brand-logo{ height:34px; }
+    .topnav .tagline{ font-size:.8rem; letter-spacing:.05em; word-spacing:.2em; }
+  }
+
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.9rem; height:1.9rem; border-radius:50%;
+    background:var(--biz-yellow); color:#2b2b2b; font-weight:800; font-size:.95rem; margin-right:.55rem; flex:none;
+  }
+  .step-title{ display:flex; align-items:center; font-weight:700; font-size:1.1rem; margin-bottom:.75rem; }
+  .step-card{ border:2px solid #c9d3e3; border-radius:.6rem; }
+  .ctrl-label{ font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; margin-bottom:.25rem; display:block; }
+  .stat-pill{ background:#eef3fb; border-radius:2rem; padding:.2rem .7rem; font-size:.8rem; font-weight:600; }
+
+  /* Theme choice (the recorder's mode boxes) */
+  .mode-choice{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:.75rem; }
+  .mode-opt{
+    display:flex; align-items:center; gap:.6rem; cursor:pointer; user-select:none;
+    border:2px solid #c9d3e3; border-radius:.6rem; padding:.7rem 1.1rem; background:#fff; margin:0;
+  }
+  .mode-opt:hover{ border-color:var(--biz-blue); }
+  .mode-opt .form-check-input{ width:1.3rem; height:1.3rem; margin:0; cursor:pointer; flex:none; }
+  .mode-opt .big{ font-size:1.8rem; line-height:1; }
+  .mode-opt .nm{ font-weight:800; }
+  .mode-opt .sub{ font-size:.75rem; color:#6c757d; }
+  .mode-opt.checked{ border-color:var(--biz-blue); background:#eef3fb; box-shadow:0 0 0 3px #0d6efd22; }
+  .ready-made{ font-size:.85rem; }
+
+  .prompt{
+    background:linear-gradient(120deg,var(--biz-blue-dark),var(--biz-blue)); color:#fff;
+    border-radius:.6rem; padding:.9rem 1.1rem; font-size:1.05rem; min-height:3.2rem;
+  }
+  .now-box{ display:flex; gap:.75rem; flex-wrap:wrap; }
+  .now-card{ flex:1 1 140px; background:#fff; border:2px solid #dde3ec; border-radius:.6rem; padding:.6rem .9rem; }
+  .now-card.warn{ border-color:#fd7e14; background:#fff4e6; }
+  .now-card .lbl{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6c757d; }
+  .now-card .val{ font-size:1.5rem; font-weight:800; line-height:1.2; min-height:1.8rem; font-variant-numeric:tabular-nums; }
+  .big-play{ font-size:1.15rem; font-weight:700; padding:.6rem 1.8rem; }
+
+  /* Message */
+  .msg-count{ font-variant-numeric:tabular-nums; font-weight:700; color:#6c757d; }
+  .msg-count.full{ color:var(--biz-red); }
+  .swatch{ width:2.1rem; height:2.1rem; border-radius:50%; border:3px solid #c9d3e3; cursor:pointer; padding:0;
+    box-shadow:inset 0 0 0 2px #fff; }
+  .swatch.on{ border-color:var(--biz-blue); box-shadow:inset 0 0 0 2px #fff, 0 0 0 3px #0d6efd44; }
+
+  /* Preview and result: black frames like the dance stage */
+  .stage-frame{ background:#000; border-radius:.6rem; padding:.5rem; display:flex; justify-content:center; }
+  .stage-frame canvas, .stage-frame img{ display:block; max-width:100%; height:auto; border-radius:.3rem; }
+  #svgHold{ position:absolute; left:-9999px; top:0; width:10px; height:10px; overflow:hidden; }
+  .progress{ height:1.1rem; }
+  .rec-dot{ display:inline-block; width:.8rem; height:.8rem; border-radius:50%; background:#adb5bd; margin-right:.4rem; vertical-align:baseline; }
+  .rec-dot.on{ background:var(--biz-red); animation:blink 1s infinite; }
+  .rec-dot.ok{ background:var(--biz-green); }
+  @keyframes blink{ 50%{ opacity:.25; } }
+  .now-card.rec{ border-color:var(--biz-red); background:#fdecee; }
+  .now-card .det{ font-size:.85rem; color:#5a6475; }
+  .stage-frame video{ display:block; max-width:100%; height:auto; border-radius:.3rem; }
+
+  .file-box{ background:#f1f4f9; border:2px dashed #c9d3e3; border-radius:.6rem; padding:.75rem; }
+  .folder-name{ font-family:Consolas,Monaco,monospace; font-weight:700; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<!-- STICKY TOP NAV -->
+<div class="topnav">
+  <a class="brand" href="../index.html"><img class="brand-logo" src="../logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">Music Practice App</div>
+</div>
+
+<main class="container my-4">
+
+  <h1 class="h3 fw-bold mb-1">🎞️ GIF Creator</h1>
+  <p class="text-muted mb-4">Make a short animated GIF of <b>Chiku and Miku</b>, the dancing monkeys from
+    <a href="../MUSIC-PROD/SONG-2.html">Rani Rani</a>, with your own message, and send it to a friend.
+    Everything happens in your browser; nothing is uploaded.
+    <a href="../index.html" class="ms-1">Back to Song Practice</a></p>
+
+  <!-- STEP 1: theme -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">1</span>Choose a theme</div>
+      <div class="mode-choice" id="themeChoice"></div>
+      <div class="ready-made mt-2" id="readyMade">
+        💋 Also available: a <b>ready-made</b> throwing-kisses GIF (AI video, 10 s, 10.7 MB, no message):
+        <a href="Gifs/GIF-1-throwing-kisses.gif" download="GIF-1-throwing-kisses.gif">⬇ Ready-made kiss GIF</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: message -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">2</span>Your message</div>
+      <label class="ctrl-label" for="msg">Message (up to 50 characters, emoji welcome)</label>
+      <div class="input-group mb-1">
+        <input type="text" class="form-control form-control-lg" id="msg" maxlength="100" autocomplete="off" placeholder="Type a message…">
+        <button class="btn btn-outline-secondary" type="button" id="msgClear" title="Clear the message">✕</button>
+      </div>
+      <div class="small mb-3"><span class="msg-count" id="msgCount">0 / 50</span>
+        <span class="text-muted ms-2">Long messages go onto two lines and get smaller to fit.</span></div>
+      <div class="row g-3 align-items-end">
+        <div class="col-auto">
+          <span class="ctrl-label">Position</span>
+          <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="pos" id="posTop" value="top" checked>
+            <label class="btn btn-outline-primary" for="posTop">⬆ Top</label>
+            <input type="radio" class="btn-check" name="pos" id="posBottom" value="bottom">
+            <label class="btn btn-outline-primary" for="posBottom">⬇ Bottom</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <span class="ctrl-label">Colour</span>
+          <div class="d-flex gap-2" id="swatches"></div>
+        </div>
+        <div class="col-auto">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="credit" checked>
+            <label class="form-check-label" for="credit">Show the <b>🎞️ Create a Gif</b> button <span class="text-muted small">(with this page's address, so friends can make their own)</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: preview -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">3</span>Preview</div>
+      <div class="row g-3 align-items-end mb-3">
+        <div class="col-6 col-md-auto">
+          <label class="ctrl-label" for="lenSel">Length</label>
+          <select class="form-select" id="lenSel">
+            <option value="3">3 seconds</option><option value="5" selected>5 seconds</option><option value="8">8 seconds</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-auto">
+          <label class="ctrl-label" for="sizeSel">Size</label>
+          <select class="form-select" id="sizeSel">
+            <option value="540x600" selected>540 × 600 portrait</option>
+            <option value="480x480">480 × 480 square</option>
+            <option value="360x400">360 × 400 small</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-auto">
+          <label class="ctrl-label" for="fpsSel">Smoothness</label>
+          <select class="form-select" id="fpsSel">
+            <option value="10">10 frames a second</option>
+            <option value="12.5" selected>12.5 frames a second</option>
+            <option value="15">15 frames a second</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-auto">
+          <button type="button" class="btn btn-outline-primary w-100" id="pvBtn">❚❚ Pause</button>
+        </div>
+      </div>
+      <div class="stage-frame"><canvas id="preview" width="540" height="600"></canvas></div>
+      <div class="mt-2 d-flex flex-wrap gap-2" id="pvInfo"></div>
+    </div>
+  </div>
+
+  <!-- STEP 4: voice (for a video with sound) -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">4</span>Add your voice (optional, for a video with sound)</div>
+      <p class="small text-muted mb-2">A GIF can't hold sound. To send the monkeys <b>with your voice</b>, record up to
+        <b>10 seconds</b> here (e.g. “Happy birthday Mum, love you!”), then press <b>🎬 Create video with sound</b> in step 5.
+        The video is always 10 s long and the animation loops under your voice. Your recording stays on this device.</p>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-danger" id="recBtn">● Record (10 s)</button>
+        <button type="button" class="btn btn-outline-danger" id="recStop" disabled>■ Stop</button>
+        <button type="button" class="btn btn-outline-primary" id="recPlay" disabled>▶ Play with the preview</button>
+        <button type="button" class="btn btn-outline-secondary" id="recDel" disabled>🗑 Delete</button>
+      </div>
+      <div class="now-box">
+        <div class="now-card" id="recCard"><div class="lbl">Your voice</div>
+          <div class="val"><span class="rec-dot" id="recDot"></span><span id="recLen">–</span></div>
+          <div class="det" id="recState">No recording yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: create and save -->
+  <div class="card shadow-sm step-card mb-3">
+    <div class="card-body">
+      <div class="step-title"><span class="step-num">5</span>Create and save</div>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-danger big-play" id="makeBtn">🎞️ Create GIF</button>
+        <button type="button" class="btn btn-primary big-play" id="vidBtn" disabled title="Record your voice in step 4 first">🎬 Create video with sound</button>
+        <button type="button" class="btn btn-outline-danger" id="cancelBtn" disabled>■ Cancel</button>
+      </div>
+      <div class="prompt mb-2" id="prompt">Choose a theme, type your message and press <b>Create GIF</b> (or record your voice and press <b>Create video with sound</b>).</div>
+      <div class="progress mb-3" id="progWrap" hidden><div class="progress-bar progress-bar-striped progress-bar-animated" id="prog" style="width:0%"></div></div>
+
+      <div id="result" hidden>
+        <div class="now-box mb-3">
+          <div class="now-card" id="sizeCard"><div class="lbl">File size</div><div class="val" id="rSize">–</div></div>
+          <div class="now-card"><div class="lbl" id="rFramesLbl">Frames</div><div class="val" id="rFrames">–</div></div>
+          <div class="now-card"><div class="lbl">Length</div><div class="val" id="rLen">–</div></div>
+          <div class="now-card"><div class="lbl">Picture</div><div class="val" id="rDim">–</div></div>
+        </div>
+        <div class="stage-frame mb-3"><img id="gifImg" alt="Your GIF"><video id="vidEl" controls loop playsinline hidden></video></div>
+        <div class="file-box mb-2">
+          <div class="small mb-2">Save folder: <span class="folder-name" id="folderName">not chosen yet</span>
+            <span class="text-muted">(suggested: GIF-CREATOR/Gifs)</span></div>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-success big-play" id="saveBtn">💾 Save</button>
+            <button type="button" class="btn btn-outline-primary" id="folderBtn">📁 Choose folder…</button>
+            <button type="button" class="btn btn-outline-secondary" id="downloadBtn">⬇ Download instead</button>
+            <button type="button" class="btn btn-outline-success" id="shareBtn" hidden>📤 Share</button>
+          </div>
+        </div>
+        <div class="small" id="saveMsg"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">Music Practice App · GIF Creator · <a href="../index.html">🎵 Song Practice</a> · <a href="../MUSIC-PROD/SONG-2.html">🐒 Rani Rani</a> · <a href="../recorder.html">🎙️ Recorder</a></div>
+</footer>
+
+<div id="svgHold"><svg id="stage" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 511" width="540" height="600"></svg></div>
+
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+
+/* =====================================================================
+   THEMES
+   segs: which move each monkey does over the loop, as [start phase 0..1, move].
+   hbRate: half-beats a second (the dance groove), amp: how hard they dance.
+   ===================================================================== */
+const THEMES = [
+  { id:'kiss', emoji:'💋', name:'Throwing kisses', sub:'Eyes closed, a pucker and hearts flying', msg:'Sending you kisses!',
+    hbRate:1.2, amp:.45, tiles:[[330, 85], [350, 85], [300, 70], [0, 80], [320, 60]], hearts:18,
+    segs:{ chiku:[[0, 'sway'], [.10, 'kiss1'], [.48, 'kissBoth'], [.88, 'sway']],
+           miku: [[0, 'sway'], [.22, 'kiss1'], [.48, 'kissBoth'], [.88, 'sway']] } },
+  { id:'birthday', emoji:'🎂', name:'Happy Birthday', sub:'A cake, balloons and confetti', msg:'Happy Birthday!',
+    hbRate:1.6, amp:.8, tiles:[[200, 90], [50, 95], [330, 90], [140, 75], [280, 80]], hearts:0, cake:true, balloons:true, confetti:24,
+    segs:{ chiku:[[0, 'clap'], [.5, 'wave']], miku:[[0, 'clap'], [.5, 'wave']] } },
+  { id:'dance', emoji:'💃', name:'Dance party', sub:'The Rani Rani moves under a disco ball', msg:"Let's dance!",
+    hbRate:1.6, amp:1, tiles:[[330, 90], [200, 90], [50, 95], [280, 80], [140, 75]], hearts:18, disco:true, flash:true, banana:true,
+    segs:{ chiku:[[0, 'clap'], [.25, 'wave'], [.5, 'punch'], [.75, 'swim']], miku:[[0, 'clap'], [.25, 'wave'], [.5, 'punch'], [.75, 'swim']] } },
+  { id:'thanks', emoji:'🙏', name:'Thank you', sub:'Namaste, a bow and falling petals', msg:'Thank you so much!',
+    hbRate:.8, amp:.3, tiles:[[40, 80], [30, 70], [50, 85], [20, 70], [45, 75]], hearts:0, petals:28, glow:true,
+    segs:{ chiku:[[0, 'namaste'], [.3, 'bow'], [.7, 'namaste']], miku:[[0, 'namaste'], [.36, 'bow'], [.76, 'namaste']] } },
+  { id:'congrats', emoji:'🎉', name:'Congratulations', sub:'A jump for joy, a trophy and stars', msg:'Congratulations!',
+    hbRate:1.6, amp:.85, tiles:[[50, 95], [45, 90], [200, 80], [50, 95], [280, 70]], hearts:0, confetti:40, stars:true, trophy:true,
+    segs:{ chiku:[[0, 'cheer'], [.5, 'trophy']], miku:[[0, 'cheer'], [.5, 'wave']] } },
+];
+const COLORS = [['#ffd60a', 'Yellow'], ['#ffffff', 'White'], ['#ff6fb5', 'Pink'], ['#39ff14', 'Neon green']];
+const BTN = '🎞️ Create a Gif';
+const URL_TXT = 'ragchamp.github.io/MUSIC/GIF-CREATOR/gif.html';
+const MAXCH = 50;
+
+const S = { theme:'kiss', msg:THEMES[0].msg, pos:'top', color:'#ffd60a', credit:true, len:5, size:'540x600', fps:12.5 };
+try{ Object.assign(S, JSON.parse(localStorage.getItem('gifCreator') || '{}')); }catch(e){}
+if (!THEMES.some(t => t.id === S.theme)) S.theme = 'kiss';
+delete S.cast;                                   // the fairies and the photo face were removed (2026-11-20)
+try{ localStorage.removeItem('gifCreatorFace'); localStorage.removeItem('gifCreatorPhoto'); }catch(e){}
+function saveS(){ try{ localStorage.setItem('gifCreator', JSON.stringify(S)); }catch(e){} }
+const theme = () => THEMES.find(t => t.id === S.theme);
+
+/* =====================================================================
+   SEEDED RANDOM: the preview and the GIF always show the same thing
+   ===================================================================== */
+function rng(seed){ let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+  t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+/* =====================================================================
+   DRAWING HELPERS (copied from MUSIC-PROD/SONG-2.html)
+   ===================================================================== */
+const NS = 'http://www.w3.org/2000/svg';
+const svg = $('stage');
+function el(tag, attrs, parent = svg){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+}
+const f1 = n => n.toFixed(1);
+const lerp = (a, b, t) => a + (b - a) * t;
+const lerpP = (p, q, t) => [lerp(p[0], q[0], t), lerp(p[1], q[1], t)];
+const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
+const frac = x => x - Math.floor(x);
+const TAU = Math.PI * 2;
+function curve(p){
+  const n = p.length, at = i => p[Math.max(0, Math.min(n - 1, i))];
+  let d = `M${f1(p[0][0])},${f1(p[0][1])}`;
+  for (let i = 0; i < n - 1; i++){
+    const a = at(i - 1), b = at(i), c = at(i + 1), e = at(i + 2);
+    d += `C${f1(b[0] + (c[0] - a[0]) / 6)},${f1(b[1] + (c[1] - a[1]) / 6)} ${f1(c[0] - (e[0] - b[0]) / 6)},${f1(c[1] - (e[1] - b[1]) / 6)} ${f1(c[0])},${f1(c[1])}`;
+  }
+  return d;
+}
+const line = (parent, color, width) => el('path', { fill:'none', stroke:color, 'stroke-width':width, 'stroke-linecap':'round', 'stroke-linejoin':'round' }, parent);
+const HEART = 'M0,8 C-14,-2 -20,-12 -12,-19 C-6,-24 0,-19 0,-14 C0,-19 6,-24 12,-19 C20,-12 14,-2 0,8 Z';
+const STAR4 = '0,-8 2,-2 8,0 2,2 0,8 -2,2 -8,0 -2,-2';
+const HEART_COLORS = ['#ff4081', '#f50057', '#ff80ab', '#e91e63', '#ff1744', '#f48fb1'];
+
+/* =====================================================================
+   THE STAGE (layers, back to front)
+   ===================================================================== */
+let VW = 460, VH = 511, FLOOR = 460, SC = 1, TOP = 90;
+const defs = el('defs', {});
+const beam = el('linearGradient', { id:'beam', x1:0, y1:0, x2:0, y2:1 }, defs);
+[[0, 'rgba(255,255,255,.35)'], [1, 'rgba(255,255,255,0)']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, beam));
+const ballG = el('radialGradient', { id:'ball', cx:.35, cy:.35 }, defs);
+[[0, '#ffffff'], [.5, '#b0bec5'], [1, '#455a64']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, ballG));
+const glowG = el('radialGradient', { id:'gold' }, defs);
+[[0, 'rgba(255,193,7,.55)'], [.5, 'rgba(255,152,0,.2)'], [1, 'rgba(255,152,0,0)']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, glowG));
+const velvet = el('radialGradient', { id:'velvet', cx:.4, cy:.35, r:.75 }, defs);
+[[0, '#ff5252'], [.35, '#d50000'], [.75, '#9b0000'], [1, '#5c0000']].forEach(([o, c]) => el('stop', { offset:o, 'stop-color':c }, velvet));
+const VELVET_DARK = '#5c0000', VELVET = '#c40000';
+
+const bgRect = el('rect', { x:0, y:0, width:VW, height:VH, fill:'#000' });
+const glow = el('ellipse', { fill:'url(#gold)' });
+const backLayer = el('g', {});      // hearts, balloons, petals behind the monkeys
+const spots = [0, 1].map(i => ({ p:el('polygon', { fill:'url(#beam)' }), dir: i ? -1 : 1 }));
+const cord = el('line', { y1:0, stroke:'#888', 'stroke-width':2 });
+const ball = el('g', {});
+el('circle', { r:24, fill:'url(#ball)' }, ball);
+const facets = [];
+for (let i = 0; i < 12; i++) facets.push(el('rect', { width:6, height:6, fill:'#fff', opacity:0 }, ball));
+const floorG = el('g', {});
+const troupeLayer = el('g', {});
+const frontLayer = el('g', {});     // cake, kiss hearts, confetti, stars in front
+
+/* =====================================================================
+   THE MONKEYS (from SONG-2.html, with new moves and faces)
+   ===================================================================== */
+const FUR = { chiku:['#8d5524', '#5d3412', '#f1c27d'], miku:['#c68642', '#8d5524', '#ffe0bd'] };
+const REST = s => [[s * 60, -110], [s * 64, -74]];
+const MOUTH = [8, -188];                      // the mouth, in body units (for blowing kisses)
+// Kiss: the hand goes to the mouth, stays, then swings out towards the other monkey
+function kissArm(s, u, both){
+  const rest = both ? [[s * 60, -118], [s * 40, -96]] : REST(s);
+  const atMouth = [[s * 58, -150], [s * MOUTH[0], MOUTH[1]]];
+  const out = [[s * 66, -196], [s * (both ? 100 : 94), both ? -238 : -224]];
+  if (!both && s < 0) return [[s * 60, -112], [s * 22, -104]];      // other hand on the belly
+  if (u < .3) { const k = smooth(u / .3); return [lerpP(rest[0], atMouth[0], k), lerpP(rest[1], atMouth[1], k)]; }
+  if (u < .55) return atMouth;
+  if (u < .72) { const k = smooth((u - .55) / .17); return [lerpP(atMouth[0], out[0], k), lerpP(atMouth[1], out[1], k)]; }
+  if (u < .85) return out;
+  const k = smooth((u - .85) / .15); return [lerpP(out[0], rest[0], k), lerpP(out[1], rest[1], k)];
+}
+const kissFace = u => ({ pucker: u > .18 && u < .74 ? 1 : 0, closed: u > .24 && u < .68 ? 1 : 0 });
+const MOVES = {
+  sway:    { arms:(s, st) => { const w = Math.sin(Math.PI * st.hb) * 4; return [[s * 60, -110 + w], [s * 64, -74 + w]]; } },
+  clap:    { arms:(s, st) => { const k = st.hit2; return [[s * 62, -112], lerpP([s * 82, -150], [s * 10, -168], k)]; } },
+  wave:    { arms:(s, st) => { const w = Math.sin(Math.PI * st.hb); return [[s * 64, -205], [s * 66 + w * 34, -268 + Math.abs(w) * 8]]; } },
+  scratch: { arms:(s, st) => { const top = (Math.floor(st.hb / 4) % 2 === 0) === (s > 0); const j = Math.sin(st.b * Math.PI * 2) * 7;
+      return top ? [[s * 72, -205], [s * 26 + j, -262]] : [[s * 64, -96], [s * 16 + j, -112]]; } },
+  punch:   { arms:(s, st) => { const mine = (Math.floor(st.hb) % 2 === 0) === (s > 0); const k = mine ? 1 - Math.pow(frac(st.hb), 2) : 0;
+      return [lerpP([s * 66, -112], [s * 54, -200], k), lerpP([s * 50, -150], [s * 48, -268], k)]; } },
+  swim:    { arms:(s, st) => { const a = st.hb * Math.PI + (s > 0 ? 0 : Math.PI); return [[s * 70, -150 + 20 * Math.sin(a)], [s * (70 + 30 * Math.cos(a)), -180 + 70 * Math.sin(a)]]; } },
+  kiss1:   { arms:(s, st, u) => kissArm(s, u, false), face:kissFace },
+  kissBoth:{ arms:(s, st, u) => kissArm(s, u, true), face:kissFace },
+  namaste: { arms:(s, st) => { const w = Math.sin(Math.PI * st.hb) * 3; return [[s * 56, -124 + w], [s * 9, -160 + w]]; }, face:() => ({ closed:0, smile:1 }) },
+  bow:     { arms:(s) => [[s * 56, -124], [s * 9, -160]], bow:u => Math.sin(Math.PI * u), face:u => ({ closed: u > .15 && u < .85 ? 1 : 0, smile:1 }) },
+  cheer:   { arms:(s, st) => { const k = 1 - Math.pow(frac(st.hb), 2); return [lerpP([s * 66, -130], [s * 56, -205], k), lerpP([s * 70, -150], [s * 50, -272], k)]; }, jump:true },
+  trophy:  { arms:(s, st) => { if (s > 0) return [[54, -205], [44, -262]];
+      const w = Math.sin(Math.PI * st.hb); return [[s * 64, -205], [s * 66 + w * 30, -264 + Math.abs(w) * 8]]; } },
+};
+
+function makeMonkey(name, mirror){
+  const [fur, dark, face] = FUR[name];
+  const g = el('g', {}, troupeLayer);
+  const inner = el('g', {}, g);
+  const shadow = el('ellipse', { cx:0, cy:0, rx:70, ry:9, fill:'rgba(0,0,0,.45)' }, inner);
+  const tailO = line(inner, dark, 14), tail = line(inner, fur, 9);
+  const legs = [-1, 1].map(s => ({ s, o:line(inner, VELVET_DARK, 26), l:line(inner, VELVET, 20),
+    foot:el('ellipse', { rx:22, ry:10, fill:'#ffd600', stroke:'#c79100', 'stroke-width':2.5 }, inner),
+    shine:el('ellipse', { rx:7, ry:3, fill:'#fff59d' }, inner) }));
+  const body = el('g', {}, inner);
+  el('ellipse', { cx:0, cy:-112, rx:51, ry:61, fill:'url(#velvet)', stroke:VELVET_DARK, 'stroke-width':3 }, body);
+  el('path', { d:'M-20,-168 L20,-168 L0,-104 Z', fill:'#fff' }, body);
+  el('path', { d:'M-22,-168 L-6,-116 L-26,-128 L-14,-140 L-34,-150 Z', fill:'#8b0000', stroke:VELVET_DARK, 'stroke-width':1.5 }, body);
+  el('path', { d:'M22,-168 L6,-116 L26,-128 L14,-140 L34,-150 Z', fill:'#8b0000', stroke:VELVET_DARK, 'stroke-width':1.5 }, body);
+  el('path', { d:'M0,-158 L-13,-166 L-13,-150 Z M0,-158 L13,-166 L13,-150 Z', fill:'#111' }, body);
+  el('circle', { cx:0, cy:-158, r:3.5, fill:'#111' }, body);
+  [-94, -76].forEach(y => el('circle', { cx:0, cy:y, r:4.5, fill:'#ffd54f', stroke:'#c79100', 'stroke-width':1.5 }, body));
+  el('path', { d:'M-34,-96 l16,0', stroke:VELVET_DARK, 'stroke-width':2.5, 'stroke-linecap':'round' }, body);
+  // Head (drawn before the arms, so a hand can come up in front of the mouth)
+  const head = el('g', {}, body);
+  [-1, 1].forEach(s => { el('circle', { cx:s * 58, cy:-4, r:20, fill:fur, stroke:dark, 'stroke-width':3 }, head);
+                         el('circle', { cx:s * 58, cy:-4, r:11, fill:'#f8bbd0' }, head); });
+  el('circle', { r:54, fill:fur, stroke:dark, 'stroke-width':3 }, head);
+  el('path', { d:'M0,-30 C-14,-44 -44,-36 -42,-8 C-40,10 -34,22 -30,30 C-20,48 20,48 30,30 C34,22 40,10 42,-8 C44,-36 14,-44 0,-30 Z', fill:face }, head);
+  el('path', { d:'M-8,-52 C-4,-66 6,-66 4,-54 M2,-53 C8,-64 16,-60 12,-51', fill:'none', stroke:dark, 'stroke-width':3, 'stroke-linecap':'round' }, head);
+  const eyes = [-1, 1].map(s => {
+    el('ellipse', { cx:s * 18, cy:-10, rx:13, ry:15, fill:'#fff', stroke:dark, 'stroke-width':1.5 }, head);
+    const pupil = el('circle', { cx:s * 18, cy:-8, r:7, fill:'#1a1a1a' }, head);
+    const glint = el('circle', { cx:s * 18 + 3, cy:-11, r:2.5, fill:'#fff' }, head);
+    const lid = el('ellipse', { cx:s * 18, cy:-10, rx:14, ry:0, fill:face }, head);
+    const shut = el('path', { d:`M${s * 7},-7 Q${s * 18},-20 ${s * 29},-7`, fill:'none', stroke:dark, 'stroke-width':3.5, 'stroke-linecap':'round', opacity:0 }, head);
+    const brow = el('path', { fill:'none', stroke:dark, 'stroke-width':4, 'stroke-linecap':'round' }, head);
+    return { s, pupil, glint, lid, shut, brow };
+  });
+  el('ellipse', { cx:-6, cy:10, rx:3, ry:2.5, fill:dark }, head);
+  el('ellipse', { cx:6, cy:10, rx:3, ry:2.5, fill:dark }, head);
+  const cheeks = [-1, 1].map(s => el('ellipse', { cx:s * 32, cy:18, rx:9, ry:6, fill:'#ff8a80', opacity:.55 }, head));
+  const mouth = el('path', { fill:'#7f1d1d', stroke:dark, 'stroke-width':2 }, head);
+  const teeth = el('rect', { x:-12, y:22, width:24, height:6, rx:2, fill:'#fff' }, head);
+  const tongue = el('ellipse', { cx:0, cy:34, rx:9, ry:5, fill:'#ef5350' }, head);
+  const pucker = el('g', { opacity:0 }, head);
+  el('ellipse', { cx:5, cy:27, rx:8, ry:9, fill:'#e53935', stroke:dark, 'stroke-width':2 }, pucker);
+  el('ellipse', { cx:5, cy:27, rx:3, ry:4, fill:'#7f1d1d' }, pucker);
+  el('path', { d:'M-47,-28 C-46,-74 46,-74 47,-28 C20,-36 -20,-36 -47,-28 Z', fill:'#2e7d32', stroke:'#1b5e20', 'stroke-width':2.5 }, head);
+  el('path', { d:'M-30,-60 C-20,-66 -6,-68 2,-68', fill:'none', stroke:'#66bb6a', 'stroke-width':3, 'stroke-linecap':'round' }, head);
+  el('path', { d:'M18,-34 C40,-42 70,-38 78,-26 C62,-22 36,-26 18,-28 Z', fill:'#1b5e20' }, head);
+  el('circle', { cx:0, cy:-66, r:5, fill:'#ffd600' }, head);
+  if (name === 'miku'){
+    [0, 72, 144, 216, 288].forEach(a => el('ellipse', { cx:-30, cy:-58, rx:5, ry:8, fill:'#f48fb1', transform:`rotate(${a} -30 -50)` }, head));
+    el('circle', { cx:-30, cy:-50, r:4, fill:'#ffd600' }, head);
+  }
+  const arms = [-1, 1].map(s => ({ s, o:line(body, VELVET_DARK, 24), l:line(body, VELVET, 18),
+    hand:el('circle', { r:13, fill:face, stroke:dark, 'stroke-width':2 }, body) }));
+  // Props held in the right hand: Chiku's banana (Dance party) and the trophy (Congratulations)
+  let banana = null, trophy = null;
+  if (name === 'chiku'){
+    banana = el('g', {}, body);
+    el('path', { d:'M-4,0 C-6,-22 6,-42 24,-48 C14,-36 8,-18 10,2 Z', fill:'#ffeb3b', stroke:'#f9a825', 'stroke-width':2 }, banana);
+    el('path', { d:'M22,-48 l6,-5', stroke:'#6d4c41', 'stroke-width':4, 'stroke-linecap':'round' }, banana);
+    trophy = el('g', {}, body);
+    el('rect', { x:-16, y:-14, width:32, height:9, rx:2, fill:'#6d4c41' }, trophy);
+    el('rect', { x:-4, y:-30, width:8, height:17, fill:'#ffc107', stroke:'#b28704', 'stroke-width':1.5 }, trophy);
+    el('path', { d:'M-24,-70 L24,-70 C24,-44 12,-32 0,-30 C-12,-32 -24,-44 -24,-70 Z', fill:'#ffc107', stroke:'#b28704', 'stroke-width':2 }, trophy);
+    el('path', { d:'M-24,-64 C-38,-64 -36,-46 -18,-44 M24,-64 C38,-64 36,-46 18,-44', fill:'none', stroke:'#ffc107', 'stroke-width':4 }, trophy);
+    el('path', { d:'M-14,-64 C-14,-50 -8,-42 -2,-40', fill:'none', stroke:'#fff59d', 'stroke-width':3, 'stroke-linecap':'round' }, trophy);
+    el('polygon', { points:'0,-62 3,-55 10,-55 4,-50 6,-43 0,-47 -6,-43 -4,-50 -10,-55 -3,-55', fill:'#fff8e1' }, trophy);
+  }
+  const SH = [36, -150];
+
+  return { name, g, mirror, x:0, update(st, ms){
+    const th = st.theme, amp = th.amp, sd = mirror ? -1 : 1;
+    const cur = MOVES[ms.move], prev = MOVES[ms.prevMove];
+    const bowK = cur.bow ? cur.bow(ms.u) : 0;
+    const jumpK = (cur.jump ? ms.mix : 0) + (prev.jump ? 1 - ms.mix : 0);
+    const jump = jumpK * Math.abs(Math.sin(Math.PI * st.hb)) * 40;
+    const bounce = Math.abs(Math.sin(Math.PI * st.hb)) * 14 * amp * (1 - jumpK);
+    const sway = st.sw * sd;
+    body.setAttribute('transform', `translate(${f1(sway * 14 * amp)} ${f1(-bounce - jump + st.hit * 4 * amp + bowK * 16)}) rotate(${f1(sway * 7 * amp)} 0 -60)`);
+    head.setAttribute('transform', `translate(0 ${f1(-212 + bowK * 22)}) rotate(${f1(sway * 12 * amp + Math.sin(st.b * Math.PI) * 3 * amp)}) scale(1 ${f1(1 - bowK * .12)})`);
+    shadow.setAttribute('rx', f1(70 - jump * .5)); shadow.setAttribute('opacity', f1(1 - jump / 90));
+
+    arms.forEach(a => {
+      const c = cur.arms(a.s, st, ms.u), p = prev.arms(a.s, st, 1);
+      const e = lerpP(p[0], c[0], ms.mix), h = lerpP(p[1], c[1], ms.mix);
+      const d = curve([[a.s * SH[0], SH[1]], e, h]);
+      a.o.setAttribute('d', d); a.l.setAttribute('d', d);
+      a.hand.setAttribute('cx', f1(h[0])); a.hand.setAttribute('cy', f1(h[1]));
+      if (a.s > 0 && banana){
+        banana.setAttribute('opacity', th.banana ? 1 : 0);
+        banana.setAttribute('transform', `translate(${f1(h[0])} ${f1(h[1])}) rotate(${f1(-20 + 30 * Math.sin(st.b * Math.PI))})`);
+        trophy.setAttribute('opacity', th.trophy ? 1 : 0);
+        trophy.setAttribute('transform', `translate(${f1(h[0])} ${f1(h[1] + 8)})`);
+      }
+    });
+
+    const by = -bounce - jump;
+    legs.forEach(l => {
+      const tap = Math.max(0, Math.sin(Math.PI * st.hb) * l.s * sd) * 16 * amp * (1 - jumpK);
+      const fy = -tap - jump * .8;
+      const fx = l.s * 36 + sway * 6 * amp;
+      const d = curve([[l.s * 22 + sway * 14 * amp, -66 + by + bowK * 10], [l.s * (46 + bounce * .6 + bowK * 8), -34 + by * .5 - tap * .5], [fx, fy - 6]]);
+      l.o.setAttribute('d', d); l.l.setAttribute('d', d);
+      l.foot.setAttribute('cx', f1(fx + l.s * 8)); l.foot.setAttribute('cy', f1(fy));
+      l.shine.setAttribute('cx', f1(fx + l.s * 12)); l.shine.setAttribute('cy', f1(fy - 4));
+    });
+
+    const tp = [];
+    for (let k = 0; k <= 6; k++){
+      const t = k / 6, w = Math.sin(st.hb * Math.PI * .5 - k * .8) * (8 + 26 * t) * (.4 + amp);
+      tp.push([-30 - 60 * t + w * .4, -70 + by - 90 * t + w]);
+    }
+    tp.push([tp[6][0] + 18, tp[6][1] - 14], [tp[6][0] + 22, tp[6][1] + 4]);
+    const td = curve(tp);
+    tailO.setAttribute('d', td); tail.setAttribute('d', td);
+
+    // Face
+    const fc = cur.face ? cur.face(ms.u) : {};
+    const puck = (fc.pucker || 0) * ms.mix;
+    const open = fc.smile ? 6 : 4 + 16 * st.hit2 * amp;
+    mouth.setAttribute('d', `M-22,18 Q0,${f1(24 + open)} 22,18 Q0,${f1(30 + open * 1.4)} -22,18 Z`);
+    mouth.setAttribute('opacity', puck > .5 ? 0 : 1);
+    pucker.setAttribute('opacity', puck > .5 ? 1 : 0);
+    teeth.setAttribute('opacity', puck <= .5 && open > 8 ? 1 : 0);
+    tongue.setAttribute('cy', f1(28 + open * .9)); tongue.setAttribute('opacity', puck <= .5 && open > 12 ? 1 : 0);
+    cheeks.forEach(c => c.setAttribute('opacity', puck > .5 ? .95 : .55));
+    const look = Math.sin(TAU * (st.p * 2) + (mirror ? 2 : 0)) * 4;
+    const closed = (fc.closed || 0) * ms.mix > .5;
+    const blink = st.blink[mirror ? 1 : 0];
+    eyes.forEach(ey => {
+      ey.pupil.setAttribute('cx', f1(ey.s * 18 + look)); ey.glint.setAttribute('cx', f1(ey.s * 18 + look + 3));
+      ey.lid.setAttribute('ry', closed || blink ? 16 : 0);
+      ey.shut.setAttribute('opacity', closed || blink ? 1 : 0);
+      const up = 8 * st.hit2 * amp;
+      ey.brow.setAttribute('d', `M${ey.s * 8},${f1(-30 - up)} Q${ey.s * 18},${f1(-38 - up)} ${ey.s * 30},${f1(-30 - up + 2)}`);
+    });
+  } };
+}
+const troupe = [makeMonkey('chiku', false), makeMonkey('miku', true)];
+// A point in a monkey's own units -> stage units (ignores the small body sway)
+const world = (m, lx, ly) => [m.x + (m.mirror ? -1 : 1) * SC * lx, FLOOR + SC * ly];
+
+/* =====================================================================
+   THEME EXTRAS (all positions are worked out from the loop phase p,
+   so the last frame flows into the first)
+   ===================================================================== */
+let extras = null;
+function buildExtras(){
+  backLayer.replaceChildren(); frontLayer.replaceChildren();
+  const th = theme(), R = rng(1234 + th.id.length * 97);
+  const X = { hearts:[], balloons:[], petals:[], confetti:[], stars:[], kiss:[], burst:null, cake:null };
+  for (let i = 0; i < th.hearts; i++){
+    const big = i % 3 === 0;
+    X.hearts.push({ e:el('path', { d:HEART, fill:HEART_COLORS[i % HEART_COLORS.length], stroke:'rgba(255,255,255,.5)', 'stroke-width':1 }, backLayer),
+      fx:R(), fy:R(), size: big ? 2.2 + R() : .9 + R() * .9, ph:R() * TAU, op: big ? .22 : .35 + R() * .25 });
+  }
+  if (th.balloons){
+    const BC = ['#e53935', '#1e88e5', '#fdd835', '#43a047', '#8e24aa', '#fb8c00', '#ec407a'];
+    for (let i = 0; i < 8; i++){
+      const g = el('g', {}, backLayer);
+      el('path', { d:'M0,20 C-5,32 5,44 0,58', fill:'none', stroke:'#ddd', 'stroke-width':1.5 }, g);
+      el('ellipse', { rx:16, ry:20, fill:BC[i % BC.length] }, g);
+      el('ellipse', { cx:-6, cy:-8, rx:4, ry:6, fill:'rgba(255,255,255,.45)' }, g);
+      el('polygon', { points:'-3,19 3,19 0,23', fill:BC[i % BC.length] }, g);
+      X.balloons.push({ e:g, fx:(i + .5) / 8 + (R() - .5) * .08, fy:R(), ph:R() * TAU, size:.8 + R() * .5 });
+    }
+  }
+  if (th.petals){
+    const PC = ['#f8bbd0', '#ffcc80', '#ffab91', '#fff59d', '#f48fb1'];
+    for (let i = 0; i < th.petals; i++)
+      X.petals.push({ e:el('ellipse', { rx:5, ry:9, fill:PC[i % PC.length], opacity:.85 }, i % 2 ? frontLayer : backLayer),
+        fx:R(), fy:R(), ph:R() * TAU, spin:1 + Math.floor(R() * 2) });
+  }
+  if (th.cake){
+    const c = el('g', {}, frontLayer);
+    el('rect', { x:-42, y:-30, width:84, height:30, rx:5, fill:'#ec407a', stroke:'#ad1457', 'stroke-width':2 }, c);
+    el('rect', { x:-32, y:-52, width:64, height:24, rx:5, fill:'#fff8e1', stroke:'#d7ccc8', 'stroke-width':2 }, c);
+    el('path', { d:'M-32,-46 q8,10 16,0 q8,10 16,0 q8,10 16,0 q8,10 16,0', fill:'none', stroke:'#f48fb1', 'stroke-width':4 }, c);
+    [-22, -6, 10, 26].forEach(x => el('circle', { cx:x, cy:-16, r:3, fill:'#fff59d' }, c));
+    const flames = [-16, 0, 16].map((x, i) => {
+      el('rect', { x:x - 3, y:-72, width:6, height:20, fill:['#42a5f5', '#ffee58', '#66bb6a'][i] }, c);
+      return el('path', { d:'M0,0 C-5,-6 -3,-12 0,-18 C3,-12 5,-6 0,0 Z', fill:'#ffb300' }, el('g', { transform:`translate(${x} -72)` }, c));
+    });
+    X.cake = { e:c, flames };
+  }
+  if (th.confetti){
+    for (let i = 0; i < th.confetti; i++)
+      X.confetti.push({ e:el('rect', { x:-4.5, y:-2.5, width:9, height:5, fill:`hsl(${Math.floor(R() * 360)} 95% 60%)` }, frontLayer),
+        fx:R(), fy:R(), ph:R() * TAU, spin:(R() < .5 ? -1 : 1) * (1 + Math.floor(R() * 3)), sp:1 + Math.floor(R() * 2) });
+  }
+  if (th.stars){
+    for (let i = 0; i < 12; i++)
+      X.stars.push({ e:el('polygon', { points:STAR4, fill: i % 3 ? '#ffd600' : '#fff' }, frontLayer), fx:R(), fy:R(), ph:R(), size:1 + R() * 1.5 });
+  }
+  if (th.id === 'kiss'){
+    // Each kiss1 throws 4 hearts at the other monkey; kissBoth sends up a big heart that bursts
+    for (let m = 0; m < 2; m++) for (let j = 0; j < 4; j++)
+      X.kiss.push({ m, j, e:el('path', { d:HEART, fill:HEART_COLORS[(j + m) % HEART_COLORS.length], stroke:'#fff', 'stroke-width':1.2 }, frontLayer),
+        sp:el('polygon', { points:STAR4, fill:'#fff' }, frontLayer) });
+    const big = el('path', { d:HEART, fill:'#ff1744', stroke:'#fff', 'stroke-width':1.5 }, frontLayer);
+    const bits = [];
+    for (let k = 0; k < 10; k++) bits.push(el('path', { d:HEART, fill:HEART_COLORS[k % HEART_COLORS.length] }, frontLayer));
+    X.burst = { big, bits };
+  }
+  extras = X;
+}
+
+/* =====================================================================
+   SIZE AND LAYOUT
+   ===================================================================== */
+let W = 540, H = 600, FPS = 12.5, LEN = 5, NF = 62, HBN = 8, bandH = 51, tiles = [];
+function layout(){
+  [W, H] = S.size.split('x').map(Number);
+  FPS = +S.fps; LEN = +S.len; NF = Math.round(LEN * FPS);
+  VW = 460; VH = Math.round(460 * H / W);
+  svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`); svg.setAttribute('width', W); svg.setAttribute('height', H);
+  bgRect.setAttribute('width', VW); bgRect.setAttribute('height', VH);
+  bandH = Math.round(VH * (S.pos === 'bottom' ? .2 : .1));
+  FLOOR = VH - bandH;
+  TOP = VH * (S.pos === 'top' ? .19 : .06);
+  SC = Math.min((FLOOR - TOP) / 292, VW * .98 / 390);
+  const gap = 92 * SC;
+  troupe.forEach((m, i) => { m.x = VW / 2 + (i ? gap : -gap); });
+  spots[0].x = VW * .06; spots[1].x = VW * .94;
+  spots.forEach(sp => sp.p.setAttribute('points', `0,0 ${f1(-VW * .1)},${VH} ${f1(VW * .1)},${VH}`));
+  const bx = VW / 2, by = Math.max(30, TOP - 34);
+  cord.setAttribute('x1', bx); cord.setAttribute('x2', bx); cord.setAttribute('y2', by - 20);
+  ball.setAttribute('transform', `translate(${bx} ${by})`);
+  glow.setAttribute('cx', VW / 2); glow.setAttribute('cy', FLOOR - 150 * SC); glow.setAttribute('rx', VW * .55); glow.setAttribute('ry', 210 * SC);
+  floorG.replaceChildren(); tiles = [];
+  const n = Math.ceil(VW / 50);
+  for (let i = 0; i < n; i++) tiles.push(el('rect', { x:i * 50 + 1, y:FLOOR, width:48, height:bandH, rx:3 }, floorG));
+  const th = theme();
+  HBN = 4 * Math.max(1, Math.round(LEN * th.hbRate / 4));     // half-beats per loop: a whole number of sways
+  buildExtras();
+  if (extras.cake) extras.cake.e.setAttribute('transform', `translate(${f1(VW / 2)} ${f1(FLOOR)}) scale(${f1(SC * .9)})`);
+}
+
+/* Which move each monkey is doing at phase p, and how far into it */
+function moveAt(segs, p){
+  let i = segs.length - 1;
+  for (let k = 0; k < segs.length; k++) if (segs[k][0] <= p) i = k;
+  const p0 = segs[i][0], p1 = i + 1 < segs.length ? segs[i + 1][0] : 1 + segs[0][0];
+  let pp = p; if (p < segs[0][0]) pp = p + 1;               // before the first start: still the last move
+  const start = i === segs.length - 1 && p < segs[0][0] ? p0 - 1 : p0;
+  const u = (p - start) / (p1 - p0);
+  const prevMove = segs[(i - 1 + segs.length) % segs.length][1];
+  const mix = segs.length === 1 ? 1 : smooth((p - start) * LEN / .35);
+  return { move:segs[i][1], prevMove, u:Math.max(0, Math.min(1, u)), mix, p0:start, p1:start + (p1 - p0) };
+}
+
+/* =====================================================================
+   DRAW ONE FRAME (frame i of NF)
+   ===================================================================== */
+function drawFrame(i){
+  const th = theme(), p = i / NF;
+  const hb = p * HBN, b = hb * 2;
+  const blinkW = .14 / LEN;
+  const blink = [[.31, .79], [.36, .84]].map(ts => ts.some(t => p >= t && p < t + blinkW));
+  const st = { theme:th, p, hb, b, blink, hit:Math.pow(1 - frac(b), 3), hit2:Math.pow(1 - frac(hb), 3), sw:Math.sin(Math.PI * hb / 2) };
+  const mss = troupe.map(m => moveAt(th.segs[m.name], p));
+  troupe.forEach((m, k) => {
+    m.update(st, mss[k]);
+    m.g.setAttribute('transform', `translate(${f1(m.x)} ${f1(FLOOR)}) scale(${f1(m.mirror ? -SC : SC)} ${f1(SC)})`);
+  });
+
+  // Disco ball and spotlights (Dance party only)
+  const disco = !!th.disco;
+  [cord, ball].forEach(e => e.setAttribute('opacity', disco ? 1 : 0));
+  spots.forEach((sp, k) => {
+    const ang = sp.dir * (16 + 12 * Math.sin(TAU * p * 2 + k * 2));
+    sp.p.setAttribute('transform', `translate(${f1(sp.x)} 0) rotate(${f1(ang)})`);
+    sp.p.setAttribute('opacity', disco ? f1(.45 + .5 * st.hit2) : 0);
+  });
+  facets.forEach((f, k) => {
+    const a = TAU * p * 3 + k * TAU / 12, r = 13 + 6 * ((k * 7) % 3) / 2;
+    f.setAttribute('x', f1(r * Math.cos(a) - 3)); f.setAttribute('y', f1(-14 + (k % 4) * 7 - 3));
+    f.setAttribute('opacity', f1(Math.max(0, Math.sin(a)) * .9));
+  });
+  glow.setAttribute('opacity', th.glow ? f1(.8 + .2 * Math.sin(TAU * p)) : 0);
+
+  // Floor tiles
+  const beatN = Math.floor(b);
+  tiles.forEach((tl, k) => {
+    const C = th.tiles, shift = th.flash ? beatN : Math.floor(hb / 2);
+    const [h, sat] = C[((k + shift) % C.length + C.length) % C.length];
+    const light = th.flash ? 18 + 30 * st.hit * ((k + beatN) % 2) : 22 + 6 * Math.sin(TAU * p + k);
+    tl.setAttribute('fill', `hsl(${h} ${sat}% ${f1(light)}%)`);
+  });
+
+  const X = extras;
+  X.hearts.forEach(h => {
+    const fy = 1.05 - frac(h.fy + p) * 1.13, x = h.fx * VW + Math.sin(TAU * p + h.ph) * 18;
+    const pulse = 1 + .12 * st.hit2;
+    h.e.setAttribute('transform', `translate(${f1(x)} ${f1(fy * VH)}) rotate(${f1(Math.sin(TAU * p + h.ph) * 15)}) scale(${(h.size * pulse).toFixed(2)})`);
+    h.e.setAttribute('opacity', f1(h.op * 1.1));
+  });
+  X.balloons.forEach(bl => {
+    const fy = 1.1 - frac(bl.fy + p) * 1.3;
+    const x = bl.fx * VW + Math.sin(TAU * p * 2 + bl.ph) * 8;
+    bl.e.setAttribute('transform', `translate(${f1(x)} ${f1(fy * VH)}) rotate(${f1(Math.sin(TAU * p + bl.ph) * 8)}) scale(${f1(bl.size * Math.max(.8, SC))})`);
+  });
+  X.petals.forEach(pt => {
+    const fy = -.05 + frac(pt.fy + p) * 1.1, x = pt.fx * VW + Math.sin(TAU * p * 2 + pt.ph) * 22;
+    pt.e.setAttribute('transform', `translate(${f1(x)} ${f1(fy * VH)}) rotate(${f1(360 * p * pt.spin + pt.ph * 57)}) scale(${f1(.8 + .4 * Math.abs(Math.sin(TAU * p * pt.spin + pt.ph)))} 1)`);
+  });
+  X.confetti.forEach(c => {
+    const fy = -.03 + frac(c.fy + p * c.sp) * 1.0, x = c.fx * VW + Math.sin(TAU * p * 2 + c.ph) * 14;
+    const y = fy * VH;
+    c.e.setAttribute('opacity', y > FLOOR ? 0 : 1);
+    c.e.setAttribute('transform', `translate(${f1(x)} ${f1(y)}) rotate(${f1(360 * p * c.spin + c.ph * 57)})`);
+  });
+  X.stars.forEach(s => {
+    const on = Math.max(0, Math.sin(TAU * (p * 2 + s.ph)));
+    s.e.setAttribute('transform', `translate(${f1(s.fx * VW)} ${f1(TOP * .6 + s.fy * (FLOOR - TOP) * .8)}) scale(${f1(s.size * (.4 + on))})`);
+    s.e.setAttribute('opacity', f1(on));
+  });
+  if (X.cake) X.cake.flames.forEach((fl, k) => fl.setAttribute('transform', `scale(${f1(1 + .15 * Math.sin(TAU * p * 6 + k * 2))} ${f1(1 + .25 * Math.sin(TAU * p * 9 + k))})`));
+
+  // Kiss hearts: thrown when a kiss1 hand swings out (u = .55), flying to the other monkey's face
+  if (th.id === 'kiss'){
+    const flyP = .9 / LEN;
+    X.kiss.forEach(k => {
+      const me = troupe[k.m], other = troupe[1 - k.m];
+      const seg = th.segs[me.name].find(sg => sg[1] === 'kiss1');
+      const segs = th.segs[me.name], si = segs.indexOf(seg), segEnd = segs[si + 1][0];
+      const throwP = seg[0] + .57 * (segEnd - seg[0]) + k.j * .12 / LEN;
+      const age = frac(p - throwP);
+      if (age > flyP){ k.e.setAttribute('opacity', 0); k.sp.setAttribute('opacity', 0); return; }
+      const t = age / flyP;
+      const a = world(me, 92, -222);
+      const tgt = k.j === 0 ? world(other, -18, -205) : world(other, -10 + k.j * 14, -250 - k.j * 22);
+      const x = lerp(a[0], tgt[0], t), y = lerp(a[1], tgt[1], t) - Math.sin(Math.PI * t) * 46 * SC;
+      const sz = (.5 + .7 * t) * SC * (k.j === 0 ? 1.3 : .9);
+      k.e.setAttribute('transform', `translate(${f1(x)} ${f1(y)}) rotate(${f1(Math.sin(TAU * t) * 12)}) scale(${f1(sz)})`);
+      k.e.setAttribute('opacity', f1(t > .8 ? (1 - t) / .2 : 1));
+      const ts = Math.max(0, t - .18);
+      k.sp.setAttribute('transform', `translate(${f1(lerp(a[0], tgt[0], ts))} ${f1(lerp(a[1], tgt[1], ts) - Math.sin(Math.PI * ts) * 46 * SC)}) scale(${f1(.7 * SC)})`);
+      k.sp.setAttribute('opacity', f1(.9 * Math.sin(Math.PI * t)));
+    });
+    // Both blow a kiss: a big heart rises between them and bursts into little hearts
+    const segB = th.segs.chiku.find(sg => sg[1] === 'kissBoth'), sb = th.segs.chiku.indexOf(segB);
+    const relP = segB[0] + .57 * (th.segs.chiku[sb + 1][0] - segB[0]);
+    const age = frac(p - relP), riseP = .8 / LEN, burstP = .6 / LEN;
+    const cx = VW / 2, cy0 = FLOOR - 225 * SC, cy1 = Math.max(TOP + 30, FLOOR - 285 * SC);
+    if (age < riseP){
+      const t = age / riseP;
+      X.burst.big.setAttribute('opacity', 1);
+      X.burst.big.setAttribute('transform', `translate(${f1(cx)} ${f1(lerp(cy0, cy1, smooth(t)))}) scale(${f1((.6 + 1.6 * t) * SC * (1 + .08 * Math.sin(TAU * t * 3)))})`);
+      X.burst.bits.forEach(e => e.setAttribute('opacity', 0));
+    } else if (age < riseP + burstP){
+      const t = (age - riseP) / burstP;
+      X.burst.big.setAttribute('opacity', 0);
+      X.burst.bits.forEach((e, k) => {
+        const a = k * TAU / X.burst.bits.length - Math.PI / 2, r = 110 * SC * smooth(t);
+        e.setAttribute('opacity', f1(1 - t));
+        e.setAttribute('transform', `translate(${f1(cx + Math.cos(a) * r)} ${f1(cy1 + Math.sin(a) * r * .8)}) scale(${f1(.9 * SC)})`);
+      });
+    } else {
+      X.burst.big.setAttribute('opacity', 0);
+      X.burst.bits.forEach(e => e.setAttribute('opacity', 0));
+    }
+  }
+}
+
+/* =====================================================================
+   SVG -> CANVAS, PLUS THE MESSAGE AND THE CREDIT LINE
+   ===================================================================== */
+const ser = new XMLSerializer();
+function svgImage(){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(new Blob([ser.serializeToString(svg)], { type:'image/svg+xml' }));
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = e => { URL.revokeObjectURL(url); rej(new Error('Could not draw the frame')); };
+    img.src = url;
+  });
+}
+const FONT = '"Segoe UI", Arial, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+function wrapLines(ctx, text, maxW){
+  const words = text.split(/\s+/).filter(Boolean), lines = [];
+  let cur = '';
+  for (const w of words){
+    const t = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(t).width <= maxW || !cur) cur = t; else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+function drawText(ctx){
+  const sc = W / VW;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  const text = S.msg.trim();
+  if (text){
+    const areaTop = S.pos === 'top' ? 0 : FLOOR * sc;
+    const areaH = S.pos === 'top' ? TOP * sc : bandH * sc * (S.credit ? .72 : 1);
+    const maxW = W * .92;
+    let size = Math.round(H * .095), lines;
+    for (; size >= 12; size--){
+      ctx.font = `900 ${size}px ${FONT}`;
+      lines = wrapLines(ctx, text, maxW);
+      const widest = Math.max(...lines.map(l => ctx.measureText(l).width));
+      if (lines.length <= 2 && widest <= maxW && lines.length * size * 1.08 <= areaH * .92) break;
+    }
+    const lh = size * 1.08, y0 = areaTop + areaH / 2 - (lines.length - 1) * lh / 2 + (S.pos === 'top' ? size * .05 : 0);
+    if (S.pos === 'bottom'){ ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, areaTop, W, areaH); }
+    lines.forEach((l, k) => {
+      const y = y0 + k * lh;
+      ctx.lineWidth = Math.max(3, size * .16); ctx.strokeStyle = '#000';
+      ctx.strokeText(l, W / 2, y);
+      if (S.color === '#39ff14'){ ctx.shadowColor = '#39ff14'; ctx.shadowBlur = size * .35; }
+      ctx.fillStyle = S.color; ctx.fillText(l, W / 2, y);
+      ctx.shadowBlur = 0;
+    });
+  }
+  if (S.credit){
+    // A drawn "Create a Gif" button and the page's address (a GIF can't hold a clickable link)
+    let bs = Math.max(11, Math.round(H * .032)), us;
+    let bw, uw, gapX, padX;
+    for (; bs >= 9; bs--){
+      us = Math.round(bs * .62); padX = bs * .8; gapX = bs * .6;
+      ctx.font = `800 ${bs}px ${FONT}`; bw = ctx.measureText(BTN).width + padX * 2;
+      ctx.font = `600 ${us}px ${FONT}`; uw = ctx.measureText(URL_TXT).width;
+      if (bw + gapX + uw <= W * .94) break;
+    }
+    const bh = bs * 1.6, x0 = (W - (bw + gapX + uw)) / 2;
+    const yc = H - Math.max(bh / 2 + 4, Math.min(bandH * sc / 2, bh / 2 + bandH * sc * .12));
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, yc - bh / 2 - 4, W, bh + 8);
+    ctx.beginPath(); ctx.roundRect(x0, yc - bh / 2, bw, bh, bh / 2);
+    ctx.fillStyle = '#dc3545'; ctx.fill(); ctx.lineWidth = Math.max(2, bs * .12); ctx.strokeStyle = '#ffd60a'; ctx.stroke();
+    ctx.font = `800 ${bs}px ${FONT}`; ctx.fillStyle = '#fff'; ctx.fillText(BTN, x0 + bw / 2, yc + 1);
+    ctx.textAlign = 'left'; ctx.font = `600 ${us}px ${FONT}`;
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText(URL_TXT, x0 + bw + gapX, yc + 1);
+    ctx.fillStyle = '#ffd60a'; ctx.fillText(URL_TXT, x0 + bw + gapX, yc + 1);
+    ctx.textAlign = 'center';
+  }
+}
+async function renderFrame(i, ctx){
+  drawFrame(i);
+  const img = await svgImage();
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  ctx.drawImage(img, 0, 0, W, H);
+  drawText(ctx);
+}
+
+/* =====================================================================
+   GIF ENCODER (written for this page: no library, works on file://)
+   One palette for the whole GIF (median cut on a 15-bit colour histogram of sample frames),
+   frames after the first only store the rectangle that changed (unchanged pixels transparent).
+   ===================================================================== */
+function buildPalette(samples){
+  const hist = new Uint32Array(32768);
+  for (const d of samples) for (let j = 0; j < d.length; j += 8) hist[((d[j] >> 3) << 10) | ((d[j + 1] >> 3) << 5) | (d[j + 2] >> 3)]++;
+  const keys = [];
+  for (let k = 0; k < 32768; k++) if (hist[k]) keys.push(k);
+  const comp = (k, c) => c === 0 ? k >> 10 : c === 1 ? (k >> 5) & 31 : k & 31;
+  const mkBox = ks => {
+    let n = 0; const lo = [31, 31, 31], hi = [0, 0, 0];
+    for (const k of ks){ n += hist[k]; for (let c = 0; c < 3; c++){ const v = comp(k, c); if (v < lo[c]) lo[c] = v; if (v > hi[c]) hi[c] = v; } }
+    return { ks, n, lo, hi };
+  };
+  const boxes = [mkBox(keys)];
+  const MAXC = 255;                                  // index 255 is kept for "transparent"
+  while (boxes.length < MAXC){
+    let best = -1, bs = 0;
+    boxes.forEach((bx, i) => { if (bx.ks.length < 2) return;
+      const r = Math.max(bx.hi[0] - bx.lo[0], bx.hi[1] - bx.lo[1], bx.hi[2] - bx.lo[2]);
+      const sc = r * Math.sqrt(bx.n); if (sc > bs){ bs = sc; best = i; } });
+    if (best < 0) break;
+    const bx = boxes[best], rs = [0, 1, 2].map(c => bx.hi[c] - bx.lo[c]), c = rs.indexOf(Math.max(...rs));
+    const ks = bx.ks.slice().sort((a, b) => comp(a, c) - comp(b, c));
+    let acc = 0, cut = 1;
+    for (let i = 0; i < ks.length - 1; i++){ acc += hist[ks[i]]; if (acc >= bx.n / 2){ cut = i + 1; break; } cut = i + 1; }
+    boxes.splice(best, 1, mkBox(ks.slice(0, cut)), mkBox(ks.slice(cut)));
+  }
+  const pal = boxes.map(bx => {
+    let r = 0, g = 0, b = 0;
+    for (const k of bx.ks){ const w = hist[k]; r += w * comp(k, 0); g += w * comp(k, 1); b += w * comp(k, 2); }
+    const f = v => Math.min(255, Math.round(v / bx.n * 8.226));   // 0..31 -> 0..255
+    return [f(r), f(g), f(b)];
+  });
+  if (!pal.some(c => c[0] + c[1] + c[2] < 6)){ if (pal.length >= MAXC) pal.pop(); pal.push([0, 0, 0]); }
+  return pal;
+}
+function makeMapper(pal){
+  const table = new Int16Array(32768).fill(-1);
+  return (r, g, b) => {
+    const k = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+    let v = table[k];
+    if (v < 0){
+      const R = (r & 0xf8) + 4, G = (g & 0xf8) + 4, B = (b & 0xf8) + 4;
+      let bd = 1e9;
+      for (let i = 0; i < pal.length; i++){ const c = pal[i], d = (c[0] - R) ** 2 * 3 + (c[1] - G) ** 2 * 4 + (c[2] - B) ** 2 * 2; if (d < bd){ bd = d; v = i; } }
+      table[k] = v;
+    }
+    return v;
+  };
+}
+class ByteOut {
+  constructor(){ this.buf = new Uint8Array(1 << 20); this.n = 0; }
+  need(k){ if (this.n + k > this.buf.length){ const nb = new Uint8Array(Math.max(this.buf.length * 2, this.n + k)); nb.set(this.buf.subarray(0, this.n)); this.buf = nb; } }
+  byte(b){ this.need(1); this.buf[this.n++] = b; }
+  bytes(a){ this.need(a.length); this.buf.set(a, this.n); this.n += a.length; }
+  u16(v){ this.byte(v & 255); this.byte((v >> 8) & 255); }
+  str(s){ for (const ch of s) this.byte(ch.charCodeAt(0)); }
+  result(){ return this.buf.slice(0, this.n); }
+}
+const LZW_STAMP = new Int32Array(1 << 20), LZW_CODE = new Int16Array(1 << 20);
+let lzwGen = 0;
+function lzwEncode(px, out){
+  const MIN = 8, CLEAR = 256, EOI = 257;
+  out.byte(MIN);
+  const data = new ByteOut();
+  let size = MIN + 1, next = EOI + 1, cur = 0, bits = 0;
+  const emit = code => { cur |= code << bits; bits += size; while (bits >= 8){ data.byte(cur & 255); cur >>>= 8; bits -= 8; } };
+  lzwGen++;
+  emit(CLEAR);
+  let prefix = px[0];
+  for (let i = 1; i < px.length; i++){
+    const k = px[i], key = (prefix << 8) | k;
+    if (LZW_STAMP[key] === lzwGen){ prefix = LZW_CODE[key]; continue; }
+    emit(prefix);
+    if (next === 4096){ emit(CLEAR); next = EOI + 1; size = MIN + 1; lzwGen++; }
+    else { if (next >= (1 << size)) size++; LZW_STAMP[key] = lzwGen; LZW_CODE[key] = next++; }
+    prefix = k;
+  }
+  emit(prefix); emit(EOI);
+  if (bits > 0) data.byte(cur & 255);
+  const d = data.result();
+  for (let o = 0; o < d.length; o += 255){ const n = Math.min(255, d.length - o); out.byte(n); out.bytes(d.subarray(o, o + n)); }
+  out.byte(0);
+}
+function gifStart(out, w, h, pal){
+  out.str('GIF89a'); out.u16(w); out.u16(h);
+  out.byte(0xF7); out.byte(0); out.byte(0);                       // global colour table, 256 entries
+  for (let i = 0; i < 256; i++){ const c = pal[i] || [0, 0, 0]; out.byte(c[0]); out.byte(c[1]); out.byte(c[2]); }
+  out.byte(0x21); out.byte(0xFF); out.byte(11); out.str('NETSCAPE2.0'); out.byte(3); out.byte(1); out.u16(0); out.byte(0);   // loop forever
+}
+const TRANS = 255;
+function gifFrame(out, idx, prev, w, h, delayCs){
+  let x0 = 0, y0 = 0, x1 = w - 1, y1 = h - 1;
+  if (prev){
+    x0 = w; y0 = h; x1 = -1; y1 = -1;
+    for (let y = 0; y < h; y++){ const r = y * w;
+      for (let x = 0; x < w; x++) if (idx[r + x] !== prev[r + x]){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+    if (x1 < 0){ x0 = x1 = y0 = y1 = 0; }
+  }
+  const fw = x1 - x0 + 1, fh = y1 - y0 + 1, px = new Uint8Array(fw * fh);
+  for (let y = 0; y < fh; y++) for (let x = 0; x < fw; x++){
+    const s = (y + y0) * w + x + x0;
+    px[y * fw + x] = prev && idx[s] === prev[s] ? TRANS : idx[s];
+  }
+  out.byte(0x21); out.byte(0xF9); out.byte(4); out.byte((1 << 2) | (prev ? 1 : 0)); out.u16(delayCs); out.byte(TRANS); out.byte(0);
+  out.byte(0x2C); out.u16(x0); out.u16(y0); out.u16(fw); out.u16(fh); out.byte(0);
+  lzwEncode(px, out);
+}
+
+/* =====================================================================
+   CREATE THE GIF
+   ===================================================================== */
+let busy = false, cancelled = false, lastGif = null, lastName = '', lastKind = 'gif';
+const work = document.createElement('canvas');
+const wctx = work.getContext('2d', { willReadFrequently:true });
+const tick = () => new Promise(r => setTimeout(r, 0));
+function prompt(html){ $('prompt').innerHTML = html; }
+function progress(f){ $('progWrap').hidden = f == null; if (f != null) $('prog').style.width = (f * 100).toFixed(1) + '%'; }
+async function create(){
+  if (busy) return null;
+  busy = true; cancelled = false; pausePreview(true);
+  setBusyUI(true);
+  const t0 = performance.now();
+  try{
+    layout();
+    work.width = W; work.height = H;
+    // 1. palette from ~10 frames spread over the loop
+    prompt('🎨 Choosing the colours…'); progress(0);
+    const samples = [], ns = Math.min(10, NF);
+    for (let k = 0; k < ns; k++){
+      await renderFrame(Math.floor(k * NF / ns), wctx);
+      samples.push(wctx.getImageData(0, 0, W, H).data);
+      if (cancelled) throw new Error('cancel');
+    }
+    const pal = buildPalette(samples), map = makeMapper(pal);
+    // 2. every frame -> palette indices -> GIF
+    const out = new ByteOut();
+    gifStart(out, W, H, pal);
+    const delay = Math.round(100 / FPS);
+    let prev = null;
+    for (let i = 0; i < NF; i++){
+      prompt(`🖌️ Drawing frame <b>${i + 1}</b> of ${NF}…`); progress(i / NF);
+      await renderFrame(i, wctx);
+      const d = wctx.getImageData(0, 0, W, H).data, idx = new Uint8Array(W * H);
+      for (let j = 0, q = 0; q < idx.length; j += 4, q++) idx[q] = map(d[j], d[j + 1], d[j + 2]);
+      gifFrame(out, idx, prev, W, H, delay);
+      prev = idx;
+      await tick();
+      if (cancelled) throw new Error('cancel');
+    }
+    out.byte(0x3B);
+    const bytes = out.result();
+    lastGif = new Blob([bytes], { type:'image/gif' }); lastKind = 'gif';
+    lastName = `GIF-${theme().id}-${slug(S.msg) || 'monkeys'}.gif`;
+    showResult(bytes.length, (performance.now() - t0) / 1000);
+    return lastGif;
+  }catch(err){
+    if (err.message === 'cancel') prompt('Cancelled. Press <b>Create GIF</b> to try again.');
+    else { prompt('⚠️ Something went wrong: ' + err.message); console.error(err); }
+    return null;
+  }finally{
+    busy = false; progress(null); setBusyUI(false);
+    pausePreview(false);
+  }
+}
+function setBusyUI(on){
+  $('makeBtn').disabled = on; $('vidBtn').disabled = on || !voice; $('cancelBtn').disabled = !on;
+  ['recBtn', 'recPlay', 'recDel'].forEach(id => $(id).disabled = on || (id !== 'recBtn' && !voice));
+  if (on) $('result').hidden = true;
+}
+const slug = s => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+let gifUrl = null;
+function showResult(nBytes, secs){
+  if (gifUrl) URL.revokeObjectURL(gifUrl);
+  gifUrl = URL.createObjectURL(lastGif);
+  const isVid = lastKind !== 'gif';
+  $('gifImg').hidden = isVid; $('vidEl').hidden = !isVid;
+  if (isVid){ $('gifImg').removeAttribute('src'); $('vidEl').src = gifUrl; }
+  else { $('vidEl').pause(); $('vidEl').removeAttribute('src'); $('gifImg').src = gifUrl; }
+  const mb = nBytes / 1048576, big = mb > (isVid ? 15 : 5);
+  $('rSize').textContent = mb >= 1 ? mb.toFixed(1) + ' MB' : Math.round(nBytes / 1024) + ' KB';
+  $('sizeCard').classList.toggle('warn', big);
+  $('rFramesLbl').textContent = isVid ? 'Format' : 'Frames';
+  $('rFrames').textContent = isVid ? lastKind.toUpperCase() + ' 🔊' : NF;
+  $('rLen').textContent = isVid ? VIDEO_SECS.toFixed(1) + ' s' : (NF * Math.round(100 / FPS) / 100).toFixed(1) + ' s';
+  $('rDim').textContent = `${W}×${H}`;
+  $('result').hidden = false; $('saveMsg').textContent = '';
+  $('shareBtn').hidden = !(navigator.canShare && navigator.canShare({ files:[fileOf()] }));
+  let tip = big ? ' It is quite big: the small size makes it easier to send.' : ' Save it, download it or share it.';
+  if (lastKind === 'webm') tip += ' (This browser could only make a WebM video; some apps, like WhatsApp, may not take it. Chrome or Edge make MP4.)';
+  prompt(`✅ Your ${isVid ? 'video with sound' : 'GIF'} is ready (made in ${secs.toFixed(1)} s).` + tip);
+}
+const fileOf = () => new File([lastGif], lastName, { type:lastGif.type.split(';')[0] });
+
+/* =====================================================================
+   SAVE / DOWNLOAD / SHARE (folder handle kept in IndexedDB, like recorder.html)
+   ===================================================================== */
+let dirHandle = null;
+const canPickFolder = 'showDirectoryPicker' in window;
+function idb(){ return new Promise((res, rej) => { const r = indexedDB.open('gif-creator', 1);
+  r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbGet(k){ try{ const db = await idb(); return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); }catch(e){ return null; } }
+async function idbSet(k, v){ try{ const db = await idb(); db.transaction('kv', 'readwrite').objectStore('kv').put(v, k); }catch(e){} }
+function showFolder(){ $('folderName').textContent = dirHandle ? dirHandle.name : 'not chosen yet'; }
+async function pickFolder(){
+  try{ dirHandle = await window.showDirectoryPicker({ id:'gif-creator', mode:'readwrite', startIn: dirHandle || 'pictures' }); }
+  catch(e){ return false; }
+  await idbSet('saveDir', dirHandle); showFolder(); return true;
+}
+async function permitted(h){
+  const o = { mode:'readwrite' };
+  if (await h.queryPermission(o) === 'granted') return true;
+  return (await h.requestPermission(o)) === 'granted';
+}
+async function saveToFolder(){
+  if (!lastGif) return;
+  if (!dirHandle && !(await pickFolder())) return;
+  if (!(await permitted(dirHandle))){ $('saveMsg').textContent = 'The browser did not allow saving in that folder.'; return; }
+  let n = 0;
+  const pre = lastKind === 'gif' ? 'GIF' : 'VIDEO', re = new RegExp('^' + pre + '-(\\d+)-', 'i');
+  for await (const [name] of dirHandle.entries()){ const m = re.exec(name); if (m) n = Math.max(n, +m[1]); }
+  const fname = `${pre}-${n + 1}-${slug(theme().name)}.${lastKind}`;
+  const fh = await dirHandle.getFileHandle(fname, { create:true });
+  const w = await fh.createWritable(); await w.write(lastGif); await w.close();
+  $('saveMsg').innerHTML = `💾 Saved as <span class="folder-name">${dirHandle.name}/${fname}</span>.`;
+}
+function download(){
+  if (!lastGif) return;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(lastGif); a.download = lastName;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  $('saveMsg').textContent = '⬇ Downloaded as ' + lastName + '.';
+}
+async function share(){
+  try{ await navigator.share({ files:[fileOf()], title:'From Chiku and Miku' }); }catch(e){}
+}
+
+/* =====================================================================
+   VOICE: record up to 10 s with the microphone
+   ===================================================================== */
+const VIDEO_SECS = 10;
+let actx = null, voice = null, voiceSrc = null, mic = null, micRec = null, recT0 = 0, recTimer = null;
+function ac(){ if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); return actx; }
+function recUI(state, msg){
+  $('recDot').className = 'rec-dot' + (state === 'rec' ? ' on' : voice ? ' ok' : '');
+  $('recCard').classList.toggle('rec', state === 'rec');
+  $('recBtn').disabled = state === 'rec' || busy; $('recStop').disabled = state !== 'rec';
+  $('recPlay').disabled = !voice || state === 'rec' || busy; $('recDel').disabled = !voice || state === 'rec' || busy;
+  $('vidBtn').disabled = !voice || state === 'rec' || busy;
+  $('recBtn').textContent = voice ? '● Record again (10 s)' : '● Record (10 s)';
+  if (msg != null) $('recState').innerHTML = msg;
+  if (state !== 'rec') $('recLen').textContent = voice ? voice.duration.toFixed(1) + ' s' : '–';
+}
+async function startRec(){
+  if (!navigator.mediaDevices || !window.MediaRecorder){ recUI('idle', '⚠️ This browser cannot record sound.'); return; }
+  stopVoice();
+  try{ mic = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } }); }
+  catch(e){ recUI('idle', '⚠️ No microphone, or the browser was not allowed to use it.'); return; }
+  const chunks = [];
+  micRec = new MediaRecorder(mic);
+  micRec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  micRec.onstop = async () => {
+    clearInterval(recTimer); mic.getTracks().forEach(t => t.stop()); mic = null;
+    try{
+      const buf = await ac().decodeAudioData(await new Blob(chunks, { type:micRec.mimeType }).arrayBuffer());
+      voice = tidyVoice(buf);
+      recUI('idle', '✅ Recorded. Press <b>▶ Play with the preview</b> to hear it with the monkeys, or <b>🎬 Create video with sound</b> in step 5.');
+    }catch(e){ voice = null; recUI('idle', '⚠️ Could not read the recording: ' + e.message); }
+  };
+  micRec.start(100); recT0 = performance.now();
+  recUI('rec', '🔴 Recording… speak now. It stops by itself at 10 s.');
+  recTimer = setInterval(() => {
+    const t = (performance.now() - recT0) / 1000;
+    $('recLen').textContent = Math.min(VIDEO_SECS, t).toFixed(1) + ' s';
+    if (t >= VIDEO_SECS) stopRec();
+  }, 100);
+}
+function stopRec(){ if (micRec && micRec.state === 'recording') micRec.stop(); }
+// Keep at most 10 s, cut the silence before the first word, and make it loud enough (peak 0.9, at most ×4)
+function tidyVoice(buf){
+  const ch = buf.numberOfChannels, sr = buf.sampleRate, d0 = buf.getChannelData(0);
+  let peak = 0;
+  for (let c = 0; c < ch; c++){ const d = buf.getChannelData(c); for (let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if (a > peak) peak = a; } }
+  let start = 0; const thr = peak * .08;
+  while (start < d0.length && Math.abs(d0[start]) < thr) start++;
+  start = Math.max(0, Math.min(start, d0.length - 1) - Math.round(sr * .15));
+  const len = Math.max(1, Math.min(buf.length - start, Math.round(sr * VIDEO_SECS)));
+  const out = ac().createBuffer(ch, len, sr), g = peak > 0 ? Math.min(4, .9 / peak) : 1;
+  for (let c = 0; c < ch; c++){ const src = buf.getChannelData(c), dst = out.getChannelData(c); for (let i = 0; i < len; i++) dst[i] = src[start + i] * g; }
+  return out;
+}
+function stopVoice(){ if (voiceSrc){ try{ voiceSrc.stop(); }catch(e){} voiceSrc = null; } }
+function playVoice(){
+  if (!voice) return;
+  stopVoice();
+  voiceSrc = ac().createBufferSource(); voiceSrc.buffer = voice; voiceSrc.connect(ac().destination); voiceSrc.start();
+  pvPlaying = true; pvStart = performance.now(); $('pvBtn').textContent = '❚❚ Pause';    // restart the preview with the voice
+}
+
+/* =====================================================================
+   VIDEO WITH SOUND: one loop of frames is drawn once, then played for 10 s on a canvas while the
+   browser records the canvas and the voice together (MediaRecorder: MP4 in Chrome/Edge, else WebM)
+   ===================================================================== */
+function videoType(){
+  const T = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  return T.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+}
+async function createVideo(){
+  if (busy || !voice) return null;
+  const type = videoType();
+  if (!type){ prompt('⚠️ This browser cannot make videos. Please use Chrome or Edge.'); return null; }
+  busy = true; cancelled = false; pausePreview(true); stopVoice(); setBusyUI(true);
+  const t0 = performance.now();
+  const vc = document.createElement('canvas');
+  vc.style.cssText = 'position:fixed;left:-10000px;top:0;';
+  document.body.appendChild(vc);
+  let rec = null, src = null;
+  try{
+    layout();
+    work.width = W; work.height = H; vc.width = W; vc.height = H;
+    const vctx = vc.getContext('2d');
+    // 1. draw one loop of frames
+    const frames = [];
+    for (let i = 0; i < NF; i++){
+      prompt(`🖌️ Drawing frame <b>${i + 1}</b> of ${NF}…`); progress(i / NF * .3);
+      await renderFrame(i, wctx);
+      frames.push(await createImageBitmap(work));
+      if (cancelled) throw new Error('cancel');
+    }
+    // 2. play them for 10 s with the voice and record both
+    const ctx = ac(), dest = ctx.createMediaStreamDestination();
+    src = ctx.createBufferSource(); src.buffer = voice; src.connect(dest);
+    const stream = new MediaStream([...vc.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+    const chunks = [];
+    rec = new MediaRecorder(stream, { mimeType:type, videoBitsPerSecond:2500000, audioBitsPerSecond:128000 });
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    const done = new Promise(r => rec.onstop = r);
+    vctx.drawImage(frames[0], 0, 0);
+    rec.start(250);
+    const start = ctx.currentTime + .1;
+    src.start(start);
+    await new Promise(resolve => {
+      const step = () => {
+        const el = ctx.currentTime - start;
+        if (cancelled || el >= VIDEO_SECS + .05){ resolve(); return; }
+        vctx.drawImage(frames[Math.floor(Math.max(0, el) * FPS) % NF], 0, 0);
+        prompt(`🎬 Recording the video… <b>${Math.max(0, el).toFixed(1)}</b> of ${VIDEO_SECS} s (keep this tab open)`);
+        progress(.3 + .7 * Math.max(0, el) / VIDEO_SECS);
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+    rec.stop(); await done;
+    frames.forEach(f => f.close && f.close());
+    if (cancelled) throw new Error('cancel');
+    const ext = type.startsWith('video/mp4') ? 'mp4' : 'webm';
+    lastGif = new Blob(chunks, { type:type.split(';')[0] }); lastKind = ext;
+    lastName = `VIDEO-${theme().id}-${slug(S.msg) || 'monkeys'}.${ext}`;
+    showResult(lastGif.size, (performance.now() - t0) / 1000);
+    return lastGif;
+  }catch(err){
+    if (rec && rec.state !== 'inactive') rec.stop();
+    if (err.message === 'cancel') prompt('Cancelled. Press <b>Create video with sound</b> to try again.');
+    else { prompt('⚠️ Something went wrong: ' + err.message); console.error(err); }
+    return null;
+  }finally{
+    try{ src && src.stop(); }catch(e){}
+    vc.remove();
+    busy = false; progress(null); setBusyUI(false); recUI('idle');
+    pausePreview(false);
+  }
+}
+
+
+/* =====================================================================
+   PREVIEW (the same frames as the GIF, drawn on a canvas in a loop)
+   ===================================================================== */
+const pv = $('preview'), pctx = pv.getContext('2d');
+let pvPlaying = true, pvHold = false, pvStart = performance.now(), pvBusy = false, pvFrame = -1, pvDirty = true;
+function pausePreview(h){ pvHold = h; }
+async function previewLoop(){
+  if (!pvBusy && !pvHold && (pvPlaying || pvDirty)){
+    pvBusy = true;
+    try{
+      if (pvDirty){ layout(); pv.width = W; pv.height = H; showInfo(); }
+      const i = pvPlaying ? Math.floor((performance.now() - pvStart) / 1000 * FPS) % NF : Math.max(0, pvFrame);
+      if (i !== pvFrame || pvDirty){ await renderFrame(i, pctx); pvFrame = i; }
+      pvDirty = false;
+    }catch(e){ console.error(e); }
+    pvBusy = false;
+  }
+  setTimeout(previewLoop, 1000 / FPS / 2);
+}
+function showInfo(){
+  $('pvInfo').innerHTML = [`${W} × ${H}`, `${NF} frames`, `${LEN} s loop`, theme().emoji + ' ' + theme().name]
+    .map(t => `<span class="stat-pill">${t}</span>`).join('');
+}
+function changed(){ saveS(); pvDirty = true; }
+
+/* =====================================================================
+   CONTROLS
+   ===================================================================== */
+const chars = s => Array.from(s);
+function buildThemes(){
+  $('themeChoice').innerHTML = THEMES.map(t => `
+    <label class="mode-opt" data-id="${t.id}">
+      <input class="form-check-input" type="radio" name="theme" value="${t.id}">
+      <span class="big">${t.emoji}</span>
+      <span><span class="nm d-block">${t.name}</span><span class="sub">${t.sub}</span></span>
+    </label>`).join('');
+  $('themeChoice').addEventListener('change', e => { if (e.target.name === 'theme') setTheme(e.target.value); });
+}
+function setTheme(id){
+  const old = theme();
+  S.theme = id;
+  const m = S.msg.trim();
+  if (!m || THEMES.some(t => t.msg === m)) S.msg = theme().msg;   // replace a default message, keep the user's own
+  if (old.id !== id || !$('msg').value) $('msg').value = S.msg;
+  syncUI(); changed();
+}
+function setMessage(text){
+  const c = chars(text);
+  S.msg = c.slice(0, MAXCH).join('');
+  if ($('msg').value !== S.msg) $('msg').value = S.msg;
+  syncUI(); changed();
+}
+function syncUI(){
+  document.querySelectorAll('#themeChoice .mode-opt').forEach(o => {
+    const on = o.dataset.id === S.theme; o.classList.toggle('checked', on); o.querySelector('input').checked = on; });
+  $('readyMade').hidden = S.theme !== 'kiss';
+  const n = chars(S.msg).length;
+  $('msgCount').textContent = `${n} / ${MAXCH}`; $('msgCount').classList.toggle('full', n >= MAXCH);
+  $('posTop').checked = S.pos === 'top'; $('posBottom').checked = S.pos === 'bottom';
+  document.querySelectorAll('.swatch').forEach(b => b.classList.toggle('on', b.dataset.c === S.color));
+  $('credit').checked = S.credit;
+  $('lenSel').value = String(S.len); $('sizeSel').value = S.size; $('fpsSel').value = String(S.fps);
+}
+function initUI(){
+  buildThemes();
+  $('swatches').innerHTML = COLORS.map(([c, n]) => `<button type="button" class="swatch" data-c="${c}" title="${n}" aria-label="${n}" style="background:${c}"></button>`).join('');
+  $('swatches').addEventListener('click', e => { const b = e.target.closest('.swatch'); if (b){ S.color = b.dataset.c; syncUI(); changed(); } });
+  $('msg').value = S.msg;
+  $('msg').addEventListener('input', () => setMessage($('msg').value));
+  $('msgClear').addEventListener('click', () => { setMessage(''); $('msg').focus(); });
+  document.querySelectorAll('input[name=pos]').forEach(r => r.addEventListener('change', () => { S.pos = r.value; changed(); }));
+  $('credit').addEventListener('change', () => { S.credit = $('credit').checked; changed(); });
+  $('lenSel').addEventListener('change', () => { S.len = +$('lenSel').value; pvStart = performance.now(); changed(); });
+  $('sizeSel').addEventListener('change', () => { S.size = $('sizeSel').value; changed(); });
+  $('fpsSel').addEventListener('change', () => { S.fps = +$('fpsSel').value; changed(); });
+  $('pvBtn').addEventListener('click', () => {
+    pvPlaying = !pvPlaying; if (pvPlaying) pvStart = performance.now() - pvFrame / FPS * 1000;
+    $('pvBtn').textContent = pvPlaying ? '❚❚ Pause' : '▶ Play';
+  });
+  $('makeBtn').addEventListener('click', create);
+  $('cancelBtn').addEventListener('click', () => { cancelled = true; });
+  $('saveBtn').addEventListener('click', () => saveToFolder().catch(e => { $('saveMsg').textContent = 'Could not save: ' + e.message; }));
+  $('folderBtn').addEventListener('click', pickFolder);
+  $('downloadBtn').addEventListener('click', download);
+  $('shareBtn').addEventListener('click', share);
+  $('recBtn').addEventListener('click', startRec);
+  $('recStop').addEventListener('click', stopRec);
+  $('recPlay').addEventListener('click', playVoice);
+  $('recDel').addEventListener('click', () => { stopVoice(); voice = null; recUI('idle', 'Recording deleted.'); });
+  $('vidBtn').addEventListener('click', createVideo);
+  if (!canPickFolder){ $('saveBtn').hidden = true; $('folderBtn').hidden = true; $('downloadBtn').textContent = '⬇ Download'; $('downloadBtn').classList.replace('btn-outline-secondary', 'btn-success'); }
+  syncUI();
+  idbGet('saveDir').then(h => { if (h){ dirHandle = h; showFolder(); } });
+}
+
+initUI();
+layout();
+previewLoop();
+
+/* For headless tests */
+window.__gifCreator = { themes:THEMES, state:S, setTheme, setMessage, create, createVideo, startRec, stopRec,
+  get voice(){ return voice; }, setVoice(b){ voice = b; recUI('idle'); }, videoType, ac, layout,  drawFrame, renderFrame,
+  frames:() => NF, get lastGif(){ return lastGif; }, set(o){ Object.assign(S, o); syncUI(); changed(); layout(); } };
+})();
+</script>
+</body>
+</html>
