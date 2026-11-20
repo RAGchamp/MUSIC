@@ -290,6 +290,9 @@ One self-contained page, recorder.html's look (nav, step cards, `.mode-opt` boxe
   records `canvas.captureStream(30)` + the voice (`MediaStreamDestination`). MP4 (H.264 + AAC) in Chrome/Edge, else WebM with a
   warning. Saved as `VIDEO-<n>-<theme>.mp4` / downloaded as `VIDEO-<theme>-<message>.mp4`. Checked headless with a fake mic:
   MP4 540×600, 10.2 s, 1.6 MB, avc1 + mp4a tracks, ~13 s to make.
+- **Song option removed (owner, 2026-11-20):** a 🎵 built-in song (Anhoni Ko Honi Kar De, 38 s video, dance speed changing
+  with the music) was built and then dropped before it was pushed. For now the only sound is the user's own 10 s voice; the owner
+  may add built-in sounds later. Don't add it back unless asked.
 - `window.__gifCreator` = {themes, state, set(o), setTheme, setMessage, create, createVideo, startRec, stopRec, voice, setVoice,
   videoType, ac, layout, drawFrame, renderFrame, frames, lastGif}.
 

@@ -9,6 +9,8 @@
 - **added later the same day (owner's request): a video with sound.** A GIF can't hold audio, so a new step 4 records up
   to 10 s of the user's **voice** (owner's choice) and step 5 has **🎬 Create video with sound**: a 10 s MP4 (always 10 s,
   owner's choice; the animation loops under the voice), recorded from a canvas with `MediaRecorder` (WebM where MP4 isn't supported);
+- a built-in song instead of the voice (Anhoni Ko Honi Kar De, a 38 s video with the dance speeding up) was built and then
+  **dropped at the owner's request**: for now the only sound is the user's 10 s voice; built-in sounds may come later;
 - a photo face and a 🧚 Fairies choice were added later the same day and then **removed at the owner's request**
   (keep it simple: monkeys only);
 - the disco ball and spotlights appear only in Dance party; Chiku's banana only in Dance party, the trophy in Congratulations.
