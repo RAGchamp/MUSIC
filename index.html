@@ -66,7 +66,8 @@
 
   /* Journey */
   .journey{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:stretch; margin-top:.6rem; }
-  .jstep{ flex:1 1 120px; background:#f1f4f9; border:2px solid #dde3ec; border-radius:.7rem; padding:.6rem .75rem; position:relative; }
+  .jstep{ display:block; text-decoration:none; color:inherit; transition:border-color .12s; flex:1 1 120px; background:#f1f4f9; border:2px solid #dde3ec; border-radius:.7rem; padding:.6rem .75rem; position:relative; }
+  .jstep:hover{ border-color:var(--nav-blue); color:inherit; }
   .jstep .ic{ font-size:1.3rem; }
   .jstep b{ display:block; font-size:.9rem; line-height:1.25; margin-top:.15rem; }
   .jstep span{ font-size:.76rem; color:var(--muted); }
@@ -165,14 +166,15 @@
       <p class="mb-1">The first step to becoming an AI amplifier is simple: <b>build small apps and watch how AI works</b>, where it shines and
         where it needs guiding. That is what each RAG Champ project does:</p>
       <div class="journey">
-        <div class="jstep"><div class="ic">🧪</div><b>Evals for Coding Agents</b><span>Measuring how well coding agents work</span></div>
-        <div class="jstep"><div class="ic">🏛️</div><b>COBOL → Java migration</b><span>A framework of coding agents</span></div>
-        <div class="jstep"><div class="ic">📑</div><b>Annual Report Analyzer</b><span>Finance: reading company reports</span></div>
-        <div class="jstep"><div class="ic">📈</div><b>Stock Investment Playbook</b><span>Finance: investing</span></div>
-        <div class="jstep"><div class="ic">🧾</div><b>Small Business Accounting</b><span>Finance: bookkeeping</span></div>
-        <div class="jstep"><div class="ic">🗺️</div><b>Flow Chart App</b><span>Presentations PowerPoint can't make</span></div>
-        <div class="jstep now"><div class="ic">🎵</div><b>Music</b><span>Practise, learn, play and create</span></div>
+        <a class="jstep" href="vision.html#evals"><div class="ic">🧪</div><b>Evals for Coding Agents</b><span>Measuring how well coding agents work</span></a>
+        <a class="jstep" href="vision.html#cobol"><div class="ic">🏛️</div><b>COBOL → Java migration</b><span>A framework of coding agents</span></a>
+        <a class="jstep" href="vision.html#analyzer"><div class="ic">📑</div><b>Annual Report Analyzer</b><span>Finance: reading company reports</span></a>
+        <a class="jstep" href="vision.html#stocks"><div class="ic">📈</div><b>Stock Investment Playbook</b><span>Finance: investing</span></a>
+        <a class="jstep" href="vision.html#accounting"><div class="ic">🧾</div><b>Small Business Accounting</b><span>Finance: bookkeeping</span></a>
+        <a class="jstep" href="vision.html#flowchart"><div class="ic">🗺️</div><b>Flow Chart App</b><span>Presentations PowerPoint can't make</span></a>
+        <a class="jstep now" href="vision.html#music"><div class="ic">🎵</div><b>Music</b><span>Practise, learn, play and create</span></a>
       </div>
+      <p class="mt-3 mb-0"><a class="btn btn-go" href="vision.html">🔭 Read the full vision and every initiative →</a></p>
     </div>
   </section>
 
@@ -377,7 +379,7 @@
     <a href="practice.html">🎶 Song Practice</a> · <a href="piano.html">🎹 Piano player</a> · <a href="mini-piano.html">📱 Mini Piano</a> ·
     <a href="MUSIC-THEORY/MUSIC-BASICS.html">📚 Music Basics</a> · <a href="GIF-CREATOR/gif.html">🎞️ GIF Creator</a> ·
     <a href="NOTES-TESTER/index.html">🧪 Notes Tester</a> · <a href="recorder.html">🎙️ Recorder</a> ·
-    <a href="contactus.html">✉️ Contact Us</a> · <a href="SITE-MAP.html">🗺️ Site Map</a></div>
+    <a href="vision.html">🔭 Vision</a> · <a href="contactus.html">✉️ Contact Us</a> · <a href="SITE-MAP.html">🗺️ Site Map</a></div>
 </footer>
 
 </body>

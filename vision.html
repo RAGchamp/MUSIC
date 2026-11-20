@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Champ Vision</title>
+<meta name="description" content="The RAG Champ vision: helping tech professionals become AI amplifiers, by building small apps and learning how AI works. Seven initiatives from coding-agent evals to music.">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root{
+    --biz-blue:#0d6efd; --biz-blue-dark:#084298; --biz-yellow:#ffc107;
+    --nav-blue:#04264d; --nav-yellow:#ffd60a;
+    --ink:#1f2633; --muted:#5a6475; --line:#c9d3e3;
+  }
+  body{ background:#f7f8fa; margin:0; color:var(--ink); }
+
+  .topnav{
+    position:sticky; top:0; z-index:1030;
+    background:var(--nav-blue); color:var(--nav-yellow);
+    padding:.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 .15rem .5rem rgba(0,0,0,.25);
+  }
+  .topnav .brand{ display:inline-flex; align-items:center; text-decoration:none; }
+  .topnav .brand-logo{ height:44px; width:auto; display:block; }
+  .topnav .tagline{ font-weight:600; font-size:1.05rem; color:var(--nav-yellow); letter-spacing:.15em; word-spacing:.6em; font-style:italic; }
+  @media (max-width:576px){ .topnav{ flex-direction:column; text-align:center; gap:.4rem; padding:.75rem 1rem; } }
+
+  .hero{
+    background:radial-gradient(circle at 85% 20%, rgba(255,214,10,.18), transparent 40%),
+               linear-gradient(135deg,#04264d 0%,#083a72 60%,#0b4c94 100%);
+    color:#fff; padding:3rem 0 2.6rem; border-top:4px solid var(--nav-yellow);
+  }
+  .hero .kicker{ color:var(--nav-yellow); font-weight:700; letter-spacing:.14em; text-transform:uppercase; font-size:.8rem; }
+  .hero h1{ font-weight:800; font-size:clamp(1.9rem, 4.6vw, 3rem); line-height:1.15; margin:.5rem 0 1rem; }
+  .hero h1 span{ color:var(--nav-yellow); }
+  .hero .lead{ color:#dbe6f5; max-width:48rem; }
+  .hl{ background:var(--nav-yellow); color:var(--nav-blue); font-weight:700; padding:.05rem .35rem; border-radius:.25rem; }
+
+  .sec{ padding:2.6rem 0 .4rem; }
+  .sec-kicker{ font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#b0185a; }
+  .sec h2{ font-weight:800; font-size:1.6rem; margin:.25rem 0 .4rem; }
+  .sec .intro{ color:var(--muted); max-width:50rem; }
+
+  .amp-def{ background:#fff8e1; border-left:6px solid var(--biz-yellow); border-radius:.5rem; padding:1rem 1.2rem; font-size:1.05rem; }
+  .pillar{ background:#fff; border:2px solid var(--line); border-radius:.8rem; padding:1rem 1.1rem; height:100%; }
+  .pillar .ic{ font-size:1.7rem; }
+  .pillar b{ display:block; margin:.25rem 0; font-size:1.05rem; }
+  .pillar span{ font-size:.9rem; color:var(--muted); }
+
+  /* Timeline */
+  .timeline{ position:relative; margin-top:1.4rem; }
+  .timeline::before{ content:''; position:absolute; left:22px; top:0; bottom:0; width:4px; background:linear-gradient(var(--nav-blue), var(--nav-yellow)); border-radius:2px; }
+  .titem{ position:relative; padding-left:64px; margin-bottom:1.4rem; }
+  .tdot{ position:absolute; left:0; top:.6rem; width:48px; height:48px; border-radius:50%; background:#fff; border:4px solid var(--nav-blue);
+    display:flex; align-items:center; justify-content:center; font-size:1.35rem; }
+  .titem.now .tdot{ border-color:var(--nav-yellow); background:var(--nav-blue); }
+  .tcard{ background:#fff; border:2px solid var(--line); border-radius:.9rem; padding:1.1rem 1.2rem; }
+  .titem.now .tcard{ border-color:var(--nav-blue); background:linear-gradient(180deg,#fff,#f3f7fd); }
+  .tmeta{ font-size:.75rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .tcard h3{ font-size:1.25rem; font-weight:800; margin:.2rem 0 .45rem; }
+  .tcard p{ font-size:.93rem; margin-bottom:.55rem; }
+  .tcard ul{ font-size:.9rem; color:var(--muted); padding-left:1.15rem; margin-bottom:.7rem; }
+  .lesson{ background:#fde2ec; border-radius:.55rem; padding:.55rem .8rem; font-size:.9rem; color:#5a1d36; margin-bottom:.7rem; }
+  .lesson b{ color:#8a1f4a; }
+  .tag{ display:inline-block; font-size:.68rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:.12rem .5rem; border-radius:1rem; background:#eef3fb; color:var(--biz-blue-dark); margin-right:.25rem; }
+  .btn-go{ background:var(--nav-blue); color:var(--nav-yellow); font-weight:700; border-radius:2rem; padding:.35rem 1rem; font-size:.88rem; }
+  .btn-go:hover{ background:#083a72; color:var(--nav-yellow); }
+  .btn-go-lite{ border:2px solid var(--nav-blue); color:var(--nav-blue); font-weight:700; border-radius:2rem; padding:.28rem .95rem; font-size:.86rem; }
+  .btn-go-lite:hover{ background:#eef3fb; color:var(--nav-blue); }
+  @media (max-width:576px){
+    .timeline::before{ left:16px; }
+    .titem{ padding-left:46px; }
+    .tdot{ width:36px; height:36px; font-size:1rem; border-width:3px; }
+  }
+
+  /* Principles */
+  .prin{ background:#fff; border:2px solid var(--line); border-radius:.8rem; padding:.9rem 1rem; height:100%; }
+  .prin .n{ display:inline-flex; align-items:center; justify-content:center; width:1.9rem; height:1.9rem; border-radius:50%;
+    background:var(--biz-yellow); font-weight:800; margin-bottom:.4rem; }
+  .prin b{ display:block; margin-bottom:.2rem; }
+  .prin span{ font-size:.88rem; color:var(--muted); }
+
+  .cta{ background:linear-gradient(135deg,#04264d,#0b4c94); color:#fff; border-radius:1rem; padding:1.8rem 1.4rem; text-align:center; }
+  .btn-hero{ background:var(--nav-yellow); color:#04264d; font-weight:800; border-radius:2rem; padding:.6rem 1.4rem; border:none; }
+  .btn-hero:hover{ background:#ffe45c; color:#04264d; }
+  .btn-hero-ghost{ color:#fff; border:2px solid rgba(255,255,255,.6); font-weight:700; border-radius:2rem; padding:.55rem 1.3rem; }
+  .btn-hero-ghost:hover{ background:rgba(255,255,255,.12); color:#fff; }
+
+  footer{ background:var(--nav-blue); }
+  footer a{ color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="RAG Champ"></a>
+  <div class="tagline">AI Amplifier portal</div>
+</div>
+
+<header class="hero">
+  <div class="container">
+    <div class="kicker">RAG Champ · Vision</div>
+    <h1>Helping tech professionals become<br><span>AI amplifiers.</span></h1>
+    <p class="lead mb-0">RAG Champ explores what AI can really do, one small app at a time. Each project is a hands-on experiment:
+      build something real, watch where AI shines and where it needs guiding, and turn that into lessons other professionals can use.
+      <span class="hl">Human-led, AI-assisted</span>, from coding-agent evals to finance, presentations and music.</p>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- WHAT IS AN AI AMPLIFIER -->
+  <section class="sec">
+    <div class="sec-kicker">The goal</div>
+    <h2>What is an AI amplifier?</h2>
+    <div class="amp-def my-3">
+      <b>An AI amplifier</b> is a professional who can guide an organisation to make <b>optimal</b> use of AI.
+      Optimal means three things at once:
+    </div>
+    <div class="row g-3">
+      <div class="col-md-4"><div class="pillar"><div class="ic">🏆</div><b>High-quality output</b><span>Results that are checked, tested and trustworthy, not just "looks right".</span></div></div>
+      <div class="col-md-4"><div class="pillar"><div class="ic">🪶</div><b>The fewest resources</b><span>Small models, plain files and local tools where they are enough; big models only where they add value.</span></div></div>
+      <div class="col-md-4"><div class="pillar"><div class="ic">⚡</div><b>The shortest time</b><span>Ideas that once took months to assess, tested in days or a week.</span></div></div>
+    </div>
+    <p class="mt-3 mb-0">You can't guide others on this from slides alone. <b>The first step is to build small apps and experiment</b>, and see for
+      yourself how AI behaves on real problems. That is what each initiative below does.</p>
+  </section>
+
+  <!-- JOURNEY -->
+  <section class="sec">
+    <div class="sec-kicker">The journey so far</div>
+    <h2>Seven initiatives, one direction</h2>
+    <p class="intro">Different domains, each picked to test a different side of AI: how to measure it, trust it, scale it, keep it in check, make
+      it small, and let it be creative.</p>
+
+    <div class="timeline">
+
+      <div class="titem" id="evals">
+        <div class="tdot">🧪</div>
+        <div class="tcard">
+          <div class="tmeta">July 2026 · Foundations</div>
+          <h3>Evals for Coding Agents</h3>
+          <p>A ten-chapter course on how to tell whether an AI coding agent is any good: LLM and agent basics, golden datasets,
+            evals vs classic QA, Goodhart's law, the top ten ways agents fail, and using LangSmith to measure and improve agents, ending with a quiz.</p>
+          <div class="lesson"><b>Amplifier lesson:</b> you can't improve what you don't measure. Before trusting an agent, decide how you'll grade it.</div>
+          <span class="tag">Course</span><span class="tag">Evals</span><span class="tag">LangSmith</span>
+          <div class="mt-2"><a class="btn btn-go" href="https://ragchamp.github.io/Evals/" target="_blank" rel="noopener">▶ Read the course</a></div>
+        </div>
+      </div>
+
+      <div class="titem" id="cobol">
+        <div class="tdot">🏛️</div>
+        <div class="tcard">
+          <div class="tmeta">August 2026 · Coding agents</div>
+          <h3>COBOL → Java migration framework</h3>
+          <p>Using coding agents to modernise legacy code. The result is a <b>deterministic</b> converter that turns GnuCOBOL batch programs into a Java Spring Boot API
+            in three inspectable stages (data dictionary → statement tree → Java), with a rule table that stops and names the exact COBOL line it can't convert.
+            It was proven against a real five-program credit-card statement batch job, with an audit app to compare outputs.</p>
+          <div class="lesson"><b>Amplifier lesson:</b> use AI to <i>build</i> a reliable tool, not to guess a translation. Same input, same output, verified against the real thing.</div>
+          <span class="tag">COBOL</span><span class="tag">Java</span><span class="tag">Spring Boot</span>
+          <div class="mt-2"><a class="btn btn-go-lite" href="https://github.com/RAGchamp/COBOL-TO-JAVA" target="_blank" rel="noopener">GitHub repo →</a></div>
+        </div>
+      </div>
+
+      <div class="titem" id="analyzer">
+        <div class="tdot">📑</div>
+        <div class="tcard">
+          <div class="tmeta">September–November 2026 · Finance</div>
+          <h3>Annual Report Analyzer</h3>
+          <p>A local web app for in-depth analysis of the <b>notes to the financial statements</b> in an annual report PDF. Ask a question such as
+            "Analyze the company's tax-related liabilities"; the app finds the right notes deterministically, extracts them with their tables, and has
+            Claude explain the impact on each financial statement, with follow-up questions and a report for every answer. It also rebuilds every
+            statement as a table. Backed by 510 automated tests.</p>
+          <div class="lesson"><b>Amplifier lesson:</b> let code find the exact facts, then let AI reason over them. Precise retrieval first is what makes the analysis trustworthy.</div>
+          <span class="tag">Python</span><span class="tag">Flask</span><span class="tag">Claude Code</span>
+          <div class="mt-2"><a class="btn btn-go-lite" href="https://github.com/RAGchamp/ANALYZER" target="_blank" rel="noopener">GitHub repo →</a></div>
+        </div>
+      </div>
+
+      <div class="titem" id="stocks">
+        <div class="tdot">📈</div>
+        <div class="tcard">
+          <div class="tmeta">September 2026 · Finance</div>
+          <h3>Stock Investment Playbook</h3>
+          <p>Investment playbooks per stock, built with Claude Code from 10-K and 10-Q filings and industry templates, grounded in the value-investing
+            ideas of Graham &amp; Dodd's <i>Security Analysis</i>. Playbooks roll up into P/E cheat sheets and risk/reward rankings per industry (retail, big tech,
+            semiconductors, restaurants, India manufacturing and more), with a plan to scale it to a 669-ticker watchlist refreshed every quarter.</p>
+          <div class="lesson"><b>Amplifier lesson:</b> prove a pipeline on one industry, then template it. One reusable template plus a few human inputs scales to hundreds of companies.</div>
+          <span class="tag">Investing</span><span class="tag">Templates</span><span class="tag">Pipelines</span>
+          <div class="mt-2"><a class="btn btn-go-lite" href="https://github.com/RAGchamp/stocks" target="_blank" rel="noopener">GitHub repo →</a></div>
+        </div>
+      </div>
+
+      <div class="titem" id="accounting">
+        <div class="tdot">🧾</div>
+        <div class="tcard">
+          <div class="tmeta">October 2026 · Finance</div>
+          <h3>Small Business Accounting</h3>
+          <p>An accounting agent for a small business (the sample is a take-out pizza shop). The owner uploads receipts, bank and card statements,
+            handwritten cash sheets and delivery-app reports; Claude reads each one and <b>proposes</b> journal entries; the owner accepts, edits or
+            rejects them; accepted entries go into a strict double-entry ledger, from which <b>code</b>, never the AI, produces the financial statements
+            and draft tax worksheets. It reuses the Annual Report Analyzer's engine.</p>
+          <div class="lesson"><b>Amplifier lesson:</b> AI proposes, a human approves, code computes. Keep the numbers that matter out of the AI's hands.</div>
+          <span class="tag">Accounting</span><span class="tag">Human in the loop</span><span class="tag">Reuse</span>
+          <div class="mt-2"><a class="btn btn-go-lite" href="https://github.com/RAGchamp/ACCTG-APP" target="_blank" rel="noopener">GitHub repo →</a></div>
+        </div>
+      </div>
+
+      <div class="titem" id="flowchart">
+        <div class="tdot">🗺️</div>
+        <div class="tcard">
+          <div class="tmeta">October 2026 · Presentations</div>
+          <h3>Flow Chart App and FlowTrace AI</h3>
+          <p>A browser app for complex flow charts that PowerPoint can't make: curved ribbons, knots, rings and serpentines. Its <b>FlowTrace</b> feature
+            reads a picture of a flow chart and rebuilds it as editable shapes, using its <b>own small model</b> (a 0.25 M-parameter network that runs on
+            a laptop), trained on synthetic diagrams the app generates itself.</p>
+          <div class="lesson"><b>Amplifier lesson:</b> not every problem needs a giant model. A tiny, purpose-built model trained on data you generate can do the job locally, for free.</div>
+          <span class="tag">Small model</span><span class="tag">Synthetic data</span><span class="tag">Design</span>
+          <div class="mt-2 d-flex flex-wrap gap-2">
+            <a class="btn btn-go" href="https://ragchamp.github.io/FLOWCHART/" target="_blank" rel="noopener">▶ Open the app</a>
+            <a class="btn btn-go-lite" href="https://github.com/RAGchamp/FLOWCHART-AI" target="_blank" rel="noopener">FlowTrace AI repo →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="titem now" id="music">
+        <div class="tdot">🎵</div>
+        <div class="tcard">
+          <div class="tmeta">November 2026 · Now</div>
+          <h3>Music</h3>
+          <p>What began as an experiment to see whether AI could work out the notes of a song grew, within a week, into several workstreams:
+            song practice with the original recording, piano players with animated hands, music theory lessons and a test, original songs, and a GIF creator.
+            Along the way AI built its own tools to check its work against the recordings.</p>
+          <div class="lesson"><b>Amplifier lesson:</b> with AI, ideas that could take six months or more to assess can be tested in a week. And this is just the beginning.</div>
+          <span class="tag">Audio analysis</span><span class="tag">Learning</span><span class="tag">Creativity</span>
+          <div class="mt-2"><a class="btn btn-go" href="index.html">▶ Explore the Music app</a></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PRINCIPLES -->
+  <section class="sec">
+    <div class="sec-kicker">What runs through all of them</div>
+    <h2>Six principles for using AI well</h2>
+    <div class="row g-3">
+      <div class="col-md-6 col-lg-4"><div class="prin"><div class="n">1</div><b>Humans lead</b><span>A person sets the goal, judges the result and decides when it is good enough. AI assists.</span></div></div>
+      <div class="col-md-6 col-lg-4"><div class="prin"><div class="n">2</div><b>Measure before you trust</b><span>Evals, tests and comparisons against the real thing turn "looks right" into "is right".</span></div></div>
+      <div class="col-md-6 col-lg-4"><div class="prin"><div class="n">3</div><b>Code for facts, AI for judgement</b><span>Deterministic code finds and computes; AI reads, explains and proposes.</span></div></div>
+      <div class="col-md-6 col-lg-4"><div class="prin"><div class="n">4</div><b>Right-size the model</b><span>Use a small local model when it is enough, and save the big ones for where they add value.</span></div></div>
+      <div class="col-md-6 col-lg-4"><div class="prin"><div class="n">5</div><b>Prove small, then scale</b><span>Make one case work end to end, then turn it into a template or a pipeline.</span></div></div>
+      <div class="col-md-6 col-lg-4"><div class="prin"><div class="n">6</div><b>Reuse what works</b><span>Each project borrows from the last: engines, checks and patterns compound over time.</span></div></div>
+    </div>
+  </section>
+
+  <section class="sec pb-2">
+    <div class="cta">
+      <h2 class="h3 fw-bold">See it in action</h2>
+      <p class="mb-3" style="color:#dbe6f5">Start with the latest experiment, or read more on the blog.</p>
+      <div class="d-flex flex-wrap gap-2 justify-content-center">
+        <a class="btn btn-hero" href="index.html">🎵 The Music app</a>
+        <a class="btn btn-hero-ghost" href="https://ragchamp.github.io/BLOG/" target="_blank" rel="noopener">📰 Agentic AI blog</a>
+        <a class="btn btn-hero-ghost" href="contactus.html">✉️ Contact Us</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="text-white py-4 mt-5">
+  <div class="container text-center small">RAG Champ · AI Amplifier portal ·
+    <a href="index.html">🏠 Home</a> · <a href="practice.html">🎶 Song Practice</a> · <a href="SITE-MAP.html">🗺️ Site Map</a> ·
+    <a href="contactus.html">✉️ Contact Us</a></div>
+</footer>
+
+</body>
+</html>
