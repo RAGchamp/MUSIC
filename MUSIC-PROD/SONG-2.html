@@ -450,9 +450,14 @@ function layout(){
   if (aspect >= 1){ VH = 420; VW = Math.round(420 * aspect); } else { VW = 460; VH = Math.round(460 / aspect); }
   svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
   FLOOR = VH - Math.max(40, VH * .1);
-  const neonY = VH * .2 + 30;
-  SC = Math.min((FLOOR - neonY - 12) / 275, VW * .94 / 400);  // as big as fits between the banner and the floor, side by side
-  const gap = 100 * SC;
+  let neonY = VH * .2 + 30;
+  SC = Math.min((FLOOR - neonY - 12) / 275, VW * .96 / 380);  // as big as fits between the banner and the floor, side by side
+  if (SC < (FLOOR - neonY - 12) / 275){
+    // Tall screen: the width limits the monkeys, so put the banner in the middle of the space above their heads
+    const headTop = FLOOR - 275 * SC;
+    neonY = Math.max(neonY, (70 + headTop) / 2 + Math.min(96, VW * .13) * .35);
+  }
+  const gap = 92 * SC;
   troupe.forEach((m, i) => { m.x = VW / 2 + (i ? gap : -gap); });
   spots[0].x = VW * .06; spots[1].x = VW * .94;
   spots.forEach(sp => sp.p.setAttribute('points', `0,0 ${f1(-VW * .1)},${VH} ${f1(VW * .1)},${VH}`));
